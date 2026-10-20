@@ -1,0 +1,6 @@
+node_modules/
+dist/
+android/
+src/tailwind.generated.css
+.DS_Store
+*.log

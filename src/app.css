@@ -1,0 +1,44 @@
+
+/* The prototype's glass UI stays intact, with local background and a low-FPS fallback. */
+.app-background {
+  height: 100dvh;
+  min-height: 100dvh;
+  background-color: #f4eee6;
+  background-image:
+    radial-gradient(ellipse at 18% 8%, rgba(178, 136, 89, .19), transparent 42%),
+    radial-gradient(ellipse at 88% 82%, rgba(28, 28, 30, .09), transparent 46%),
+    linear-gradient(135deg, #eee5da 0%, #fdfcfb 54%, #e8ddcf 100%);
+  background-attachment: fixed;
+}
+#app-layout {
+  box-sizing: border-box;
+  height: 100dvh;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+#app-layout > nav { padding-bottom: max(.5rem, env(safe-area-inset-bottom, 0px)); }
+#app-layout main, #view-chat, #chat-container { min-height: 0; }
+#view-chat footer {
+  bottom: var(--keyboard-inset, 0px);
+  padding-bottom: max(.75rem, env(safe-area-inset-bottom, 0px));
+}
+#chat-container { overscroll-behavior: contain; scroll-padding-bottom: 8rem; }
+textarea:disabled, input:disabled { opacity: .72; cursor: not-allowed; }
+.identity-choice:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid #B28859; outline-offset: 3px;
+}
+.low-performance .mac-glass, .low-performance .mac-glass-solid,
+.low-performance #login-screen, .low-performance #setup-screen {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: rgba(253, 252, 251, .97) !important;
+}
+.low-performance .mac-glass { border-color: rgba(28, 28, 30, .08); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

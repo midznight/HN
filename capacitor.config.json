@@ -1,0 +1,8 @@
+{
+  "appId": "id.ourspace.couple",
+  "appName": "Our Space",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -48,15 +48,15 @@ flowchart TD
 - **Push:** Firebase Cloud Messaging (FCM). Payload hanya memuat metadata minimum seperti jenis peristiwa dan ID buram; tanpa teks, caption, nama file, gambar atau kunci. Konten didekripsi di perangkat.
 - **Rahasia server:** service account Firebase dan API key TURN hanya berada di environment fungsi server. Jangan masukkan ke JavaScript, APK atau repo.
 
-## 3. Persetujuan diperlukan untuk penyimpanan kunci E2EE
+## 3. Keputusan E2EE — disetujui untuk implementasi Fase 2
 
 Ada benturan teknis: private key Web Crypto yang dibuat dengan `extractable: false` tidak dapat diekspor/dibungkus untuk dimasukkan ke Android Keystore; menyimpan `CryptoKey` di IndexedDB tidak otomatis menjadikannya kunci Android Keystore. Referensi: [MDN — CryptoKey.extractable](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/extractable) dan [Android Keystore](https://developer.android.com/privacy-and-security/keystore).
 
-**Rekomendasi:** buat pasangan kunci ECDH P-256 langsung di Android Keystore melalui plugin Capacitor native kecil yang memakai API Android resmi. Private key tidak diekspor; plugin melakukan operasi ECDH, lalu Web Crypto menangani HKDF-SHA-256 dan AES-256-GCM. Public key ditukar lewat Supabase dan fingerprint diverifikasi langsung oleh Hamid dan Nur. **Ini menyimpang dari persyaratan ECDH yang sepenuhnya dilakukan oleh Web Crypto; jangan terapkan tanpa persetujuan.**
+**Keputusan yang disetujui:** pasangan kunci ECDH P-256 dibuat langsung di Android Keystore melalui plugin Capacitor native kecil yang memakai API Android resmi. Private key tidak diekspor; plugin melakukan operasi ECDH, lalu Web Crypto menangani HKDF-SHA-256 dan AES-256-GCM. Public key ditukar lewat Supabase dan fingerprint diverifikasi langsung oleh Hamid dan Nur. **Persetujuan pemilik diberikan pada 20 Oktober 2026.** Implementasi kunci native dimulai di Fase 2; Fase 1 tidak membuat atau menyimpan kunci E2EE.
 
 Alternatifnya, Web Crypto perlu mengekspor kunci privat sementara agar dapat dibungkus dengan kunci Keystore, atau menyimpan CryptoKey di penyimpanan web yang bukan Keystore. Keduanya memiliki batas perlindungan berbeda dan bukan rekomendasi utama.
 
-Alur pesan setelah keputusan disetujui:
+Alur pesan setelah keputusan ini diterapkan pada Fase 2:
 1. Setiap perangkat membuat private key lokal dan mengunggah public key saja.
 2. Kedua pengguna membandingkan fingerprint public key lewat kode pendek/QR. Perubahan key menampilkan peringatan dan perlu diverifikasi ulang.
 3. Turunkan kunci pesan dari rahasia ECDH dengan HKDF dan konteks yang mengikat pasangan, arah pengirim/penerima, serta versi kunci.

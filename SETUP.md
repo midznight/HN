@@ -8,7 +8,7 @@
 
 1. PIN prototipe `1208` harus dihapus dari kode dan placeholder. Jangan gunakan `1208` karena sama dengan tanggal jadian 12 Agustus dalam format DDMM. Buat PIN baru saat onboarding; rekomendasi minimal 6 digit.
 2. Prototipe menyebut tanggal 12 Agustus 2021. Spesifikasi menggunakan `[TANGGAL_JADIAN]`, jadi konfirmasikan tanggal itu sebelum anniversary/counter diaktifkan.
-3. Keputusan kunci E2EE perlu persetujuan: rekomendasi saya adalah membuat/menggunakan private key ECDH P-256 langsung di Android Keystore lewat plugin Capacitor native kecil, sedangkan HKDF/AES-GCM memakai Web Crypto. Ini berbeda dari ECDH sepenuhnya lewat Web Crypto, tetapi konsisten dengan syarat private key berada di Keystore. Jangan mengunci implementasi tanpa persetujuan.
+3. Pemilik menyetujui pada 20 Oktober 2026 penggunaan private key ECDH P-256 yang dibuat dan digunakan langsung di Android Keystore lewat plugin Capacitor native kecil; HKDF/AES-GCM tetap memakai Web Crypto. Implementasinya masuk Fase 2; Fase 1 belum membuat kunci E2EE.
 4. Password dua akun Supabase tidak boleh ditanam di APK. Onboarding harus mengaitkan identitas dengan kredensial satu kali lalu menyimpan sesi di penyimpanan native; pemilihan nama saja tidak boleh membuka akun server.
 
 ## 2. Supabase Free — tindakan manual di dashboard
@@ -75,14 +75,15 @@ Halaman resmi Metered saat dicek menyebut **20 GB TURN relay gratis/bulan**, dan
 
 ## 6. Build APK tanpa Android Studio
 
-Pada Fase 1, GitHub Actions akan meng-install dependency dari lockfile, build UI lokal, menjalankan pemeriksaan yang tersedia, dan mengunggah APK debug sebagai artifact. Setelah workflow selesai:
+Fase 1 menambahkan workflow `.github/workflows/android-debug.yml`. Workflow memasang dependency, menjalankan tes shell dan build aset lokal, membuat proyek Android Capacitor pada runner, lalu membangun APK debug. Android Studio lokal dan signing key release tidak dibutuhkan untuk APK debug.
 
-1. Buka repo → **Actions** → workflow build terbaru yang sukses.
-2. Di bagian **Artifacts**, unduh APK debug ke Android.
-3. Izinkan instalasi dari sumber yang digunakan untuk membuka APK, instal, lalu nonaktifkan lagi izin sumber tidak dikenal jika tak dibutuhkan.
-4. Tes PIN salah/benar, mode pesawat, buka ulang app, tombol Back, keyboard pada chat, safe area status/nav bar dan rotasi layar.
+1. Buka repo → **Actions** → run **Build Android APK (debug)** pada branch `phase-1-capacitor-shell`.
+2. Pastikan job sukses dan artifact `our-space-debug-apk` tersedia. Jika gagal, baca step merah—jangan menganggap APK selesai.
+3. Unduh artifact, ekstrak jika berbentuk ZIP, lalu instal APK pada HP Android.
+4. Pada instalasi baru pilih “Aku Hamid” atau “Aku Nur”, buat PIN 6–8 digit dan konfirmasikan. Tutup/buka ulang app, lalu coba PIN benar/salah.
+5. Aktifkan mode pesawat dan uji PIN lagi. Coba tombol Back dari Chat/Panggilan/Brankas, keyboard chat, safe area status/nav bar, lalu pindahkan app ke background dan buka kembali.
 
-Build release dengan signature stabil dibuat setelah release keystore aman tersedia. APK debug bukan paket Play Store. GitHub Actions artifact dan sideload tidak membutuhkan Android Studio.
+APK debug belum setara dengan release APK. Signing release memerlukan keystore aman dan konsisten; jangan commit key atau password ke repo.
 
 ## 7. Checklist pengujian manual per fitur
 
@@ -101,4 +102,4 @@ Belum ada fitur yang dinyatakan lulus pada Fase 0. Checklist harus dilaporkan se
 
 ## 8. Aksi dashboard yang belum dilakukan
 
-Fase 0 hanya membaca repo dan menulis dokumentasi. Belum ada Firebase project, Supabase project/user/bucket/table, GitHub Secret, package Android, APK atau migration yang dibuat/diubah oleh pekerjaan ini.
+Fase 0 tidak membuat layanan cloud. Fase 1 menambah kerangka Capacitor dan workflow APK, tetapi belum membuat Firebase/Supabase project, user, bucket, migrasi, atau secret cloud.
