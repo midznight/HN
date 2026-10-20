@@ -1,6 +1,6 @@
 # Our Space — Arsitektur dan Batas Keamanan
 
-**Status:** Fase 0 — rancangan saja; belum ada fitur diimplementasikan.  
+**Status:** Arsitektur dirancang pada Fase 0. Branch ini sekarang berisi shell UI offline dan gerbang PIN Fase 1; backend/Auth/E2EE belum diimplementasikan.  
 **Tanggal verifikasi layanan:** 20 Oktober 2026.  
 **Repositori:** [midznight/HN](https://github.com/midznight/HN). File acuan aktual: [prototipe UI.html](https://github.com/midznight/HN/blob/main/prototipe%20UI.html).
 

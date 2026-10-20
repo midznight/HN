@@ -1,7 +1,7 @@
 # Fase 1 — Shell Capacitor dan PIN lokal
 
 **Branch:** `phase-1-capacitor-shell`  
-**Status awal:** source dan workflow ditambahkan. Keberhasilan APK harus dikonfirmasi dari run Actions; perilaku di HP fisik belum dapat dikonfirmasi oleh agen.
+**Status:** GitHub Actions build sukses dan artifact APK debug tersedia. Instalasi serta pengujian di HP fisik masih menunggu verifikasi pengguna.
 
 ## Perubahan
 
@@ -19,6 +19,8 @@ Auth Supabase, pasangan kunci ECDH native di Android Keystore, chat E2EE, media,
 
 ## Uji manual di HP
 
+APK artifact yang berhasil dibuat: [Build Android APK (debug)](https://github.com/midznight/HN/actions/runs/39454749104). Ambil `our-space-debug-apk` pada bagian Artifacts. Artifact kedaluwarsa pada 3 November 2026.
+
 1. Repo → **Actions** → pilih run **Build Android APK (debug)** → unduh artifact `our-space-debug-apk`.
 2. Instal APK. Pada instalasi baru pilih identitas dan buat PIN 6–8 digit. Uji konfirmasi yang berbeda.
 3. Tutup lalu buka kembali; PIN benar membuka aplikasi, PIN salah ditolak dan percobaan berulang menambah jeda.
@@ -27,4 +29,4 @@ Auth Supabase, pasangan kunci ECDH native di Android Keystore, chat E2EE, media,
 6. Pindahkan aplikasi ke background lalu buka kembali; layar PIN harus muncul. Tes keyboard chat, status/nav bar, rotasi dan perangkat berperforma rendah.
 7. Pastikan tidak ada kebutuhan jaringan untuk PIN/UI setelah APK terinstal.
 
-Jangan tandai fase lulus penuh sampai build Actions dan pengujian perangkat benar-benar sukses.
+Build Actions sudah lulus; fase ini baru tervalidasi penuh setelah pengguna memasang APK dan menguji PIN benar/salah secara offline serta lifecycle Back/background di HP.

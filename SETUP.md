@@ -1,6 +1,6 @@
 # Our Space — Setup dan Prosedur Operasional
 
-**Status:** panduan awal Fase 0. Tidak ada layanan, akun atau secret yang dibuat/diubah saat dokumen ini ditulis.  
+**Status:** panduan setup untuk Fase 0–1. Shell Capacitor dan workflow APK sudah tersedia di branch ini; belum ada layanan cloud, akun, atau secret cloud yang dibuat/diubah.  
 **Verifikasi dokumen/harga:** 20 Oktober 2026.  
 **Repositori:** [midznight/HN](https://github.com/midznight/HN) saat ini **public**. Source dan dokumentasi dapat dibaca siapa pun. Jangan commit password, service account, Supabase service-role key, token, keystore, atau data pribadi.
 
