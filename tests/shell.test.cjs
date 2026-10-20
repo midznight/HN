@@ -36,6 +36,7 @@ test("features waiting for later phases are explicit empty states", () => {
 });
 test("direct runtime dependencies are version-pinned", () => {
   assert.equal(packageJson.dependencies["@capacitor/core"], "8.5.3");
+  assert.equal(packageJson.dependencies["@capacitor/app"], "8.1.2");
   assert.equal(packageJson.dependencies["lucide"], "1.59.0");
   assert.equal(packageJson.dependencies["@fontsource/inter"], "5.3.0");
   assert.equal(packageJson.dependencies["@fontsource/playfair-display"], "5.3.0");
