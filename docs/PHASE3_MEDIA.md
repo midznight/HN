@@ -1,6 +1,6 @@
 # Fase 3 — Lampiran Media E2EE
 
-Status: implementasi awal sudah digabung ke `phase-2/e2ee-text-chat` melalui [PR #6](https://github.com/midznight/HN/pull/6). Hardening dekripsi saat lock sudah digabung melalui [PR #8](https://github.com/midznight/HN/pull/8). Migration diterapkan dan diverifikasi di produksi; GitHub Actions #91 untuk merge commit terakhir lulus. Fase belum diterima sampai tes langsung antarperangkat selesai.
+Status: implementasi awal sudah digabung melalui [PR #6](https://github.com/midznight/HN/pull/6); hardening decrypt saat lock melalui [PR #8](https://github.com/midznight/HN/pull/8); perbaikan pemilih galeri/pelestarian pilihan file melalui [PR #10](https://github.com/midznight/HN/pull/10). Migration diterapkan dan diverifikasi di produksi; GitHub Actions #101 pasca-merge dan CI PR #11 (#109) lulus. Pengguna mengonfirmasi pemilih kembali tanpa PIN ulang dan file tetap ada. Snapshot backend read-only menunjukkan satu pesan media dan objek Storage yang cocok dari setiap akun; penerimaan belum selesai sampai penerima berhasil decrypt/render/save pada kedua perangkat.
 
 ## Cakupan milestone ini
 
@@ -37,9 +37,11 @@ Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path me
 3. [x] Read-only check: bucket private, limit 4 MiB, MIME generik, constraint `message_type` dan policy Storage terpasang.
 4. [x] PR #8 menambahkan regression test untuk memastikan hasil decrypt tidak dirender setelah app lock.
 5. [x] APK pasca-merge dibuat; sertifikat penandatanganannya cocok dengan baseline API 30 yang diperiksa.
-6. [ ] Pasang APK stabil sebagai update tanpa uninstall pada kedua HP.
-7. [ ] Tes gambar, audio, video dua arah; uji file di atas 3 MiB/MIME unsupported, jaringan terputus, retry unduh/dekripsi, lock/background dan Simpan ke Galeri.
-8. [ ] Catat hasil pada Android 11/API 30 sebelum menyatakan fase diterima.
+6. [x] Perbaikan pemilih galeri/retensi file PR #10 digabung, CI #101 lulus, dan pengguna mengonfirmasi alur kembali ke aplikasi tidak meminta PIN ulang serta file terpilih tidak hilang.
+7. [x] Snapshot backend read-only: satu pesan media dari Hamid dan satu dari Nur, masing-masing memiliki objek Storage yang cocok. Ini hanya membuktikan upload/insert dua arah.
+8. [ ] Uji di perangkat penerima bahwa gambar, audio, video dapat diunduh, didekripsi, dipratinjau dan disimpan di kedua arah.
+9. [ ] Uji file di atas 3 MiB/MIME unsupported, jaringan terputus, retry unduh/dekripsi, lock/background dan Simpan ke Galeri.
+10. [ ] Catat hasil pada Android 11/API 30 sebelum menyatakan fase diterima.
 
 ## Keamanan dan batas
 

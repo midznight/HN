@@ -612,11 +612,14 @@ async function decryptAndRenderMedia(row, peerKey) {
     nonce: row.nonce,
     ciphertext: row.ciphertext,
   });
+  // Metadata is plaintext only on this device; do not parse it or start a Storage
+  // request if the app locked while native decryption was in flight.
+  if (!appUnlocked || !partnerVerified || !sessionUser) return;
   const metadata = validateMediaMetadata(JSON.parse(opened.plaintext), row);
   const result = await supabase.storage.from(MEDIA_BUCKET).download(metadata.objectPath);
+  if (!appUnlocked || !partnerVerified || !sessionUser) return;
   if (result.error || !result.data) throw result.error || new Error('Lampiran tidak tersedia.');
   if (result.data.size > MAX_MEDIA_BYTES + 1024) throw new Error('Ukuran ciphertext lampiran tidak valid.');
-  if (!appUnlocked || !partnerVerified) return;
 
   const encryptedBytes = new Uint8Array(await result.data.arrayBuffer());
   const encryptedBase64 = bytesToBase64(encryptedBytes);
