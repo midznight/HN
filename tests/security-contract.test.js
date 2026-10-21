@@ -234,3 +234,16 @@ test('media pipeline rechecks lock after Blob.arrayBuffer before starting native
   assert.ok(zeroBuffer > lockGuard && zeroBuffer < bytesWrap);
   assert.ok(bytesWrap > lockGuard && toBase64 > bytesWrap && nativeDecrypt > toBase64);
 });
+
+
+test('private app layout is shielded during the system picker and restored when picker state ends', () => {
+  const begin = client.indexOf('function beginAttachmentPicker()');
+  const click = client.indexOf('picker.click();', begin);
+  const shield = client.indexOf("appLayout.style.visibility = 'hidden';", click);
+  const clear = client.indexOf('function clearAttachmentPickerState()', begin);
+  const restore = client.indexOf('appLayout.style.visibility = attachmentPickerPreviousVisibility;', clear);
+  const reset = client.indexOf('attachmentPickerPreviousVisibility = null;', restore);
+  assert.ok(begin >= 0 && click > begin);
+  assert.ok(shield > click, 'shield is applied after the file chooser activation is requested');
+  assert.ok(clear > shield && restore > clear && reset > restore);
+});
