@@ -519,7 +519,7 @@ test('Phase 5 WebRTC call signaling and call history remain E2EE and require ver
   assert.match(html, /id="call-modal"[^>]*role="dialog"/);
   assert.match(html, /id="call-accept-button"/);
   assert.match(html, /id="call-end-button"/);
-  assert.match(html, /id="call-audio-call"/);
-  assert.match(html, /id="call-video-call"/);
+  assert.match(html, /id="chat-audio-call"/);
+  assert.match(html, /id="chat-video-call"/);
 });
 
