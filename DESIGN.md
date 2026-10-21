@@ -4,6 +4,12 @@
 **Posisi fase:** setelah Fase 0, sebelum implementasi Fase 1.  
 **Batas:** file HTML di preview-ui adalah pratinjau desain. Tidak terhubung ke Supabase, penyimpanan, notifikasi, enkripsi, atau panggilan nyata.
 
+## Keputusan desain yang telah dikonfirmasi
+
+**Keputusan pemilik — 21 Oktober 2026**
+- Tanggal jadian: **belum ditetapkan**. Jangan menampilkan hitung hari, countdown anniversary, atau kenangan yang bergantung pada tanggal sampai pemilik menetapkan tanggal secara eksplisit.
+- Pengiriman foto/video: **pratinjau dan konfirmasi sebelum mengirim**. Ini keputusan privasi yang disengaja; pengguna harus dapat memeriksa media yang dipilih lalu memilih Kirim atau Batal.
+
 ## 1. Ringkasan pengguna
 
 Our Space dipakai Hamid dan Nur, dua orang yang membuka ruang privat berkali-kali setiap hari dari Android. Momen utama terjadi dalam jeda singkat: membuka chat saat rindu, mengirim foto atau voice note sebelum tidur, dan menjawab panggilan ketika aplikasi berada di latar belakang. Mereka memerlukan status pesan yang jelas, tindakan utama yang mudah dijangkau, serta privasi yang tidak dikorbankan oleh kemudahan.
@@ -236,7 +242,7 @@ Audit implementasi tetap harus menguji semua pasangan aktual, termasuk placehold
 | Backend/E2EE/panggilan/kuota nyata | **Tidak dibangun dalam fase ini** | Preview tidak terhubung layanan |
 
 ## 10. Hal yang belum pasti
-1. **Tanggal jadian:** belum dikonfirmasi; hitung hari/countdown/kenangan terkait tetap nonaktif sampai tanggal pasti diberikan.
+1. **Tanggal jadian:** pemilik menyatakan belum ditetapkan; hitung hari/countdown/kenangan terkait tetap nonaktif hingga ada keputusan baru.
 2. **Panggilan saat aplikasi ditutup:** membutuhkan keputusan dan uji integrasi native, push, signaling, WebRTC, serta perilaku OEM.
 3. **Kuota Brankas:** harus berasal dari kuota/storage nyata, bukan angka statis.
 4. **Voice note:** rekam dan waveform audio asli belum tersedia pada baseline. HTML hanya memperlihatkan rancangan, bukan kemampuan nyata.
