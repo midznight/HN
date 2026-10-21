@@ -580,7 +580,7 @@ test('replies and emoji reactions use E2EE envelopes with no plaintext relation 
 
 test('production UI and interactive preview use the approved rose-coral design tokens', () => {
   assert.match(html, /viewport-fit=cover/);
-  assert.doesNotMatch(html, /user-scalable\\s*=\\s*no|maximum-scale\\s*=/i);
+  assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=/i);
   assert.match(html, /--os-bg:#FFF7F2/);
   assert.match(html, /--os-ink:#372632/);
   assert.match(html, /--os-rose:#B63F49/);
@@ -595,7 +595,7 @@ test('production UI and interactive preview use the approved rose-coral design t
 test('relationship card does not fabricate an anniversary date', () => {
   assert.match(html, /Ruang Kita/);
   assert.match(html, /Tanggal jadian belum dikonfirmasi/);
-  assert.doesNotMatch(html, />\\s*Anniversary\\s*</i);
+  assert.doesNotMatch(html, />\s*Anniversary\s*</i);
 });
 
 test('Android release candidate builds signed debug and release APKs and verifies matching certificates', () => {
