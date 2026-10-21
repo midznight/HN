@@ -25,6 +25,30 @@ jobs:
         run: npm run build
       - name: Generate Android project and sync Capacitor
         run: npx cap add android && npx cap sync android
+      - name: Disable backup for Keystore-bound identity storage
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          if not path.is_file():
+              raise SystemExit("Generated AndroidManifest.xml was not found.")
+          text = path.read_text()
+          start = text.find("<application")
+          end = text.find(">", start)
+          if start < 0 or end < 0:
+              raise SystemExit("Could not find the generated application tag.")
+          tag = text[start:end + 1]
+          tag, count = re.subn(r'android:allowBackup="[^"]*"', 'android:allowBackup="false"', tag, count=1)
+          if count == 0:
+              tag = tag[:-1] + ' android:allowBackup="false">'
+          text = text[:start] + tag + text[end + 1:]
+          path.write_text(text)
+          if 'android:allowBackup="false"' not in path.read_text():
+              raise SystemExit("Failed to disable backup for Keystore-bound app identity.")
+          print("Disabled Android app backup for identity data tied to Android Keystore.")
+          PY
       - name: Inject maintained native Keystore plugin
         run: |
           mkdir -p android/app/src/main/java/com/ourspace/app
