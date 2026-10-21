@@ -247,3 +247,21 @@ test('private app layout is shielded during the system picker and restored when 
   assert.ok(shield > click, 'shield is applied after the file chooser activation is requested');
   assert.ok(clear > shield && restore > clear && reset > restore);
 });
+
+
+test('media sender checks app lock after File.arrayBuffer before Base64 conversion or native encryption', () => {
+  const start = client.indexOf('async function sendMediaFile(file)');
+  const read = client.indexOf('const inputBuffer = await file.arrayBuffer()', start);
+  const guard = client.indexOf('if (!appUnlocked || !partnerVerified || !sessionUser) {', read);
+  const zero = client.indexOf('new Uint8Array(inputBuffer).fill(0)', guard);
+  const wrap = client.indexOf('const inputBytes = new Uint8Array(inputBuffer)', guard);
+  const toBase64 = client.indexOf('mediaBase64 = bytesToBase64(inputBytes)', wrap);
+  const nativeEncrypt = client.indexOf('KeyStore.encryptMedia({', toBase64);
+  const clearAfterEncrypt = client.indexOf('mediaBase64 = null;', nativeEncrypt);
+  assert.ok(start >= 0 && read > start);
+  assert.ok(guard > read && guard < wrap);
+  assert.ok(zero > guard && zero < wrap);
+  assert.ok(wrap > guard && toBase64 > wrap && nativeEncrypt > toBase64);
+  assert.ok(clearAfterEncrypt > nativeEncrypt);
+  assert.match(client.slice(start, client.indexOf('function updateComposerState', start)), /finally \{\s+mediaBase64 = null;/);
+});
