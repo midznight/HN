@@ -756,6 +756,119 @@ async function subscribeToMessages() {
     });
 }
 
+async function sendMediaFile(file) {
+  if (isSending || !appUnlocked || !sessionUser || !pair || !partnerMember || !partnerDeviceKey || !partnerVerified) return;
+  clearMessageError();
+  const status = $('chat-upload-status');
+  let objectUploaded = false;
+  let objectPath = '';
+  let uploadedBytes = null;
+  try {
+    if (!file || !isSupportedMediaMimeType(file.type)) {
+      throw new Error('Pilih gambar, video, atau audio dengan format yang didukung.');
+    }
+    if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > MAX_MEDIA_BYTES) {
+      throw new Error('Ukuran lampiran maksimal 3 MiB.');
+    }
+
+    const filename = safeMediaFilename(file.name);
+    const mimeType = file.type.trim().toLowerCase();
+    const messageId = createMessageId();
+    objectPath = pair.id + '/' + sessionUser.id + '/' + messageId + '.bin';
+
+    isSending = true;
+    updateComposerState();
+    if (status) {
+      status.textContent = 'Mengamankan lampiran di perangkat…';
+      status.classList.remove('hidden');
+    }
+
+    const inputBytes = new Uint8Array(await file.arrayBuffer());
+    const mediaBase64 = bytesToBase64(inputBytes);
+    inputBytes.fill(0);
+    const encrypted = await KeyStore.encryptMedia({
+      peerPublicKey: partnerDeviceKey.public_key,
+      pairId: pair.id,
+      messageId,
+      senderId: sessionUser.id,
+      recipientId: partnerMember.user_id,
+      keyVersion: EXPECTED_KEY_VERSION,
+      filename,
+      mimeType,
+      mediaBase64,
+    });
+    if (!appUnlocked || !partnerVerified) return;
+
+    if (status) status.textContent = 'Mengunggah ciphertext terenkripsi…';
+    uploadedBytes = base64ToBytes(encrypted.ciphertext);
+    const encryptedBlob = new Blob([uploadedBytes], { type: 'application/octet-stream' });
+    const { error: uploadError } = await supabase.storage.from(MEDIA_BUCKET).upload(objectPath, encryptedBlob, {
+      contentType: 'application/octet-stream',
+      cacheControl: '3600',
+      upsert: false,
+    });
+    if (uploadError) throw uploadError;
+    objectUploaded = true;
+    uploadedBytes.fill(0);
+    uploadedBytes = null;
+    if (!appUnlocked || !partnerVerified) return;
+
+    if (status) status.textContent = 'Menyimpan metadata terenkripsi…';
+    const metadata = {
+      mediaVersion: 1,
+      objectPath,
+      filename,
+      mimeType,
+      size: file.size,
+      nonce: encrypted.nonce,
+    };
+    const encryptedMetadata = await KeyStore.encryptMessage({
+      peerPublicKey: partnerDeviceKey.public_key,
+      pairId: pair.id,
+      messageId,
+      senderId: sessionUser.id,
+      recipientId: partnerMember.user_id,
+      keyVersion: EXPECTED_KEY_VERSION,
+      messageType: 'media',
+      plaintext: JSON.stringify(metadata),
+    });
+    if (!appUnlocked || !partnerVerified) return;
+
+    const record = {
+      id: messageId,
+      pair_id: pair.id,
+      sender_id: sessionUser.id,
+      recipient_id: partnerMember.user_id,
+      ciphertext: encryptedMetadata.ciphertext,
+      nonce: encryptedMetadata.nonce,
+      key_version: EXPECTED_KEY_VERSION,
+      message_type: 'media',
+    };
+    const { data, error } = await supabase.from('messages').insert(record)
+      .select('id,pair_id,sender_id,recipient_id,ciphertext,nonce,key_version,message_type,created_at')
+      .single();
+    if (error) throw error;
+    objectUploaded = false;
+    if (!appUnlocked || !partnerVerified) return;
+    renderMediaMessage(data, file.slice(0, file.size, mimeType), metadata);
+    const bottom = $('chat-container');
+    if (bottom) bottom.scrollTop = bottom.scrollHeight;
+  } catch (error) {
+    const visibleMessage = error?.message && !/jwt|token|authorization|secret/i.test(error.message)
+      ? error.message
+      : humanError(error, 'Lampiran tidak terkirim. File asli tidak disimpan di server.');
+    messageError(visibleMessage);
+  } finally {
+    if (objectUploaded && objectPath) {
+      try { await supabase.storage.from(MEDIA_BUCKET).remove([objectPath]); } catch { /* an orphan contains ciphertext only */ }
+    }
+    if (uploadedBytes) uploadedBytes.fill(0);
+    if (status) status.classList.add('hidden');
+    isSending = false;
+    updateComposerState();
+  }
+}
+
 function updateComposerState() {
   const enabled = Boolean(appUnlocked && sessionUser && partnerVerified && partnerDeviceKey && pair);
   if ($('chat-message-input')) $('chat-message-input').disabled = !enabled;
