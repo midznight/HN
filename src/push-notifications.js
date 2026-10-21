@@ -185,6 +185,33 @@ async function registerDevice(explicitUserAction) {
       clearTimeout(registrationWaiter.timer);
       registrationWaiter = null;
     }
+
+    // A network error can arrive after the server upsert actually succeeded.
+    // Always try removing this user's row before reporting that registration failed.
+    let cleanupFailed = false;
+    if (snapshot?.userId && supabase) {
+      try {
+        const { error } = await supabase.from('device_push_tokens')
+          .delete().eq('user_id', snapshot.userId);
+        cleanupFailed = Boolean(error);
+      } catch {
+        cleanupFailed = true;
+      }
+    } else {
+      cleanupFailed = true;
+    }
+
+    if (cleanupFailed) {
+      // Do not display an off toggle if a server token might still exist.
+      await setSavedPreference(true).catch(() => {});
+      const failure = new Error('push_registration_cleanup_failed');
+      failure.preservePushState = true;
+      throw failure;
+    }
+
+    if (FCM_ANDROID_CONFIGURED && ANDROID_NATIVE) {
+      try { await PushNotifications.unregister(); } catch { /* server token cleanup is confirmed */ }
+    }
     throw new Error('push_registration_failed');
   }
 }
@@ -237,10 +264,15 @@ export async function initPushNotifications() {
           checkbox.checked = false;
           await setSavedPreference(false);
         }
-      } catch {
-        checkbox.checked = false;
-        await setSavedPreference(false).catch(() => {});
-        status('Push gagal diaktifkan. Periksa izin dan konfigurasi server; isi pesan tidak dikirim.');
+      } catch (error) {
+        if (error?.preservePushState === true) {
+          checkbox.checked = true;
+          status('Pendaftaran push gagal dibersihkan dari server. Push mungkin masih aktif; sambungkan internet lalu coba nonaktifkan kembali.');
+        } else {
+          checkbox.checked = false;
+          await setSavedPreference(false).catch(() => {});
+          status('Push gagal diaktifkan. Periksa izin dan konfigurasi server; isi pesan tidak dikirim.');
+        }
       } finally {
         checkbox.disabled = !(await serverReady());
       }

@@ -386,3 +386,13 @@ test('Push sign-out does not swallow local opt-out preference persistence failur
   assert.match(fn, /await setSavedPreference\(false\);/);
   assert.doesNotMatch(fn, /await setSavedPreference\(false\)\.catch\(\(\) => \{\}\)/);
 });
+
+
+test('Push registration failure attempts server token rollback and never shows off if rollback is uncertain', () => {
+  assert.match(pushClient, /A network error can arrive after the server upsert actually succeeded/);
+  assert.match(pushClient, /let cleanupFailed = false/);
+  assert.match(pushClient, /const \\{ error \\} = await supabase\.from\('device_push_tokens'\)[\s\S]*?cleanupFailed = Boolean\(error\)/);
+  assert.match(pushClient, /failure\.preservePushState = true/);
+  assert.match(pushClient, /if \(error\?\.preservePushState === true\)[\s\S]*?checkbox\.checked = true/);
+  assert.match(pushClient, /Push mungkin masih aktif/);
+});
