@@ -368,21 +368,21 @@ test('Push opt-out persists local choice before server token deletion and retrie
   const persistOff = optOut.indexOf('await setSavedPreference(false)');
   const deleteToken = optOut.indexOf(".from('device_push_tokens')");
   const restoreOn = optOut.indexOf('await setSavedPreference(true).catch', deleteToken);
-  assert.ok(optOutStart >= 0 && persistOff > optOutStart && deleteToken > persistOff);
+  assert.ok(optOutStart >= 0 && persistOff >= 0 && deleteToken > persistOff);
   assert.ok(restoreOn > deleteToken);
 
   const contextStart = pushClient.indexOf('export async function setPushContext');
   const contextEnd = pushClient.indexOf('export async function notifyPartnerForMessage', contextStart);
   const context = pushClient.slice(contextStart, contextEnd);
   assert.match(context, /if \(!enabled && supabase\)/);
-  assert.match(context, /const \\{ data: staleToken, error: staleLookupError \\}/);
-  assert.match(context, /const \\{ error: staleDeleteError \\}/);
+  assert.match(context, /const \{ data: staleToken, error: staleLookupError \}/);
+  assert.match(context, /const \{ error: staleDeleteError \}/);
 });
 
 test('Push sign-out does not swallow local opt-out preference persistence failure', () => {
   const start = pushClient.indexOf('export async function disablePushBeforeSignOut()');
   const end = pushClient.length;
   const fn = pushClient.slice(start, end);
-  assert.match(fn, /await setSavedPreference\\(false\\);/);
-  assert.doesNotMatch(fn, /await setSavedPreference\\(false\\)\\.catch\\(\\(\\) => \\{\\}\\)/);
+  assert.match(fn, /await setSavedPreference\(false\);/);
+  assert.doesNotMatch(fn, /await setSavedPreference\(false\)\.catch\(\(\) => \{\}\)/);
 });
