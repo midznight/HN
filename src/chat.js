@@ -282,6 +282,14 @@ async function bootstrapPrivateChat() {
       .maybeSingle();
     if (peerKeyError) throw peerKeyError;
     partnerDeviceKey = peerKey || null;
+    if (partnerDeviceKey) {
+      // Never trust a fingerprint string supplied by the same server as its public key.
+      // Compute SHA-256 over the exact DER bytes natively, then compare to the server record.
+      const calculated = await KeyStore.fingerprintPublicKey({ publicKey: partnerDeviceKey.public_key });
+      if (calculated.fingerprint !== partnerDeviceKey.fingerprint || calculated.algorithm !== 'ECDH-P256') {
+        throw new Error('Fingerprint public key pasangan tidak cocok dengan data server. Ini dapat menandakan kunci diganti; chat dihentikan.');
+      }
+    }
 
     await updateFingerprintPanel(localKey, partnerDeviceKey);
     if (!appUnlocked) return;
