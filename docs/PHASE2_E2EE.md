@@ -28,7 +28,7 @@ Fingerprint berisi 64 karakter hex SHA-256. Pengguna harus membandingkan semua k
 ## Menyiapkan dua akun
 
 1. Pada Supabase Dashboard project ini, pastikan hanya ada dua akun Auth yang kamu kelola: Hamid dan Nur. Buat akun terlebih dahulu melalui **Authentication → Users** bila belum ada. Gunakan kata sandi kuat berbeda dan simpan secara privat. Aplikasi tidak membuka pendaftaran publik dan tidak menyimpan kata sandi.
-2. Terapkan migration `supabase/migrations/20261021000000_phase2_e2ee_text_chat.sql` setelah project ACTIVE. CI tidak menyimpan service-role key dan migration ini sengaja tidak menambahkan pengguna otomatis.
+2. Terapkan migration `supabase/migrations/20261021010159_phase2_e2ee_text_chat.sql` setelah project ACTIVE. CI tidak menyimpan service-role key dan migration ini sengaja tidak menambahkan pengguna otomatis.
 3. Seed satu pasangan dan dua membership melalui SQL Editor menggunakan UUID yang benar-benar tampil pada daftar Auth Users. Jangan menebak/mengarang UUID. Bentuk SQL-nya:
 
    ```sql
