@@ -15,8 +15,8 @@ Pembaruan: 21 Oktober 2026. “Teruji pengguna” berarti pengguna mengonfirmasi
 | Panggilan suara/video WebRTC | Implementasi awal, belum terverifikasi di perangkat | Sinyal SDP dan riwayat disimpan sebagai ciphertext. Hanya mendukung sesi foreground Android dengan permission; tidak ada panggilan masuk ketika aplikasi tertutup. STUN-only bisa gagal pada NAT/firewall tertentu; TURN belum dikonfigurasi. |
 | Riwayat panggilan | Implementasi awal | Metadata mode/outcome/durasi disimpan terenkripsi dan ditampilkan sebagai kartu di timeline chat. Belum diuji dua HP. |
 | Notifikasi push FCM | Ter-deploy tetapi fail-closed | Aktivasi menunggu Google Workload Identity Federation, secrets server dan uji push dua HP. Payload dirancang generik. |
-| Rekam voice note dari aplikasi | Belum ada | Picker media saat ini mengirim file yang sudah ada. |
-| Balasan pesan dan reaksi emoji tersinkron | Belum diverifikasi/diimplementasi lengkap | Jangan menjanjikan sebelum model pesan dan rendering E2EE dilengkapi dan diuji. |
+| Rekam voice note dari aplikasi | Implementasi awal pada branch | MediaRecorder lokal maksimal 90 detik dan di-batasi sebelum 3 MiB; rekaman hanya masuk ke pratinjau, tidak auto-send. Izin mic dan uji perangkat belum lulus. |
+| Balasan pesan dan reaksi emoji tersinkron | Implementasi awal pada branch | Pakai tabel message_annotations ciphertext-only; target ID, emoji dan state ada dalam envelope E2EE. CI ada; uji sinkronisasi dua HP dan compatibility belum selesai. |
 | Audit keamanan independen | Belum | Tes kontrak bukan pengganti audit eksternal. |
 
 ## Batas keamanan dan operasional
