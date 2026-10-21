@@ -513,7 +513,7 @@ test('Phase 5 WebRTC call signaling and call history remain E2EE and require ver
   assert.match(callsClient, /from\('call_records'\)\.insert\(/);
   assert.match(callsClient, /new RTCPeerConnection\(\{ iceServers: STUN_SERVERS \}\)/);
   assert.match(callsClient, /navigator\.mediaDevices\?\.getUserMedia/);
-  assert.match(callsClient, /currentContext\(ctx\)/);
+  assert.match(callsClient, /sameContext\(ctx\)/);
   assert.match(callsClient, /call\.pc\.close\(\)/);
   assert.match(callsClient, /stopStream\(call\.localStream\)/);
   assert.match(html, /id="call-modal"[^>]*role="dialog"/);
