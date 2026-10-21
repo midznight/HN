@@ -29,7 +29,7 @@ Our Space dipakai Hamid dan Nur, dua orang yang membuka ruang privat berkali-kal
 - Tidak ada backdrop-filter pada daftar scroll atau bidang besar. Tidak ada aset, font, ikon, skrip, atau analitik pihak ketiga.
 - Layout memakai dynamic viewport, safe area, dan tetap mengizinkan zoom teks.
 - Back Android menutup lembar/dialog terlebih dahulu, kembali ke layar sebelumnya berikutnya, dan tidak mengakhiri sesi diam-diam.
-- Animasi hanya transform/opacity selama 180 ms, dalam rentang 150–250 ms; hormati pengaturan reduce motion.
+- Motion utama memakai transform/opacity sekitar 210 ms (rentang 150–250 ms); perubahan warna state sederhana boleh transisi singkat, dan reduce motion dihormati.
 - Semua data demo diberi label **CONTOH** dan hanya berada di preview-ui. Nilai demo tidak boleh menjadi state produksi.
 - Tanggal jadian belum dikonfirmasi. Hitung hari bersama dan hitung mundur tidak menampilkan angka sebelum tanggal diisi secara sah. Kenangan hari ini hanya dirender bila ada media nyata dengan tanggal kalender sama tahun lalu.
 - Tombol yang belum punya backend/native implementation tidak boleh tampak berhasil mengirim data nyata.
@@ -131,47 +131,50 @@ Our Space dipakai Hamid dan Nur, dua orang yang membuka ruang privat berkali-kal
 
 | Token | Terang | Gelap | Penggunaan |
 |---|---|---|---|
-| bg | #F7F4EE | #151614 | Kanvas |
-| surface | #FFFFFF | #20211F | Kartu/bubble |
-| surface-raised | #F2EEE6 | #282A27 | Panel/lembar |
-| ink | #252522 | #F4F0E8 | Teks utama |
-| muted | #59574F | #CCC5B8 | Teks sekunder |
-| muted-strong | #6C685F | #B2AA9D | Metadata minimum 12 px |
-| accent | #70502F | #E0BB85 | Aksi/status bermakna |
-| accent-pressed | #594023 | #F1CC99 | Aksi ditekan |
-| accent-soft | #F2E5D0 | #3A3023 | Latar aksen |
-| border | #D7D0C4 | #464842 | Pemisah |
-| danger | #9D332B | #FFAAA2 | Error/berbahaya |
-| success | #1E684F | #8CD6B8 | Berhasil/terverifikasi |
-| focus | #70502F | #E0BB85 | Fokus keyboard |
+| bg | #FFF7F2 | #171319 | Kanvas hangat |
+| surface | #FFFEFC | #211C24 | Kartu/bubble |
+| surface-raised | #F9ECE7 | #2B242E | Composer/panel/lembar |
+| ink | #372632 | #FFF5F2 | Teks utama |
+| muted | #786674 | #D0BFCC | Teks sekunder |
+| muted-strong | #624E5C | #E1D1DB | Metadata berkontras tinggi |
+| accent | #D65355 | #F39A8E | Identitas coral; jangan diasumsikan aman untuk teks kecil |
+| accent-pressed | #B63F49 | #FFB1A5 | Aksi primer/tertekan berkontras tinggi |
+| accent-soft | #FBE3DF | #482A35 | Latar aksen |
+| border | #E8D2D0 | #4A3848 | Pemisah |
+| danger | #B53242 | #FF929B | Error/berbahaya |
+| success | #27745F | #8CD6B8 | Berhasil/terverifikasi |
+| focus | #B63F49 | #F39A8E | Fokus keyboard |
 
-Champagne lama #B28859 tidak dipakai sebagai teks kecil di putih. Muted lama #9CA3AF diganti karena kontras rendah.
+Palet diperbarui dari Onyx & Champagne menjadi **Warm Coral / Rose / Blush**, dengan tekstur dekoratif sage yang halus. Warna coral terang dipakai sebagai identitas dan dekorasi; tombol primer memakai coral yang lebih gelap agar teks putih tetap berkontras tinggi. Tema gelap memiliki token sendiri, bukan sekadar membalik warna.
 
 ### Kontras WCAG token inti
 
-Rasio dihitung dengan rumus kontras relatif WCAG; hasil hanya menjamin pasangan yang diukur.
+Rasio dihitung dengan rumus kontras relatif WCAG. Angka ini memvalidasi pasangan yang tertera, bukan seluruh komposisi gradien atau setiap state UI.
 
 | Teks | Latar | Rasio | Status |
 |---|---|---:|---|
-| #252522 | #F7F4EE | 14.00:1 | AA |
-| #59574F | #F7F4EE | 6.59:1 | AA |
-| #70502F | #F7F4EE | 6.65:1 | AA |
-| #FFFFFF | #70502F | 7.30:1 | AA |
-| #9D332B | #F7F4EE | 6.50:1 | AA |
-| #1E684F | #F7F4EE | 6.08:1 | AA |
-| #F4F0E8 | #151614 | 15.97:1 | AA |
-| #CCC5B8 | #151614 | 10.59:1 | AA |
-| #E0BB85 | #151614 | 10.04:1 | AA |
+| #372632 | #FFF7F2 | 13.35:1 | AA |
+| #786674 | #FFF7F2 | 5.02:1 | AA |
+| #A8424A | #FBE3DF | 4.84:1 | AA |
+| #FFFFFF | #B63F49 | 5.53:1 | AA |
+| #B53242 | #FFF7F2 | 5.67:1 | AA |
+| #27745F | #FFF7F2 | 5.29:1 | AA |
+| #FFFFFF | #B84557 | 5.21:1 | AA |
+| #FFF5F2 | #171319 | 17.13:1 | AA |
+| #D0BFCC | #171319 | 10.50:1 | AA |
+| #F39A8E | #171319 | 8.59:1 | AA |
 
-Audit implementasi tetap harus menguji semua pasangan aktual, termasuk placeholder, tombol, disabled, toast, dan state-error.
+Audit implementasi tetap harus menguji semua pasangan aktual, termasuk placeholder, tombol, disabled, toast, state error, dan titik paling terang pada setiap gradien.
 
 ### Tipografi, spasi, ukuran
 - UI memakai system font: system-ui, -apple-system, Segoe UI, sans-serif; aksen judul boleh Georgia/Times New Roman satu kali. Tidak ada font eksternal.
 - Body 16 px / line-height 1.5; judul layar 22–24 px / 1.25; judul kartu 16–18 px; teks bantuan 14 px; metadata minimum 12 px / 1.35.
 - Spasi kelipatan 4 px: 4, 8, 12, 16, 20, 24, 32, 40.
 - Target sentuh minimal 48 × 48 dp; tombol primer 52–56 dp; jarak antartombol minimal 8 dp.
-- Radius: chip 10 px, input/kartu 16 px, panel 22 px, bubble 18 px; bubble punya sudut kecil untuk membedakan arah. Radius hanya membedakan struktur.
-- Kartu biasa cukup border; bayangan lembut hanya untuk sheet/dialog. Tidak semua elemen dibuat melayang.
+- Radius mengikuti bahasa yang lebih organik: chip 999 px, input sekitar 17 px, kartu 20–25 px, panel 27 px, bubble 21 px dengan satu sudut kecil pembeda arah.
+- Permukaan tidak semua dibuat melayang: kartu memakai bayangan tipis, kartu “Kita” menjadi hero bergradien coral/rose, dan sheet/dialog punya elevasi paling kuat.
+- Identitas visual memakai scrapbook editorial yang terkendali: judul aksen Georgia, komposisi lembut, orbit/lingkaran dekoratif, tekstur titik halus di chat, dan aksen sage hanya sebagai keseimbangan. Tidak memakai sticker berlebihan, gambar eksternal, atau hitung hari palsu.
+- Aksi primer menggunakan coral lebih gelap untuk menjaga kontras; coral terang untuk dekorasi, ikon, dan status yang tidak hanya dibedakan berdasarkan warna.
 
 ### Komponen dan alasan fungsional
 | Komponen | Aturan | Alasan |
@@ -219,7 +222,8 @@ Audit implementasi tetap harus menguji semua pasangan aktual, termasuk placehold
 - Pratinjau tidak memakai Unsplash, Google Fonts, Tailwind CDN, Lucide CDN, atau permintaan pihak ketiga.
 - Menghapus larangan zoom, memakai dynamic viewport dan safe area.
 - Waktu pesan selalu terlihat; composer menampilkan kontrol foto, mikrofon dan kirim.
-- Token muted/accent diganti agar pasangan inti lulus AA.
+- Setelah masukan pemilik bahwa UI masih “kaku dan boring”, bahasa visual diperbarui menjadi Warm Coral / Rose / Blush, memakai judul editorial, latar chat bertitik halus, bubble asimetris, komposisi organik, hero Kita bergradien, serta navigasi aktif yang lebih ekspresif. Preview tetap self-contained dan konten demonstrasi tetap ditandai.
+- Pasangan warna tombol primer diturunkan ke coral lebih gelap agar teks putih berkontras tinggi; tabel kontras dihitung ulang untuk pasangan yang disebutkan.
 - Tidak menetapkan tanggal jadian atau angka hubungan tanpa konfirmasi.
 - Memisahkan file pratinjau dari entrypoint aplikasi; tidak mengubah E2EE, database, edge function atau APK.
 
