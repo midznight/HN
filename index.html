@@ -99,6 +99,9 @@
         }
     .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* Our Space visual refresh — Fase 0.5, presentation layer only */
+#call-inline-status{margin-bottom:0;line-height:1.5}
+#chat-audio-call:disabled,#chat-video-call:disabled{opacity:.42;cursor:not-allowed}
+
 #call-video-stage video{max-height:42dvh;background:#34292b}
 #call-remote-audio{width:100%;max-width:280px;margin-top:16px}
 #call-modal button:focus-visible{outline:3px solid #d98796;outline-offset:3px}
@@ -422,6 +425,7 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
                         </section>
                     </div>
                 </div>
+                <div id="call-inline-status" class="hidden mx-4 mt-3 rounded-xl border border-[#eedbd8] bg-white p-3 text-xs text-[#76656a]" role="status" aria-live="polite"></div>
                 <div id="chat-container" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-36"></div>
 
                 <footer id="chat-composer" class="hidden absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
