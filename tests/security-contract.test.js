@@ -8,6 +8,7 @@ const native = readFileSync(new URL('../android-native/src/main/java/com/ourspac
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021170000_phase3_encrypted_media.sql', import.meta.url), 'utf8');
 
 test('all exposed chat tables have RLS and least-privilege grants', () => {
@@ -185,4 +186,22 @@ test('async message decryption never renders plaintext or crypto errors after th
   assert.ok(catchIndex > renderIndex);
   assert.ok(catchGuardIndex > catchIndex && catchGuardIndex < client.indexOf('renderUndecryptableMessage()', catchGuardIndex));
   assert.match(client, /if \(!appUnlocked \|\| !partnerVerified\) return;\s+if \(error\) throw error;/);
+});
+
+
+test('Android gallery picking defers only the expected app background lock and safely relocks on cancellation', () => {
+  assert.match(client, /function beginAttachmentPicker\(\)/);
+  assert.match(client, /function clearAttachmentPickerState\(\)/);
+  assert.match(client, /function finishAttachmentPicker\(fileSelected\)/);
+  assert.match(client, /const ATTACHMENT_PICKER_RESUME_GRACE_MS = 12000/);
+  assert.match(client, /finishAttachmentPicker\(Boolean\(file\)\)/);
+  assert.match(client, /addEventListener\('cancel', \(\) => finishAttachmentPicker\(false\)\)/);
+  assert.match(client, /window\.ourSpaceAttachmentPicker = \{/);
+  assert.match(client, /if \(!attachmentPickerPending \|\| !attachmentPickerBackgrounded\) return/);
+  assert.match(client, /if \(attachmentPickerPending \&\& attachmentPickerBackgrounded\) finishAttachmentPicker\(false\)/);
+  assert.match(client, /export function onChatLocked\(\) \{\s+clearAttachmentPickerState\(\)/);
+  assert.match(main, /ourspace:attachment-picker-cancelled/);
+  assert.match(main, /if\(picker\?\.isPending\(\)\)\{picker\.onBackground\(\);return\}/);
+  assert.match(main, /if\(isActive\)window\.ourSpaceAttachmentPicker\?\.onForeground\(\)/);
+  assert.match(main, /backButton[\s\S]*?ourSpaceAttachmentPicker\?\.isPending\(\)\)return/);
 });

@@ -34,7 +34,22 @@ window.togglePlay=button=>{const wave=button.nextElementSibling;if(wave)wave.cla
 window.spawnHeart=event=>{const el=document.createElement('div'),rect=event.currentTarget.getBoundingClientRect();el.textContent='❤';el.className='heart-particle';el.style.left=(event.clientX-rect.left)+'px';el.style.top=(event.clientY-rect.top)+'px';event.currentTarget.appendChild(el);if(navigator.vibrate)navigator.vibrate(50);setTimeout(()=>el.remove(),1000)};
 document.querySelectorAll('[data-identity]').forEach(button=>button.addEventListener('click',async()=>{if(await read(K.identity))return;identity=button.dataset.identity;document.querySelectorAll('[data-identity]').forEach(item=>{item.classList.toggle('ring-2',item===button);item.classList.toggle('ring-brand-400',item===button)});clearError()}));
 $('login-form').addEventListener('submit',login);
-if(window.Capacitor?.isNativePlatform()){App.addListener('appStateChange',({isActive})=>{if(!isActive&&!$('app-layout').classList.contains('hidden'))lock()});App.addListener('backButton',()=>{if($('login-screen').classList.contains('hidden')){if(currentView!=='home')window.switchView('home');else lock()}})}
+if(window.Capacitor?.isNativePlatform()){
+window.addEventListener('ourspace:attachment-picker-cancelled',()=>{if(!$('app-layout').classList.contains('hidden'))lock()});
+App.addListener('appStateChange',({isActive})=>{
+  if(!isActive&&!$('app-layout').classList.contains('hidden')){
+    const picker=window.ourSpaceAttachmentPicker;
+    if(picker?.isPending()){picker.onBackground();return}
+    lock();
+    return;
+  }
+  if(isActive)window.ourSpaceAttachmentPicker?.onForeground();
+});
+App.addListener('backButton',()=>{
+  if(window.ourSpaceAttachmentPicker?.isPending())return;
+  if($('login-screen').classList.contains('hidden')){if(currentView!=='home')window.switchView('home');else lock()}
+});
+}
 function frameMonitor(){const now=performance.now();if(now-previousFrame>40)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);previousFrame=now;if(++frameSamples>=90){document.documentElement.classList.toggle('no-blur',slowFrames>25);frameSamples=0;slowFrames=0}requestAnimationFrame(frameMonitor)}
 requestAnimationFrame(frameMonitor);
 initChat().catch(()=>{});
