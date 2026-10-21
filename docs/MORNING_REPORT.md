@@ -30,7 +30,7 @@ Fase 3 kemudian diterima oleh pengguna pada 21 Oktober 2026; status terkini meng
 
 Pengguna menyatakan Fase 3 sudah aman dan memberi izin melanjutkan. Fase 4 sekarang sedang diimplementasikan dengan notifikasi FCM generik, tabel token ber-RLS owner-only, ledger dispatch service-role-only, dan Edge Function yang memverifikasi JWT pengguna, membership pair, serta verifikasi fingerprint.
 
-Push belum aktif. Firebase Android config di GitHub Actions belum dikonfirmasi, dan autentikasi server dialihkan ke Workload Identity Federation tanpa kunci service account JSON. Build tanpa konfigurasi sengaja menonaktifkan push dan tidak meminta izin OS. Payload FCM tetap generik.
+Push belum aktif. CI #171 memastikan Firebase Android config di GitHub Actions sudah valid (`chatmidnur`, paket `com.ourspace.app`) dan membangun APK dengan konfigurasi tersebut. Autentikasi server memakai Workload Identity Federation tanpa service-account JSON. Push tetap nonaktif sampai Google WIF dan secrets server dikonfigurasi.
 
 
 ## Fase 4 — status deployment
@@ -53,5 +53,7 @@ Push belum aktif. Firebase Android config di GitHub Actions belum dikonfirmasi, 
 ## Pembaruan keyless FCM — 21 Oktober 2026
 
 - PR #22 sudah digabung ke branch `phase-2/e2ee-text-chat`; Run CI #171 sukses pada head final. Implementasi memakai WIF dan token FCM berumur 10 menit. Tidak ada service-account key dibuat.
-- Edge Function `send-chat-push` berhasil dideploy sebagai versi 2, ACTIVE, `verify_jwt=true`; tidak ada token/dispatch yang terdaftar karena Firebase client config belum tersedia. Kode fail-closed sampai provider Google, dua subject binding, tiga secret Supabase dan GitHub Android config valid.
+- Edge Function `send-chat-push` berhasil dideploy sebagai versi 2, ACTIVE, `verify_jwt=true`. CI #171 memvalidasi Firebase client config dan membangun APK bertanda tangan. Tidak ada token/dispatch yang terdaftar. Kode fail-closed sampai Google WIF, dua subject binding, dan tiga secret Supabase valid.
 - Deployment function bukan bukti Google token exchange berhasil. Uji nyata masih tertunda hingga konfigurasi WIF selesai.
+
+- Browser automation Google Cloud tidak berjalan karena saldo TinyFish wallet negatif (−US$0,264); tidak dilakukan top-up atau layanan berbayar. Setup Google Cloud pool/provider/IAM masih belum terbuat dan belum dapat diverifikasi.

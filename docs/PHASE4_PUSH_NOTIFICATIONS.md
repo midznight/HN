@@ -31,8 +31,9 @@ Ikuti [docs/FCM-WORKLOAD-IDENTITY.md](FCM-WORKLOAD-IDENTITY.md) untuk membuat se
 ## Uji penerimaan
 
 - CI: dependency audit, tes kontrak keamanan, build web, Capacitor sync, dan APK build harus lulus.
-- Dengan secret belum diisi, verifikasi toggle nonaktif dan tidak ada dialog izin.
-- Setelah dua konfigurasi valid, install APK bertanda tangan stabil sebagai update di kedua HP. Aktifkan toggle secara terpisah di setiap HP.
+- Dengan WIF belum dikonfigurasi, verifikasi toggle nonaktif dan tidak ada dialog izin.
+- `FIREBASE_ANDROID_CONFIG_BASE64` sudah divalidasi oleh CI #171 untuk project `chatmidnur` / package `com.ourspace.app`; build terkait membuat APK dengan Firebase client config.
+- Setelah tiga WIF secrets tersedia dan probe `ready=true`, pasang APK #171 sebagai update di kedua HP. Aktifkan toggle secara terpisah di setiap HP.
 - Kirim teks, lalu media, dari satu HP ke HP lain ketika penerima berada di background/layar terkunci. Sistem hanya boleh menampilkan kalimat generik.
 - Ketuk notifikasi saat aplikasi terkunci: layar PIN muncul dahulu; setelah PIN benar, tab chat dibuka. Tidak ada pesan tertentu yang dibuka otomatis.
 - Matikan toggle atau keluar akun lalu pastikan server token milik perangkat tersebut terhapus. Uji receiver tanpa token harus menghasilkan no-op, bukan error pada chat.
@@ -40,7 +41,7 @@ Ikuti [docs/FCM-WORKLOAD-IDENTITY.md](FCM-WORKLOAD-IDENTITY.md) untuk membuat se
 
 ## Batasan
 
-Firebase client config dan konfigurasi Google Cloud WIF masih merupakan blocker eksternal. Edge Function v2 sudah dideploy namun push tetap fail-closed. Implementasi belum dinyatakan aktif sampai status probe Google berhasil, build baru menggunakan Firebase config, dan uji dua arah di kedua HP lulus.
+Konfigurasi Google Cloud WIF dan tiga secret Edge Function masih menjadi blocker. Firebase client config sudah valid dan APK hasil CI #171 tersedia. Edge Function v2 sudah dideploy namun push tetap fail-closed. Implementasi belum dinyatakan aktif sampai status probe Google berhasil dan uji dua arah di kedua HP lulus.
 
 ## Pembaruan keyless
 

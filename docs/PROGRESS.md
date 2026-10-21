@@ -43,13 +43,13 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - FCM hanya menerima judul “Our Space”, isi generik “Ada pesan baru menunggu.”, dan data type=new_message. Teks/ciphertext, pengirim, nama file, metadata media, pair ID, dan message ID tidak masuk payload.
 - Tabel device_push_tokens memakai RLS owner-only. Ledger push_dispatches adalah service-role-only.
 - Edge Function memvalidasi JWT pengguna, sender id, pair dua anggota, verifikasi fingerprint penerima, umur pesan, dan deduplikasi dispatch.
-- Build tanpa FIREBASE_ANDROID_CONFIG_BASE64 tetap hijau tetapi fitur push nonaktif. Autentikasi server sedang dialihkan dari FCM_SERVICE_ACCOUNT_JSON menuju Workload Identity Federation agar tidak perlu private key Google permanen.
+- Build tanpa `FIREBASE_ANDROID_CONFIG_BASE64` tetap aman dan menonaktifkan push. Pada CI #171, secret itu sudah terpasang, tervalidasi, dan project ID `chatmidnur` cocok dengan paket `com.ourspace.app`. Autentikasi server beralih ke Workload Identity Federation agar tidak perlu private key Google permanen.
 - PR #16 merged ke integration branch pada commit 16441c87c14b454ab74409a72cfbd53e71446c70; post-merge CI #146 sukses dengan dependency audit, security-contract tests, web build, Capacitor sync, dan signed APK.
 - Migration Fase 4 sudah diterapkan di project Supabase sajlpngmpkizwjbarxlj; device_push_tokens dan push_dispatches terverifikasi ber-RLS. Belum ada token/dispatch yang tersimpan.
 - Edge Function send-chat-push sudah ACTIVE dengan verify_jwt=true.
 - PR #18 membuat opt-out lebih aman: preferensi lokal ditulis sebelum token server dihapus; kegagalan simpan preferensi memblokir logout; token server sisa direkonsiliasi pada login terverifikasi berikutnya.
 - Build #153 menciptakan APK bertanda tangan tetapi Firebase client config belum tersedia, sehingga push sengaja nonaktif. PR #22 menyiapkan autentikasi FCM tanpa service-account JSON; konfigurasi WIF Google Cloud masih harus dilakukan.
-- Blocker eksternal tersisa: buat provider/pool WIF dan bindings IAM di Google Cloud, isi `GOOGLE_WIF_AUDIENCE`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `FCM_PROJECT_ID` di Supabase, serta `FIREBASE_ANDROID_CONFIG_BASE64` di GitHub. Setelah itu tes probe token Google, build APK dengan Firebase client config, dan uji push dua arah di kedua HP.
+- Blocker eksternal tersisa: buat pool/provider WIF dan subject IAM bindings di Google Cloud; isi `GOOGLE_WIF_AUDIENCE`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, dan `FCM_PROJECT_ID` di Supabase. `FIREBASE_ANDROID_CONFIG_BASE64` sudah valid pada CI #171. Setelah WIF siap, uji probe token Google dan push dua arah di kedua HP.
 
 
 ## Pembaruan keyless FCM — 21 Oktober 2026
@@ -57,4 +57,6 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - PR #22 `feat(phase4): replace FCM JSON key with keyless workload identity` menukar autentikasi `send-chat-push` menjadi Google STS Workload Identity Federation dan impersonasi token FCM berumur 10 menit.
 - Status endpoint sekarang menguji pertukaran token federasi dan impersonasi sebelum melaporkan `ready=true`; pengujian ini belum membuktikan pesan FCM berhasil sampai ke kedua perangkat.
 - CI run #171 untuk head `127157328055f3930d4ede0d6966d45d876a1473` sukses penuh setelah perubahan WIF, probe `ready`, dan dokumentasi.
-- Tidak ada service-account JSON/private key dibuat atau disimpan. PR #22 digabung ke `phase-2/e2ee-text-chat`; Edge Function produksi `send-chat-push` kini versi 2, ACTIVE, `verify_jwt=true`, memakai WIF dan tetap fail-closed karena konfigurasi Google belum tersedia.
+- Tidak ada service-account JSON/private key dibuat atau disimpan. PR #22 digabung ke `phase-2/e2ee-text-chat`; Edge Function produksi `send-chat-push` versi 2 ACTIVE dengan `verify_jwt=true`. CI #171 memvalidasi Firebase client config `chatmidnur` untuk `com.ourspace.app` dan merakit APK. Backend tetap fail-closed karena pool/provider WIF dan secret server belum tersedia.
+
+- Percobaan konfigurasi Google Cloud melalui browser automation tidak mulai karena saldo TinyFish wallet berada pada -US$0,264. Tidak dilakukan top-up atau pembelanjaan. Tidak ada perubahan resource Google Cloud yang dilakukan oleh percobaan itu.
