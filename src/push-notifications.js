@@ -17,6 +17,7 @@ let backendReady = false;
 let readinessPromise = null;
 let listenersReady = false;
 let registrationWaiter = null;
+let revokingPush = false;
 
 function control() { return document.getElementById('push-notifications-toggle'); }
 function statusNode() { return document.getElementById('push-notifications-status'); }
@@ -49,8 +50,9 @@ function ensureListeners() {
         const waiter = registrationWaiter;
         registrationWaiter = null;
         clearTimeout(waiter.timer);
-        waiter.resolve(registration.value);
-      } else if (currentContext && backendReady) {
+        if (revokingPush) waiter.reject(new Error('push_revoking'));
+        else waiter.resolve(registration.value);
+      } else if (currentContext && backendReady && !revokingPush) {
         void savedPreference().then((enabled) => {
           const snapshot = currentContext ? { ...currentContext } : null;
           if (enabled && snapshot) return persistToken(registration.value, snapshot);
@@ -111,7 +113,7 @@ function waitForRegistrationToken() {
 }
 
 async function persistToken(token, snapshot) {
-  if (!token || !contextStillMatches(snapshot) || !supabase) {
+  if (revokingPush || !token || !contextStillMatches(snapshot) || !supabase) {
     throw new Error('invalid_push_context');
   }
   const { error } = await supabase.from('device_push_tokens').upsert({
@@ -190,6 +192,7 @@ async function registerDevice(explicitUserAction) {
 async function turnOffPush() {
   const checkbox = control();
   if (checkbox) checkbox.disabled = true;
+  revokingPush = true;
   try {
     if (currentContext && supabase) {
       const { error } = await supabase.from('device_push_tokens')
@@ -206,6 +209,7 @@ async function turnOffPush() {
     if (checkbox) checkbox.checked = true;
     status('Token push belum bisa dicabut. Sambungkan internet lalu coba lagi.');
   } finally {
+    revokingPush = false;
     if (checkbox) checkbox.disabled = !(await serverReady());
   }
 }
@@ -295,18 +299,23 @@ export async function notifyPartnerForMessage(messageId) {
 
 export async function disablePushBeforeSignOut() {
   const snapshot = currentContext ? { ...currentContext } : null;
-  if (snapshot && supabase) {
-    const { error } = await supabase.from('device_push_tokens')
-      .delete().eq('user_id', snapshot.userId);
-    if (error) throw new Error('push_token_not_revoked');
+  revokingPush = true;
+  try {
+    if (snapshot && supabase) {
+      const { error } = await supabase.from('device_push_tokens')
+        .delete().eq('user_id', snapshot.userId);
+      if (error) throw new Error('push_token_not_revoked');
+    }
+    await setSavedPreference(false).catch(() => {});
+    if (FCM_ANDROID_CONFIGURED && ANDROID_NATIVE) {
+      try { await PushNotifications.unregister(); } catch { /* no server token remains */ }
+    }
+    const checkbox = control();
+    if (checkbox) { checkbox.checked = false; checkbox.disabled = true; }
+    currentContext = null;
+    backendReady = false;
+    status('Notifikasi push nonaktif setelah keluar akun.');
+  } finally {
+    revokingPush = false;
   }
-  await setSavedPreference(false).catch(() => {});
-  if (FCM_ANDROID_CONFIGURED && ANDROID_NATIVE) {
-    try { await PushNotifications.unregister(); } catch { /* no server token remains */ }
-  }
-  const checkbox = control();
-  if (checkbox) { checkbox.checked = false; checkbox.disabled = true; }
-  currentContext = null;
-  backendReady = false;
-  status('Notifikasi push nonaktif setelah keluar akun.');
 }
