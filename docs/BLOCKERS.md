@@ -6,7 +6,8 @@ Pembaruan: 21 Oktober 2026, 18:53 WIB.
 
 - Firebase Android config belum tersedia pada repository/build secret. Push client fail-closed sampai GitHub Actions Secret FIREBASE_ANDROID_CONFIG_BASE64 berisi google-services.json valid untuk package com.ourspace.app.
 - FCM_SERVICE_ACCOUNT_JSON belum tersedia di Supabase Edge Function Secrets. Tanpa service account JSON yang valid dan project ID yang cocok, Edge Function melaporkan ready=false dan UI tidak meminta izin notifikasi.
-- Migration dan Edge Function perlu diverifikasi setelah kode digabung. Uji di kedua HP wajib setelah kedua secret siap.
+- Migration Fase 4 sudah diterapkan pada project Supabase sajlpngmpkizwjbarxlj; Edge Function send-chat-push aktif dengan verifikasi JWT wajib. CI post-merge #146 sukses.
+- Run #146 secara eksplisit mencatat Firebase client config tidak tersedia, sehingga APK tersebut menonaktifkan push. Setelah FIREBASE_ANDROID_CONFIG_BASE64 dan FCM_SERVICE_ACCOUNT_JSON diset, perlu build APK baru dan uji di kedua HP.
 - Pengujian negatif wajib: izin Android ditolak, token expired, salah project ID, function tidak tersedia, jaringan gagal, notifikasi ganda, tap saat PIN gate aktif, dan token dicabut saat logout.
 
 ## Fase 3

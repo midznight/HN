@@ -31,3 +31,13 @@ Fase 3 kemudian diterima oleh pengguna pada 21 Oktober 2026; status terkini meng
 Pengguna menyatakan Fase 3 sudah aman dan memberi izin melanjutkan. Fase 4 sekarang sedang diimplementasikan dengan notifikasi FCM generik, tabel token ber-RLS owner-only, ledger dispatch service-role-only, dan Edge Function yang memverifikasi JWT pengguna, membership pair, serta verifikasi fingerprint.
 
 Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SERVICE_ACCOUNT_JSON pada Supabase Edge Function Secrets masih membutuhkan setup. Build tanpa konfigurasi sengaja menonaktifkan push dan tidak meminta izin OS. Tidak ada plaintext atau metadata chat di payload FCM.
+
+
+## Fase 4 — status deployment
+
+- PR #16 telah digabung ke integration branch pada commit 16441c87c14b454ab74409a72cfbd53e71446c70.
+- GitHub Actions #145 pada PR dan #146 pasca-merge lulus; audit dependency, security-contract tests, web build, Capacitor sync, serta APK bertanda tangan sukses.
+- Migration Fase 4 diterapkan pada Supabase project sajlpngmpkizwjbarxlj. Pemeriksaan hanya-baca mengonfirmasi RLS aktif untuk device_push_tokens dan push_dispatches; belum ada token terdaftar dan belum ada dispatch.
+- Edge Function send-chat-push berstatus ACTIVE, verify_jwt=true. Kode menerima current Supabase key environment format maupun nama legacy.
+- Build #146 mencatat FIREBASE_ANDROID_CONFIG_BASE64 tidak tersedia dan karena itu sengaja membangun APK dengan push nonaktif. FCM_SERVICE_ACCOUNT_JSON perlu disetel di Supabase Edge Function Secrets.
+- Tidak ada service berbayar atau secret yang dimasukkan ke repository/chat. Push belum dinyatakan aktif sampai kedua secret valid, build baru menghasilkan konfigurasi Firebase, dan uji push generik berhasil pada kedua HP.

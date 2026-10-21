@@ -1,6 +1,6 @@
 # Fase 4 — Notifikasi push privat
 
-Status: implementasi kode awal sedang disiapkan. Push tetap nonaktif sampai Firebase client config dan service-account server tervalidasi. Tidak ada teks chat, ciphertext, nama pengirim, nama file, identitas pasangan, pair ID, atau message ID di payload FCM.
+Status: PR #16 sudah merged ke integration branch; CI pasca-merge #146 lulus. Migration sudah diterapkan pada Supabase project sajlpngmpkizwjbarxlj dan Edge Function send-chat-push sudah ACTIVE dengan verify_jwt=true. Push tetap nonaktif karena CI #146 memastikan Firebase Android config tidak tersedia dan service-account secret server belum diset. Tidak ada teks chat, ciphertext, nama pengirim, nama file, identitas pasangan, pair ID, atau message ID di payload FCM.
 
 ## Desain keamanan
 
