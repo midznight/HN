@@ -350,3 +350,12 @@ test('Encrypted message sends request a generic push only after message insert s
   assert.ok(mediaStart >= 0 && mediaInsert > mediaStart && mediaPush > mediaInsert);
   assert.match(client, /void setPushContext\(\{ userId: sessionUser\.id, pairId: pair\.id, verified: true \}\)/);
 });
+
+
+test('Push token refresh cannot recreate a token while opt-out or sign-out is revoking it', () => {
+  assert.match(pushClient, /let revokingPush = false/);
+  assert.match(pushClient, /currentContext && backendReady && !revokingPush/);
+  assert.match(pushClient, /if \(revokingPush \|\| !token \|\| !contextStillMatches\(snapshot\) \|\| !supabase\)/);
+  assert.match(pushClient, /async function turnOffPush\(\)[\s\S]*?revokingPush = true;[\s\S]*?revokingPush = false;/);
+  assert.match(pushClient, /export async function disablePushBeforeSignOut\(\)[\s\S]*?revokingPush = true;[\s\S]*?currentContext = null;[\s\S]*?revokingPush = false;/);
+});
