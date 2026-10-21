@@ -540,10 +540,6 @@ async function handleSignalRow(row) {
       }
       incomingCall = { id: signal.callId, mode: signal.mode, description: signal.description, context: ctx };
       showIncoming(incomingCall);
-      const accept = $('call-accept-button');
-      if (accept) accept.onclick = () => { void acceptIncomingCall(); };
-      const reject = $('call-reject-button');
-      if (reject) reject.onclick = () => { void rejectIncomingCall('rejected'); };
       return;
     }
 
