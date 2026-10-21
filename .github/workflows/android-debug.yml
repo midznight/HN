@@ -30,9 +30,94 @@ jobs:
           mkdir -p android/app/src/main/java/com/ourspace/app
           cp android-native/src/main/java/com/ourspace/app/OurSpaceKeyStorePlugin.java android/app/src/main/java/com/ourspace/app/
           cp android-native/src/main/java/com/ourspace/app/MainActivity.java android/app/src/main/java/com/ourspace/app/
-      - name: Assemble debug APK
+      - name: Configure persistent APK signing
+        env:
+          ANDROID_SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          APP_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$ANDROID_SIGNING_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "::error title=Stable APK signing is not configured::Add repository Actions secrets ANDROID_SIGNING_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, and ANDROID_KEY_PASSWORD. Refusing to create another APK with an ephemeral signature."
+            exit 1
+          fi
+          mkdir -p android/app
+          printf '%s' "$ANDROID_SIGNING_KEYSTORE_BASE64" | base64 --decode > android/app/our-space-signing.jks
+          test -s android/app/our-space-signing.jks || { echo "::error::Signing keystore could not be decoded."; exit 1; }
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          path = Path("android/app/build.gradle")
+          if not path.is_file():
+              raise SystemExit("Generated Android app/build.gradle was not found.")
+          text = path.read_text()
+          version_code = os.environ.get("APP_VERSION_CODE", "")
+          if not version_code.isdigit() or int(version_code) < 1:
+              raise SystemExit("APP_VERSION_CODE must be a positive integer.")
+
+          version_matches = list(re.finditer(r"(?m)^(\\s*versionCode\\s+)\\d+\\s*$", text))
+          if len(version_matches) != 1:
+              raise SystemExit(f"Expected one versionCode declaration, found {len(version_matches)}.")
+          text = re.sub(
+              r"(?m)^(\\s*versionCode\\s+)\\d+\\s*$",
+              lambda match: match.group(1) + version_code,
+              text,
+              count=1,
+          )
+          text = re.sub(
+              r'(?m)^(\\s*versionName\\s+)["\\'][^"\\']+["\\']\\s*
+        with:
+          name: our-space-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+,
+              lambda match: match.group(1) + f'"0.1.{version_code}"',
+              text,
+              count=1,
+          )
+
+          if "our-space-signing.jks" in text or "OUR_SPACE_STABLE_SIGNING" in text:
+              raise SystemExit("Stable signing appears already configured; refusing to inject it twice.")
+          match = re.search(r"(?m)^(\\s*)buildTypes\\s*\\{", text)
+          if not match:
+              raise SystemExit("Could not find the generated buildTypes block.")
+
+          indent = match.group(1)
+          signing = (
+              f"{indent}signingConfigs {{\\n"
+              f"{indent}    stable {{\\n"
+              f"{indent}        storeFile file(\\\"our-space-signing.jks\\\")\\n"
+              f"{indent}        storePassword System.getenv(\\\"ANDROID_KEYSTORE_PASSWORD\\\")\\n"
+              f"{indent}        keyAlias System.getenv(\\\"ANDROID_KEY_ALIAS\\\")\\n"
+              f"{indent}        keyPassword System.getenv(\\\"ANDROID_KEY_PASSWORD\\\")\\n"
+              f"{indent}    }}\\n"
+              f"{indent}}}\\n\\n"
+          )
+          debug = (
+              f"{indent}buildTypes {{\\n"
+              f"{indent}    debug {{\\n"
+              f"{indent}        signingConfig signingConfigs.stable\\n"
+              f"{indent}    }}\\n"
+          )
+          text = text[:match.start()] + signing + debug + text[match.end():]
+          path.write_text(text)
+          print(f"Configured stable APK signing; versionCode={version_code}.")
+          PY
+      - name: Assemble debug APK with stable signature
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew --no-daemon assembleDebug
+      - name: Remove signing keystore from workspace
+        if: always()
+        run: rm -f android/app/our-space-signing.jks
       - uses: actions/upload-artifact@v4
         with:
           name: our-space-debug-apk
