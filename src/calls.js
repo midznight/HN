@@ -625,6 +625,28 @@ function currentContextFrom(call) {
   return call?.context && sameContext(call.context) ? call.context : null;
 }
 
+async function refreshPendingSignals(context) {
+  if (!sameContext(context)) return;
+  try {
+    const { data, error } = await supabase.from('call_signals')
+      .select('id,pair_id,sender_id,recipient_id,ciphertext,nonce,key_version,created_at')
+      .eq('pair_id', context.pairId)
+      .eq('recipient_id', context.userId)
+      .order('created_at', { ascending: true })
+      .limit(40);
+    if (error) throw error;
+    if (!sameContext(context)) return;
+    for (const row of data || []) {
+      if (!sameContext(context)) return;
+      await handleSignalRow(row);
+    }
+  } catch {
+    if (sameContext(context)) {
+      setInlineNotice('Sinyal panggilan tertunda tidak dapat diperiksa. Chat tetap tersedia; panggilan masuk mungkin terlewat.', true);
+    }
+  }
+}
+
 function attachSignalChannel(ctx) {
   if (signalChannel && signalChannelPairId === ctx.pairId) return;
   if (signalChannel) supabase.removeChannel(signalChannel).catch(() => {});
@@ -874,6 +896,7 @@ export function initCalls() {
       const ctx = getContext();
       if (!ctx) return;
       attachSignalChannel(ctx);
+      await refreshPendingSignals(ctx);
       await refreshCallHistory();
     },
     onLocked: () => {
