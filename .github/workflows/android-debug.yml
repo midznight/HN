@@ -227,7 +227,7 @@ jobs:
               f'{indent}    }}\n'
           )
           text = text[:match.start()] + signing + debug + text[match.end():]
-          release_match = re.search(r"(?m)^(\s*)release\s*\{\s*$", text)
+          release_match = re.search(r"(?m)^([ \t]*)release[ \t]*\{[ \t]*$", text)
           if not release_match:
               raise SystemExit("Could not find the generated release build type.")
           release_indent = release_match.group(1)
