@@ -57,3 +57,22 @@ Push belum aktif. CI #171 memastikan Firebase Android config di GitHub Actions s
 - Deployment function bukan bukti Google token exchange berhasil. Uji nyata masih tertunda hingga konfigurasi WIF selesai.
 
 - Browser automation Google Cloud tidak berjalan karena saldo TinyFish wallet negatif (−US$0,264); tidak dilakukan top-up atau layanan berbayar. Setup Google Cloud pool/provider/IAM masih belum terbuat dan belum dapat diverifikasi.
+
+## Pembaruan laporan — Fase 0.5, Fase 5 dan Fase 6 (21 Oktober 2026)
+
+### Yang sudah diterapkan di branch implementasi
+- UI tiga tab dan halaman awal chat setelah PIN; kartu “Ruang Kita” tidak mengarang tanggal jadian; zoom dan reduce-motion dihormati.
+- Pratinjau sebelum kirim media di chat dan pratinjau sebelum simpan media ke Brankas.
+- Brankas E2EE memakai bucket privat dan tabel vault_items dengan RLS, plus sinkronisasi daftar via Realtime. Migrasi sudah diterapkan pada project produksi; file SQL kembar tersimpan di repo.
+- Panggilan suara/video WebRTC tahap awal dengan signaling dan riwayat ciphertext, RLS pair/fingerprint, timeout, lock teardown dan panggilan history cards di timeline chat.
+- Tes kontrak baru untuk alur media, navigasi tiga tab, skema Brankas ciphertext-only, dan skema signaling/history panggilan.
+- CI dan Android workflow kini memicu branch fase 0.5. Audit dependency produksi, syntax, tests dan build harus diperiksa pada run terbaru.
+
+### Batas yang masih nyata
+- Panggilan hanya menggunakan STUN; konektivitas di jaringan yang membutuhkan TURN belum dipastikan. Panggilan masuk/background dan uji OEM belum ada.
+- Belum ada uji Brankas/call di dua perangkat pada implementasi baru; baseline chat/media sebelumnya punya penerimaan pengguna.
+- Push FCM tetap fail-closed sampai Google WIF dan secrets valid serta tes dua HP selesai.
+- Supabase Auth leaked-password protection masih dilaporkan disabled oleh Security Advisor; aktifkan dari dashboard sebelum rilis publik.
+- Build APK signed stabil terbaru dan update in-place belum diverifikasi pada kedua perangkat. Tidak boleh uninstall atau reset key untuk mengatasi blocker.
+- Status rilis: kandidat implementasi/QA, belum “production ready”.
+
