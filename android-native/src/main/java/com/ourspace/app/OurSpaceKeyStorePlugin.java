@@ -13,6 +13,10 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -65,6 +69,9 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
     private static final int KEY_VERSION = 1;
     private static final int ECDH_SECRET_BYTES = 32;
     private static final int MAX_PLAINTEXT_BYTES = 16 * 1024;
+    private static final int MAX_MEDIA_BYTES = 3 * 1024 * 1024;
+    private static final int MAX_MEDIA_CIPHERTEXT_BASE64_CHARS = 4_300_000;
+    private static final int MEDIA_PACKAGE_MAGIC = 0x4F534D31; // "OSM1"
     private static final int GCM_NONCE_BYTES = 12;
     private static final int GCM_TAG_BITS = 128;
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
@@ -154,6 +161,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             String senderId = requiredUuid(call, "senderId");
             String recipientId = requiredUuid(call, "recipientId");
             int version = readKeyVersion(call);
+            String messageType = readMessageType(call);
             requireValidContext(pairId, messageId, senderId, recipientId, version);
             plainBytes = plaintext.getBytes(StandardCharsets.UTF_8);
             if (plainBytes.length == 0 || plainBytes.length > MAX_PLAINTEXT_BYTES) {
@@ -165,13 +173,13 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             KeyPair local = loadIdentityKeyPair();
             PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
             sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
-            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version, messageType);
             byte[] nonce = new byte[GCM_NONCE_BYTES];
             new SecureRandom().nextBytes(nonce);
 
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(messageKey, "AES"), new GCMParameterSpec(GCM_TAG_BITS, nonce));
-            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version));
+            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version, messageType));
             byte[] ciphertext = cipher.doFinal(plainBytes);
             Arrays.fill(plainBytes, (byte) 0);
 
@@ -207,6 +215,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             String senderId = requiredUuid(call, "senderId");
             String recipientId = requiredUuid(call, "recipientId");
             int version = readKeyVersion(call);
+            String messageType = readMessageType(call);
             requireValidContext(pairId, messageId, senderId, recipientId, version);
 
             byte[] nonce = Base64.decode(nonceText, Base64.DEFAULT);
@@ -219,10 +228,10 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             KeyPair local = loadIdentityKeyPair();
             PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
             sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
-            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version, messageType);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(messageKey, "AES"), new GCMParameterSpec(GCM_TAG_BITS, nonce));
-            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version));
+            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version, messageType));
             plaintext = cipher.doFinal(ciphertext); // GCM authentication must succeed before plaintext is returned.
 
             JSObject result = new JSObject();
@@ -236,6 +245,182 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             clear(sharedSecret);
             clear(messageKey);
             clear(plaintext);
+        }
+    }
+
+    @PluginMethod
+    public void encryptMedia(PluginCall call) {
+        byte[] mediaBytes = null;
+        byte[] filenameBytes = null;
+        byte[] mimeBytes = null;
+        byte[] packedPlaintext = null;
+        byte[] sharedSecret = null;
+        byte[] messageKey = null;
+        byte[] nonce = null;
+        byte[] ciphertext = null;
+        try {
+            requireEcdhSupport();
+            String peerKey = requiredString(call, "peerPublicKey");
+            String mediaBase64 = requiredString(call, "mediaBase64");
+            String filename = requiredString(call, "filename");
+            String mimeType = normalizeMediaMimeType(requiredString(call, "mimeType"));
+            String pairId = requiredUuid(call, "pairId");
+            String messageId = requiredUuid(call, "messageId");
+            String senderId = requiredUuid(call, "senderId");
+            String recipientId = requiredUuid(call, "recipientId");
+            int version = readKeyVersion(call);
+            requireValidContext(pairId, messageId, senderId, recipientId, version);
+
+            if (!isAllowedMediaMimeType(mimeType)) {
+                call.reject("Jenis media tidak didukung. Gunakan gambar, video, atau audio umum.");
+                return;
+            }
+            if (mediaBase64.length() > ((MAX_MEDIA_BYTES + 2) / 3 * 4) + 8) {
+                call.reject("Media maksimal 3 MiB agar pemrosesan aman di HP.");
+                return;
+            }
+
+            mediaBytes = Base64.decode(mediaBase64, Base64.DEFAULT);
+            filenameBytes = filename.getBytes(StandardCharsets.UTF_8);
+            mimeBytes = mimeType.getBytes(StandardCharsets.UTF_8);
+            if (mediaBytes.length == 0 || mediaBytes.length > MAX_MEDIA_BYTES) {
+                call.reject("Media kosong atau melebihi batas 3 MiB.");
+                return;
+            }
+            if (filenameBytes.length == 0 || filenameBytes.length > 512 || mimeBytes.length == 0 || mimeBytes.length > 128) {
+                call.reject("Metadata media tidak valid.");
+                return;
+            }
+
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream(12 + filenameBytes.length + mimeBytes.length + mediaBytes.length);
+            try (DataOutputStream output = new DataOutputStream(buffer)) {
+                output.writeInt(MEDIA_PACKAGE_MAGIC);
+                output.writeShort(filenameBytes.length);
+                output.writeShort(mimeBytes.length);
+                output.writeInt(mediaBytes.length);
+                output.write(filenameBytes);
+                output.write(mimeBytes);
+                output.write(mediaBytes);
+                output.flush();
+                packedPlaintext = buffer.toByteArray();
+            }
+
+            KeyPair local = loadIdentityKeyPair();
+            PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
+            sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version, "media/blob");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(messageKey, "AES"));
+            nonce = cipher.getIV();
+            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version, "media/blob"));
+            ciphertext = cipher.doFinal(packedPlaintext);
+
+            JSObject result = new JSObject();
+            result.put("nonce", Base64.encodeToString(nonce, Base64.NO_WRAP));
+            result.put("ciphertext", Base64.encodeToString(ciphertext, Base64.NO_WRAP));
+            result.put("algorithm", "ECDH-P256/HKDF-SHA256/AES-256-GCM");
+            result.put("mediaVersion", 1);
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Enkripsi media gagal. File tidak dikirim dalam bentuk asli.", e);
+        } finally {
+            clear(mediaBytes);
+            clear(filenameBytes);
+            clear(mimeBytes);
+            clear(packedPlaintext);
+            clear(sharedSecret);
+            clear(messageKey);
+            clear(nonce);
+            clear(ciphertext);
+        }
+    }
+
+    @PluginMethod
+    public void decryptMedia(PluginCall call) {
+        byte[] sharedSecret = null;
+        byte[] messageKey = null;
+        byte[] nonce = null;
+        byte[] ciphertext = null;
+        byte[] packedPlaintext = null;
+        byte[] filenameBytes = null;
+        byte[] mimeBytes = null;
+        byte[] mediaBytes = null;
+        try {
+            requireEcdhSupport();
+            String peerKey = requiredString(call, "peerPublicKey");
+            String ciphertextText = requiredString(call, "ciphertext");
+            String nonceText = requiredString(call, "nonce");
+            String pairId = requiredUuid(call, "pairId");
+            String messageId = requiredUuid(call, "messageId");
+            String senderId = requiredUuid(call, "senderId");
+            String recipientId = requiredUuid(call, "recipientId");
+            int version = readKeyVersion(call);
+            requireValidContext(pairId, messageId, senderId, recipientId, version);
+
+            if (ciphertextText.length() > MAX_MEDIA_CIPHERTEXT_BASE64_CHARS) {
+                call.reject("Ukuran lampiran terenkripsi tidak valid.");
+                return;
+            }
+            nonce = Base64.decode(nonceText, Base64.DEFAULT);
+            ciphertext = Base64.decode(ciphertextText, Base64.DEFAULT);
+            if (nonce.length != GCM_NONCE_BYTES || ciphertext.length < 28 || ciphertext.length > MAX_MEDIA_BYTES + 1024) {
+                call.reject("Format lampiran terenkripsi tidak valid.");
+                return;
+            }
+
+            KeyPair local = loadIdentityKeyPair();
+            PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
+            sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version, "media/blob");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(messageKey, "AES"), new GCMParameterSpec(GCM_TAG_BITS, nonce));
+            cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version, "media/blob"));
+            packedPlaintext = cipher.doFinal(ciphertext);
+
+            try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(packedPlaintext))) {
+                if (input.readInt() != MEDIA_PACKAGE_MAGIC) {
+                    throw new GeneralSecurityException("Media envelope version is not supported.");
+                }
+                int filenameLength = input.readUnsignedShort();
+                int mimeLength = input.readUnsignedShort();
+                int mediaLength = input.readInt();
+                if (filenameLength < 1 || filenameLength > 512 || mimeLength < 1 || mimeLength > 128
+                    || mediaLength < 1 || mediaLength > MAX_MEDIA_BYTES
+                    || (long) filenameLength + mimeLength + mediaLength != input.available()) {
+                    throw new GeneralSecurityException("Media envelope lengths are invalid.");
+                }
+                filenameBytes = new byte[filenameLength];
+                mimeBytes = new byte[mimeLength];
+                mediaBytes = new byte[mediaLength];
+                input.readFully(filenameBytes);
+                input.readFully(mimeBytes);
+                input.readFully(mediaBytes);
+            }
+
+            String filename = new String(filenameBytes, StandardCharsets.UTF_8);
+            String mimeType = normalizeMediaMimeType(new String(mimeBytes, StandardCharsets.UTF_8));
+            if (!isAllowedMediaMimeType(mimeType)) {
+                throw new GeneralSecurityException("Decrypted media type is not allowed.");
+            }
+
+            JSObject result = new JSObject();
+            result.put("filename", filename);
+            result.put("mimeType", mimeType);
+            result.put("size", mediaBytes.length);
+            result.put("mediaBase64", Base64.encodeToString(mediaBytes, Base64.NO_WRAP));
+            result.put("mediaVersion", 1);
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Lampiran tidak dapat diverifikasi atau didekripsi. Isi tidak ditampilkan.", e);
+        } finally {
+            clear(sharedSecret);
+            clear(messageKey);
+            clear(nonce);
+            clear(ciphertext);
+            clear(packedPlaintext);
+            clear(filenameBytes);
+            clear(mimeBytes);
+            clear(mediaBytes);
         }
     }
 
@@ -532,12 +717,12 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         }
     }
 
-    private static byte[] deriveMessageKey(byte[] sharedSecret, String pairId, String senderId, String recipientId, int keyVersion) throws GeneralSecurityException {
+    private static byte[] deriveMessageKey(byte[] sharedSecret, String pairId, String senderId, String recipientId, int keyVersion, String contentType) throws GeneralSecurityException {
         byte[] salt = MessageDigest.getInstance("SHA-256").digest(
             ("our-space/e2ee/salt/v1/" + pairId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8)
         );
-        // Directional key separation avoids using the same AES key for both sides of the conversation.
-        byte[] info = ("our-space/e2ee/text/aes-256-gcm/v1/" + pairId + "/" + senderId + "/" + recipientId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8);
+        // Separate directional keys by content type; text, media metadata, and media blobs never share AES keys.
+        byte[] info = ("our-space/e2ee/" + contentType + "/aes-256-gcm/v1/" + pairId + "/" + senderId + "/" + recipientId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8);
         byte[] prk = hmacSha256(salt, sharedSecret);
         byte[] blockInput = Arrays.copyOf(info, info.length + 1);
         blockInput[blockInput.length - 1] = 1;
@@ -557,14 +742,48 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         return mac.doFinal(data);
     }
 
-    private static byte[] associatedData(String pairId, String messageId, String senderId, String recipientId, int keyVersion) {
+    private static byte[] associatedData(String pairId, String messageId, String senderId, String recipientId, int keyVersion, String contentType) {
         String value = "our-space/e2ee/v1\n"
             + pairId + "\n"
             + messageId + "\n"
             + senderId + "\n"
             + recipientId + "\n"
-            + keyVersion + "\ntext";
+            + keyVersion + "\n" + contentType;
         return value.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static String readMessageType(PluginCall call) {
+        String value = call.getString("messageType");
+        if (value == null || value.trim().isEmpty()) return "text";
+        if (!"text".equals(value) && !"media".equals(value)) {
+            throw new IllegalArgumentException("Unsupported message content type.");
+        }
+        return value;
+    }
+
+    private static String normalizeMediaMimeType(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean isAllowedMediaMimeType(String mimeType) {
+        return "image/jpeg".equals(mimeType)
+            || "image/png".equals(mimeType)
+            || "image/webp".equals(mimeType)
+            || "image/gif".equals(mimeType)
+            || "image/heic".equals(mimeType)
+            || "image/heif".equals(mimeType)
+            || "video/mp4".equals(mimeType)
+            || "video/webm".equals(mimeType)
+            || "video/3gpp".equals(mimeType)
+            || "audio/mp4".equals(mimeType)
+            || "audio/aac".equals(mimeType)
+            || "audio/mpeg".equals(mimeType)
+            || "audio/ogg".equals(mimeType)
+            || "audio/webm".equals(mimeType)
+            || "audio/wav".equals(mimeType)
+            || "audio/x-wav".equals(mimeType)
+            || "audio/3gpp".equals(mimeType)
+            || "audio/amr".equals(mimeType);
     }
 
     private static String requiredString(PluginCall call, String name) {
