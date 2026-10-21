@@ -548,6 +548,7 @@ export function onChatLocked() {
   closeMediaPreview();
   window.ourSpaceCalls?.onLocked();
   window.ourSpaceVault?.onLocked();
+  window.ourSpaceAnnotations?.onLocked();
   clearMediaObjectUrls();
   appUnlocked = false;
   if (realtimeChannel && supabase) {
@@ -1086,6 +1087,7 @@ function renderMediaMessage(row, blob, metadata) {
   bubble.appendChild(time);
   line.appendChild(bubble);
   container.appendChild(line);
+  window.ourSpaceAnnotations?.registerMessage(row, line, { text: 'Lampiran terenkripsi', kind: 'media' });
   container.scrollTop = container.scrollHeight;
 }
 
@@ -1164,6 +1166,7 @@ function renderMessage(row, text) {
   bubble.append(body, time);
   line.appendChild(bubble);
   container.appendChild(line);
+  window.ourSpaceAnnotations?.registerMessage(row, line, { text, kind: 'text' });
   container.scrollTop = container.scrollHeight;
 }
 
@@ -1206,6 +1209,7 @@ async function subscribeToMessages() {
       }
     });
   void window.ourSpaceCalls?.onReady?.().catch((error) => console.warn('Call setup failed', error));
+  void window.ourSpaceAnnotations?.onReady?.().catch((error) => console.warn('Annotation setup failed', error));
 }
 
 async function sendMediaFile(file) {
@@ -1315,6 +1319,7 @@ async function sendMediaFile(file) {
     renderMediaMessage(data, file.slice(0, file.size, mimeType), metadata);
     const bottom = $('chat-container');
     if (bottom) bottom.scrollTop = bottom.scrollHeight;
+    if (replyContext) await window.ourSpaceAnnotations?.attachReply?.(data.id, replyContext);
   } catch (error) {
     // Do not surface stale upload/encryption errors into a locked chat view.
     if (!appUnlocked || !partnerVerified || !sessionUser) return;
@@ -1357,6 +1362,7 @@ async function sendMessage() {
     messageError(safeMessage(error));
     return;
   }
+  const replyContext = window.ourSpaceAnnotations?.getPendingReply?.() || null;
   const messageId = createMessageId();
   isSending = true;
   updateComposerState();
