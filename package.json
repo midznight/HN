@@ -17,7 +17,8 @@
     "@fontsource/inter": "5.1.1",
     "@fontsource/playfair-display": "5.1.1",
     "lucide": "0.468.0",
-    "@supabase/supabase-js": "2.118.0"
+    "@supabase/supabase-js": "2.118.0",
+    "@capacitor/push-notifications": "6.0.5"
   },
   "devDependencies": {
     "@capacitor/cli": "6.2.2",
