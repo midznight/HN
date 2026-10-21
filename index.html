@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Our Space - Hamid & Nur</title>
     
 
@@ -97,7 +97,84 @@
         .pb-safe {
             padding-bottom: env(safe-area-inset-bottom, 1rem);
         }
-    .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}</style>
+    .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* Our Space visual refresh — Fase 0.5, presentation layer only */
+:root{
+  --os-bg:#fff7f3;--os-paper:#fffdfb;--os-raised:#fcece8;--os-ink:#34292b;
+  --os-muted:#76656a;--os-line:#eedbd8;--os-rose:#c65e70;--os-rose-deep:#9e3e54;
+  --os-peach:#f3c8b8;--os-sage:#dce8dc;--os-shadow:0 12px 34px rgba(105,54,66,.09);
+}
+html{background:var(--os-bg);color:var(--os-ink);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--os-bg)!important;color:var(--os-ink)!important;min-height:100dvh}
+.ambient-backdrop{
+ background:radial-gradient(ellipse at 12% 8%,rgba(246,194,184,.58),transparent 36%),
+ radial-gradient(ellipse at 88% 38%,rgba(221,232,219,.64),transparent 34%),
+ linear-gradient(145deg,#fff8f5 0%,#f8efeb 56%,#f5f1e9 100%)!important
+}
+#login-screen{background:rgba(255,247,243,.88)!important}
+#login-card{background:rgba(255,253,251,.96)!important;border:1px solid #f1d9d8!important;border-radius:32px!important;box-shadow:0 24px 72px rgba(137,70,83,.15)!important}
+#login-card h1,#login-card h2{letter-spacing:-.035em}
+#app-layout{gap:12px!important}
+#app-layout>nav{
+ background:rgba(255,251,249,.94)!important;border:1px solid rgba(238,219,216,.9)!important;
+ box-shadow:0 8px 30px rgba(105,54,66,.07)!important
+}
+#app-layout>main{
+ background:rgba(255,253,251,.97)!important;border:1px solid var(--os-line)!important;
+ border-radius:28px!important;box-shadow:var(--os-shadow)!important
+}
+.mac-glass,.mac-glass-solid{
+ background:rgba(255,251,249,.93)!important;border-color:var(--os-line)!important;
+ -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+ box-shadow:0 2px 12px rgba(105,54,66,.035)!important
+}
+.ambient-backdrop~#app-layout .nav-item{border-radius:16px!important;transition:background-color .18s ease,color .18s ease,transform .18s ease}
+.nav-item.active{background:#f8e4e5!important;color:var(--os-rose-deep)!important;box-shadow:inset 0 0 0 1px #f0ced2!important}
+.nav-item:active{transform:scale(.97)}
+.app-view{animation:os-enter .22s ease-out both}
+@keyframes os-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+#view-home>div:first-child,#view-chat>header,#view-calls>header,#view-storage>header,#view-profile>header{
+ background:rgba(255,251,249,.97)!important;border-color:var(--os-line)!important
+}
+#view-home h2,#view-chat h1,#view-calls h2,#view-storage h2,#view-profile h2{
+ color:var(--os-ink)!important;letter-spacing:-.025em
+}
+#view-home .bg-white,#view-home [class*="bg-white/"],#view-storage .bg-white,#view-profile .bg-white{
+ border-color:var(--os-line)!important;box-shadow:0 6px 22px rgba(105,54,66,.055)!important
+}
+#view-home [class*="rounded-\[22px\]"],#view-home [class*="rounded-\[24px\]"],#view-home [class*="rounded-2xl"]{
+ border-radius:22px!important
+}
+#chat-container{scrollbar-width:thin;scrollbar-color:#e3c5c8 transparent}
+#chat-composer{background:rgba(255,251,249,.98)!important;border-color:var(--os-line)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#chat-composer>div{background:#fff7f5!important;border-color:#ebd4d5!important;border-radius:24px!important;min-height:52px}
+#chat-message-input{font-size:16px!important;line-height:1.45}
+#chat-send-btn{background:var(--os-rose)!important;color:#fff!important;min-width:44px;min-height:44px;border-radius:16px!important}
+#chat-send-btn:active,#chat-attach-btn:active{transform:scale(.96)}
+button,input,textarea,[role="button"]{touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:focus-visible{outline:3px solid #d98796!important;outline-offset:3px}
+button{transition:background-color .18s ease,border-color .18s ease,transform .18s ease}
+#view-profile .bg-surface-dark{background:linear-gradient(145deg,#743e4d,#a95568)!important}
+#view-profile .text-brand-50{color:#fff8f5!important}
+#view-profile .text-brand-300{color:#f7cbd1!important}
+@media(max-width:767px){
+ body{overflow:hidden}
+ #app-layout{padding:0!important;gap:0!important}
+ #app-layout>main{border-radius:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}
+ #app-layout>nav{
+   border-radius:22px 22px 0 0!important;border-bottom:0!important;
+   padding:8px 8px max(8px,env(safe-area-inset-bottom))!important;
+   box-shadow:0 -5px 24px rgba(105,54,66,.08)!important
+ }
+ #app-layout>nav .nav-item{min-width:48px;min-height:48px;justify-content:center}
+ #view-chat>header{min-height:68px}
+ #chat-container{padding:16px 14px 150px!important}
+ #chat-composer{padding:10px 12px max(10px,env(safe-area-inset-bottom))!important}
+ #view-home>div:first-child{padding-left:20px!important;padding-right:20px!important}
+}
+@media(prefers-reduced-motion:reduce){.app-view,button{animation:none!important;transition:none!important}}
+
+</style>
 </head>
 
 <body class="text-surface-dark font-sans h-screen w-full overflow-hidden relative selection:bg-gray-200 selection:text-gray-900 bg-[#f8f5f0]">
@@ -444,7 +521,7 @@
                                     <div class="w-9 h-9 rounded-full bg-surface-bg border border-gray-100 text-surface-dark flex items-center justify-center"><i data-lucide="palette" class="w-4 h-4"></i></div>
                                     <div>
                                         <p class="text-xs sm:text-sm font-medium text-surface-dark">Tema Aplikasi</p>
-                                        <p class="text-[10px] text-surface-muted uppercase tracking-wider mt-0.5">Onyx & Champagne (Aktif)</p>
+                                        <p class="text-[10px] text-surface-muted uppercase tracking-wider mt-0.5">Rose & Sage (Aktif)</p>
                                     </div>
                                 </div>
                                 <i data-lucide="chevron-right" class="w-4 h-4 text-surface-muted"></i>
