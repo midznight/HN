@@ -4,14 +4,14 @@ Pembaruan: 21 Oktober 2026, 17:44 WIB.
 
 ## Blocker untuk penerimaan Fase 3
 
-- **Uji media pada perangkat nyata masih wajib.** CI #101 sukses dan pengguna telah mengonfirmasi alur picker tidak lagi meminta PIN ulang atau kehilangan pilihan file. Pengiriman, dekripsi, tampilan, serta penyimpanan media pada kedua HP belum dikonfirmasi.
+- **Uji penerimaan media pada perangkat nyata masih wajib.** Snapshot backend read-only menemukan satu pesan media dan objek Storage yang cocok dari masing-masing akun, sehingga upload/insert dua arah sudah terbukti di server. Penerima yang berhasil mendekripsi, menampilkan dan menyimpan file pada kedua HP masih perlu dikonfirmasi.
 - **Pemasangan APK sebagai update.** Perbaikan galeri sudah diuji pengguna. Tetap gunakan update langsung tanpa uninstall; jika Android menampilkan signature mismatch, hentikan dan laporkan pesannya.
 - **Uji Android 11/API 30.** Chat teks sudah dikonfirmasi pada API 30; jalur media harus diuji secara khusus pada perangkat tersebut.
 - **Skenario kegagalan media.** Batas 3 MiB, MIME unsupported, jaringan terputus, retry unduh/dekripsi, simpan lokal, dan lock ketika operasi berjalan belum dilaporkan lulus oleh pengguna.
 
 ## Sudah tidak memblokir tahap build
 
-- CI post-merge #101 sukses untuk perbaikan picker dan metadata-after-lock.
+- CI post-merge #101 dan CI PR #11 (#109) sukses, termasuk tes kontrak keamanan dan APK build.
 - Migration Fase 3 sudah diterapkan dan diverifikasi.
 - Bucket Storage privat dan policy akses terpasang.
 - APK baru tersedia dan sertifikat cocok dengan APK baseline yang diperiksa.

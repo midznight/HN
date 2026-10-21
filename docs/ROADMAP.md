@@ -6,7 +6,7 @@ Roadmap ini melengkapi `ARCHITECTURE.md`; perubahan fase tidak otomatis berarti 
 |---|---|---|
 | 1 | Capacitor shell, PIN lokal, lifecycle Android, APK | Baseline tersedia; APK sudah dipakai pengguna. |
 | 2 | Supabase Auth, key binding, fingerprint, chat teks E2EE | Teruji pengguna: chat dua arah dan reopen di kedua HP, termasuk Android 11/API 30. |
-| 3 | Media E2EE, progress/error, pratinjau dan save | PR #6, #8, #10 merged; CI #101 lulus. Picker tanpa PIN ulang dan retensi pilihan file terkonfirmasi. Masih menunggu tes kirim/terima/dekripsi/simpan media nyata pada kedua HP. |
+| 3 | Media E2EE, progress/error, pratinjau dan save | PR #6, #8, #10 merged; CI #101 dan CI PR #11 (#109) lulus. Picker terkonfirmasi pulih; upload/insertion backend tercatat dari kedua akun. Masih menunggu bukti penerima decrypt/render/save dan uji gagal di kedua HP. |
 | 4 | FCM dengan payload generik dan izin Android | Belum dimulai; menunggu Fase 3 diterima. |
 | 5 | WebRTC, signaling privat, TURN, caveat background | Belum dimulai. |
 | 6 | Brankas terenkripsi dan log panggilan nyata | Belum dimulai. |
