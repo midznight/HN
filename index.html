@@ -99,6 +99,15 @@
         }
     .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* Our Space visual refresh — Fase 0.5, presentation layer only */
+/* Relationship card intentionally avoids a fabricated anniversary date */
+#view-home>div:nth-child(2)>div:first-child{
+ background:radial-gradient(circle at 86% 18%,rgba(255,255,255,.20),transparent 30%),linear-gradient(135deg,#a64e63 0%,#c96c7c 52%,#e39b91 100%)!important;
+ border-color:#d98b96!important;box-shadow:0 16px 34px rgba(164,78,99,.20)!important
+}
+#view-home>div:nth-child(2)>div:first-child .text-gray-400{color:#ffe2e4!important}
+#view-home>div:nth-child(2)>div:first-child .text-gray-900{color:#793c4a!important}
+#view-home>div:nth-child(2)>div:first-child .border-gray-800{border-color:rgba(255,245,242,.7)!important}
+
 :root{
   --os-bg:#fff7f3;--os-paper:#fffdfb;--os-raised:#fcece8;--os-ink:#34292b;
   --os-muted:#76656a;--os-line:#eedbd8;--os-rose:#c65e70;--os-rose-deep:#9e3e54;
@@ -279,7 +288,7 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
                         
                         <div class="relative z-10">
                             <p class="text-gray-400 text-[10px] font-medium mb-1.5 tracking-widest uppercase">Hamid & Nur</p>
-                            <div class="text-4xl sm:text-5xl font-semibold tracking-tight mb-5 text-white drop-shadow-sm">Anniversary</div>
+                            <div class="text-4xl sm:text-5xl font-semibold tracking-tight mb-5 text-white drop-shadow-sm">Ruang Kita</div>
                             <div class="flex items-center gap-2 text-[11px] text-gray-900 bg-white/90 backdrop-blur-sm w-fit px-3.5 py-1.5 rounded-full font-medium tracking-wider uppercase">
                                 <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                                 <span>Tanggal jadian belum dikonfirmasi</span>
