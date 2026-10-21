@@ -3,7 +3,7 @@
 **Pembaruan:** 22 Oktober 2026  
 **Branch kandidat:** `phase-0.5/app-ui-implementation`  
 **Branch produk:** `phase-2/e2ee-text-chat`  
-**Status:** release candidate sudah dibangun dan lolos CI otomatis; **belum dinyatakan production-ready** sampai blocker Auth, push, dan pengujian dua perangkat ditutup.
+**Status:** release candidate `0.1.243` sudah digabung ke branch produk, CI dan pemeriksaan build APK release lulus. **Belum dinyatakan production-ready** sampai WIF/FCM dan pengujian dua perangkat selesai. Leaked Password Protection merupakan fitur Pro+, tidak tersedia pada paket Free; warning itu dicatat sebagai residual risk tanpa upgrade berbayar.
 
 Aplikasi ini dibuat untuk dua pengguna privat. Repo saat ini **public**; jangan commit password, service-role key, token, private key, keystore, data chat, atau media pribadi.
 
@@ -19,7 +19,7 @@ Aplikasi ini dibuat untuk dua pengguna privat. Repo saat ini **public**; jangan 
 - PR implementasi utama: [#25](https://github.com/midznight/HN/pull/25).
 - CI: [GitHub Actions](https://github.com/midznight/HN/actions).
 - Pratinjau UI statis: [Buka Our Space UI Preview](https://our-space-ui-preview-1k5bvr5jc-mi-d1.vercel.app/). Seluruh isi bertanda CONTOH; tidak terhubung ke backend dan bukan aplikasi produksi.
-- Workflow Android menghasilkan artefak `our-space-debug-apk` dan `our-space-release-apk`. Rilis bertanda tangan stabil diverifikasi dengan `apksigner`; pipeline juga memeriksa application ID, versionCode/versionName, permission kamera/mikrofon, dan kecocokan sertifikat kedua varian.
+- Workflow Android menghasilkan artefak `our-space-debug-apk` dan `our-space-release-apk`. Kandidat `0.1.243` dibangun pada [run #243](https://github.com/midznight/HN/actions/runs/39692713328) dengan source commit `f2e2ebfcefba35b6df0b9e788b876cd778e94c50`. Release bertanda tangan stabil diverifikasi dengan `apksigner`; pipeline memeriksa application ID, versionCode/versionName, permission kamera/mikrofon, dan kecocokan sertifikat kedua varian.
 - Untuk kandidat terbaru, ambil artefak hanya dari workflow Android **terbaru yang sukses**. Jangan gunakan APK dari run lama jika branch sudah berubah.
 - Jangan uninstall aplikasi pada HP yang sudah digunakan. Coba pembaruan in-place hanya setelah mencadangkan informasi yang memang dapat dipulihkan. Jika Android menyatakan konflik paket/tanda tangan, **hentikan proses**; jangan hapus data atau uninstall untuk memaksa pembaruan. Kecocokan sertifikat release dengan APK lama yang sudah terpasang masih harus dikonfirmasi di kedua HP.
 

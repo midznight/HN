@@ -4,7 +4,7 @@ Our Space adalah aplikasi privat Android untuk dua pengguna, Hamid dan Nur. Tuju
 
 ## Status proyek
 
-Status per 22 Oktober 2026: **kandidat rilis (RC), belum siap dinyatakan production-ready**. CI untuk tes kontrak keamanan, audit dependency produksi, dan build web lulus pada commit kandidat sebelumnya; workflow Android kini membangun varian debug dan release bertanda tangan stabil serta membandingkan sertifikat. Hasil workflow HEAD terbaru harus diperiksa sebelum artefak dibagikan, lalu APK divalidasi pada kedua HP.
+Status per 22 Oktober 2026: **release candidate 0.1.243** telah digabung ke branch produk `phase-2/e2ee-text-chat`. CI [run #117](https://github.com/midznight/HN/actions/runs/39692713355) dan build APK release [run #243](https://github.com/midznight/HN/actions/runs/39692713328) lulus pada commit `f2e2ebfcefba35b6df0b9e788b876cd778e94c50`. APK release ditandatangani stabil dan metadata diverifikasi. Belum production-ready: QA dua HP/update in-place dan konfigurasi WIF/FCM masih tertunda; cek Auth Free-tier dan batas STUN dijelaskan di `SETUP.md`.
 
 - [Roadmap](docs/ROADMAP.md)
 - [Daftar fitur dan batas](docs/FEATURES.md)
@@ -60,5 +60,5 @@ Jangan membuat APK dengan tanda tangan sementara untuk dipasang menimpa aplikasi
 - PIN lokal bukan login Supabase dan bukan key E2EE.
 - Kehilangan private key dapat menyebabkan riwayat lama tidak dapat dibuka. Jangan reset key secara otomatis.
 - File media dibatasi 3 MiB agar pemakaian memori WebView/native tetap terkendali.
-- Belum ada Double Ratchet/forward secrecy, incoming-call push saat aplikasi tertutup, audit keamanan independen, atau validasi perangkat nyata untuk voice note, reaksi/balasan, Brankas dan WebRTC. Panggilan hanya memakai STUN (tidak ada TURN berbayar karena batas Rp0) dan bisa gagal pada NAT/firewall tertentu. Supabase Auth Leaked Password Protection tidak tersedia pada paket Free menurut [dokumentasi resmi Supabase](https://supabase.com/docs/guides/auth/password-security); fitur itu tidak diaktifkan karena budget Rp0. Untuk penggunaan privat, verifikasi password akun kuat/unik dan nonaktifkan public sign-up; warning dicatat sebagai residual risk. Jangan klaim siap rilis publik umum.
+- Belum ada Double Ratchet/forward secrecy, incoming-call push saat aplikasi tertutup, audit keamanan independen, atau validasi perangkat nyata untuk voice note, reaksi/balasan, Brankas dan WebRTC. Panggilan hanya memakai STUN (tidak ada TURN berbayar karena batas Rp0) dan bisa gagal pada NAT/firewall tertentu. Supabase Auth Leaked Password Protection tidak tersedia pada paket Free menurut [dokumentasi resmi Supabase](https://supabase.com/docs/guides/auth/password-security); fitur itu tidak diaktifkan karena budget Rp0. Untuk penggunaan privat dua akun, pastikan password keduanya acak/unik dan sign-up publik dinonaktifkan; warning tercatat sebagai residual risk. Jangan klaim siap rilis publik umum.
 - Jangan klaim siap produksi sebelum seluruh gate di RELEASE_CHECKLIST.md terverifikasi di CI dan pada perangkat sebenarnya.

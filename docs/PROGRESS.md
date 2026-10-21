@@ -1,6 +1,6 @@
 # Progress — Our Space
 
-Pembaruan: 21 Oktober 2026 — Fase 4 push.
+Pembaruan: 22 Oktober 2026 — integrasi RC `0.1.243` ke branch produk.
 
 ## Baseline stabil yang dikonfirmasi pengguna
 
@@ -83,3 +83,11 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - Import font dikurangi menjadi tiga weight eksplisit (Inter 400/600 dan Playfair Display 400) untuk mengurangi bundle.
 - CI sempat lulus pada beberapa commit sebelum penambahan/pengubahan paling baru; release acceptance tetap bergantung pada CI HEAD dan Android workflow HEAD. Uji dua perangkat belum tersedia dari runtime ini.
 
+## Integrasi kandidat rilis — 22 Oktober 2026
+
+- PR [#25](https://github.com/midznight/HN/pull/25) digabung ke branch produk `phase-2/e2ee-text-chat` dengan merge commit `f2e2ebfcefba35b6df0b9e788b876cd778e94c50`. Pohon file sumber aplikasi sama dengan commit kandidat sebelum merge (tree `ece5aef3b6ee3f53abc9a7955c1e25ce2b97c9c8`).
+- CI branch produk [run #117](https://github.com/midznight/HN/actions/runs/39692713355) sukses: dependency audit, syntax, unit/security-contract tests, dan production build.
+- APK release [run #243](https://github.com/midznight/HN/actions/runs/39692713328) sukses. Paket `com.ourspace.app`, versionCode `243`, versionName `0.1.243`; metadata serta izin kamera/mikrofon diverifikasi. Debug/release memakai sertifikat yang sama.
+- Signing certificate SHA-256: `6e48f45d9eeefb56fd3bc3b4ada108fdf0b73b7280e6df6766ef699adae2956d`. APK release SHA-256: `9b2b6549cb5da6216d729739beddfabd395e7906f3e95c9b456229e7324ce007`.
+- Release candidate bukan konfirmasi kompatibilitas update di perangkat: jangan uninstall APK aktif. Coba update in-place dan hentikan jika Android menyatakan konflik tanda tangan; sertifikat APK yang sekarang terpasang di kedua HP belum diperiksa.
+- Batas yang masih terbuka: WIF/FCM dan push end-to-end; QA dua HP untuk voice note, reply/reaction, vault dan WebRTC; STUN-only dapat gagal pada NAT/firewall; incoming call saat app tertutup belum ada. Leaked Password Protection adalah Pro+ menurut dokumentasi Supabase, sehingga tidak diaktifkan pada budget Rp0 dan dicatat sebagai residual risk.

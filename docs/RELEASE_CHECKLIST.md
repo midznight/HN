@@ -5,15 +5,15 @@ Status: **kandidat rilis (RC), belum siap rilis produksi** sampai blocker wajib 
 
 ## A. Source dan review
 
-- [ ] PR implementasi UI/Brankas/WebRTC ditinjau; tidak merge ke main (yang bukan branch produk) dan tidak merge ke branch baseline sebelum CI/safe review.
-- [ ] CI terbaru pada HEAD menyelesaikan dependency audit, syntax, semua unit/security-contract tests, build web dan verifikasi artefak.
-- [ ] Android workflow menghasilkan APK bertanda tangan keystore stabil; periksa versionCode, versionName, package name dan APK metadata.
-- [ ] Catat commit SHA sumber APK. Artifact harus berasal dari SHA yang sama dengan hasil QA.
+- [x] PR #25 ditinjau untuk integrasi otomatis dan digabung ke branch produk `phase-2/e2ee-text-chat` (commit `f2e2ebf`). Tidak ada merge ke `main`.
+- [x] CI pada merge commit `f2e2ebf` lulus: [run #117](https://github.com/midznight/HN/actions/runs/39692713355) menyelesaikan dependency audit, syntax, unit/security-contract tests dan build web.
+- [x] Android workflow pada merge commit sukses: [run #243](https://github.com/midznight/HN/actions/runs/39692713328) membangun debug + release APK, memverifikasi versionCode `243`, versionName `0.1.243`, package `com.ourspace.app`, permission dan kecocokan tanda tangan.
+- [x] Catat sumber binary: commit `f2e2ebfcefba35b6df0b9e788b876cd778e94c50`, tree `ece5aef3b6ee3f53abc9a7955c1e25ce2b97c9c8`. APK SHA-256 `9b2b6549cb5da6216d729739beddfabd395e7906f3e95c9b456229e7324ce007`; perangkat nyata belum QA sehingga status tetap RC.
 
 ## Hasil otomatis terbaru
 
-- CI di commit kandidat sebelumnya lulus (dependency audit, sintaks JS, unit/security-contract tests, dan build web): [run 39691048910](https://github.com/midznight/HN/actions/runs/39691048910). Commit lanjutan yang menyelaraskan token desain dan menambah tes statis akan memicu validasi HEAD baru.
-- Workflow Android telah diperluas untuk menghasilkan debug dan release APK yang ditandatangani keystore stabil dan memverifikasi metadata serta kecocokan sertifikat. Tautan artefak release hanya sah setelah workflow HEAD terakhir berstatus sukses.
+- CI branch produk pada merge commit lulus: [run #117](https://github.com/midznight/HN/actions/runs/39692713355).
+- Android release workflow branch produk lulus: [run #243](https://github.com/midznight/HN/actions/runs/39692713328). Sertifikat SHA-256 `6e48f45d9eeefb56fd3bc3b4ada108fdf0b73b7280e6df6766ef699adae2956d`; APK release SHA-256 `9b2b6549cb5da6216d729739beddfabd395e7906f3e95c9b456229e7324ce007`.
 
 ## B. Supabase dan keamanan
 
