@@ -19,6 +19,8 @@
 
 **Android 12 / API 31 atau lebih baru** diwajibkan untuk ECDH melalui Android Keystore (`PURPOSE_AGREE_KEY`). Tidak ada fallback ke private key yang bisa diekspor. Perangkat lebih lama harus gagal tertutup.
 
+Jika kunci gagal disiapkan, versi Android/API dan jenis kegagalan aman akan ditampilkan agar dapat didiagnosis. Pada perangkat di bawah API 31, upgrade Android/perangkat diperlukan untuk menjalankan implementasi ini; jangan mengganti dengan penyimpanan private key biasa. Tombol konfirmasi fingerprint hanya boleh tampil setelah kunci publik pasangan berhasil dimuat.
+
 Setiap pengguna hanya didukung dengan satu perangkat/kunci pada Fase 2. Rotasi kunci, multi-device, recovery riwayat, ratchet, dan forward secrecy belum diimplementasikan. Ini berarti pencurian private key statis dapat membahayakan ciphertext lama yang masih tersedia; aplikasi belum boleh diklaim setara dengan messenger yang memiliki ratchet dan audit independen.
 
 Jika kunci lokal hilang atau fingerprint lokal berbeda dari database, chat dihentikan. Jangan menghapus atau mengganti kunci secara otomatis. Rotasi/reset harus memakai prosedur terverifikasi pada fase audit.
