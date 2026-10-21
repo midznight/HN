@@ -3,6 +3,7 @@ import { Preferences } from '@capacitor/preferences';
 import { supabase, hasSupabaseConfig } from './supabase.js';
 import { OurSpaceKeyStore as KeyStore, ensureDeviceIdentityKey, requireAndroidE2EE } from './secure-keys.js';
 import { createMessageId, normalizeTextMessage, validateCiphertextMessage, validateMediaMetadata, isSupportedMediaMimeType, MAX_MEDIA_BYTES } from './chat-protocol.js';
+import { setPushContext, notifyPartnerForMessage, disablePushBeforeSignOut } from './push-notifications.js';
 
 const $ = (id) => document.getElementById(id);
 const PIN_IDENTITY_KEY = 'os.identity.v1';
@@ -433,6 +434,7 @@ async function bootstrapPrivateChat() {
       return;
     }
 
+    void setPushContext({ userId: sessionUser.id, pairId: pair.id, verified: true });
     clearMessageError();
     showConversation();
     setConnectionLabel('E2EE aktif · fingerprint cocok', true);
@@ -987,6 +989,7 @@ async function sendMediaFile(file) {
       .single();
     if (error) throw error;
     objectUploaded = false;
+    void notifyPartnerForMessage(data.id);
     if (!appUnlocked || !partnerVerified) return;
     renderMediaMessage(data, file.slice(0, file.size, mimeType), metadata);
     const bottom = $('chat-container');
@@ -1058,6 +1061,7 @@ async function sendMessage() {
       .select('id,pair_id,sender_id,recipient_id,ciphertext,nonce,key_version,message_type,created_at')
       .single();
     if (error) throw error;
+    void notifyPartnerForMessage(data.id);
     if (!appUnlocked) return;
     renderMessage(data, plaintext);
     input.value = '';
@@ -1074,6 +1078,12 @@ async function sendMessage() {
 
 async function signOut() {
   if (!supabase) return;
+  try {
+    await disablePushBeforeSignOut();
+  } catch {
+    messageError('Token notifikasi belum bisa dicabut karena jaringan belum siap. Sesi akun dipertahankan demi privasi; sambungkan internet lalu coba Keluar lagi.');
+    return;
+  }
   try {
     await supabase.auth.signOut();
   } catch {

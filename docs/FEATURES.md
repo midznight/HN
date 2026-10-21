@@ -1,6 +1,6 @@
 # Our Space — Daftar Fitur
 
-Status diperbarui: 21 Oktober 2026, 18:45 WIB. Status “teruji pengguna” berarti pengguna telah menyatakan tes tersebut berhasil; status itu bukan audit keamanan independen.
+Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti pengguna telah menyatakan tes tersebut berhasil; status itu bukan audit keamanan independen.
 
 | Fitur | Status | Catatan |
 |---|---|---|
@@ -10,9 +10,9 @@ Status diperbarui: 21 Oktober 2026, 18:45 WIB. Status “teruji pengguna” bera
 | Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
 | Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
 | Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | PR #10–#12 dan #14 merged; CI #124 lulus untuk tree yang sama dengan merge commit. Upload dua arah terbukti; picker versi sebelum shield dikonfirmasi. Privacy shield/sender guard versi terbaru dan penerimaan/dekripsi/render/save media masih perlu diuji nyata. |
+| Lampiran gambar/video/audio E2EE | Diterima pengguna | Pengguna menyatakan Fase 3 aman pada 21 Oktober 2026. Batas memori WebView tetap dicatat dalam dokumentasi keamanan. |
 | Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
-| Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. Menunggu penerimaan Fase 3. |
+| Notifikasi push FCM | Implementasi awal; menunggu konfigurasi | Kode client/Edge Function dan migration sedang disiapkan. Membutuhkan Firebase client config di GitHub Secret serta service-account JSON di Supabase Secrets. Payload hanya generik. |
 | Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |
 | Brankas file terenkripsi | Belum (Fase 6) | Tidak aktif. |
 | Audit keamanan formal | Belum (Fase 7) | Tes unit dan build CI bukan audit independen. |

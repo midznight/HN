@@ -10,6 +10,12 @@ const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021170000_phase3_encrypted_media.sql', import.meta.url), 'utf8');
+const pushMigration = readFileSync(new URL('../supabase/migrations/20261021220000_phase4_push_notifications.sql', import.meta.url), 'utf8');
+const pushClient = readFileSync(new URL('../src/push-notifications.js', import.meta.url), 'utf8');
+const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/index.ts', import.meta.url), 'utf8');
+const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
+const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
+const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
 
 test('all exposed chat tables have RLS and least-privilege grants', () => {
   for (const table of ['pairs', 'pair_members', 'device_keys', 'key_verifications', 'messages']) {
@@ -276,4 +282,80 @@ test('media sender suppresses stale failures when the app locks before async sen
   const visibleError = send.indexOf('messageError(visibleMessage)', catchIndex);
   assert.ok(catchIndex >= 0 && guard > catchIndex);
   assert.ok(visibleError > guard);
+});
+
+
+test('Phase 4 push tokens are owner-scoped and dispatch ledger is service-role-only', () => {
+  assert.match(pushMigration, /alter table public\.device_push_tokens enable row level security/i);
+  assert.match(pushMigration, /for select to authenticated[\s\S]*?user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(pushMigration, /for insert to authenticated[\s\S]*?user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(pushMigration, /for update to authenticated[\s\S]*?user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(pushMigration, /for delete to authenticated[\s\S]*?user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(pushMigration, /alter table public\.push_dispatches enable row level security/i);
+  assert.match(pushMigration, /revoke all on table public\.push_dispatches from public, anon, authenticated/i);
+  assert.match(pushMigration, /grant select, insert, update, delete on table public\.push_dispatches to service_role/i);
+  assert.doesNotMatch(pushMigration, /grant\s+(?:all|select|insert|update|delete)[^;]*push_dispatches[^;]*to authenticated/i);
+});
+
+test('FCM payload is generic and never embeds message identifiers or content', () => {
+  assert.match(pushFunction, /title: "Our Space"/);
+  assert.match(pushFunction, /body: "Ada pesan baru menunggu\."/);
+  assert.match(pushFunction, /data:\s*\{\s*type: "new_message"\s*\}/);
+  const start = pushFunction.indexOf('const fcmPayload = {');
+  const end = pushFunction.indexOf('};', start);
+  assert.ok(start >= 0 && end > start);
+  const payload = pushFunction.slice(start, end);
+  assert.doesNotMatch(payload, /ciphertext|plaintext|message_id|sender_id|recipient_id|pair_id|filename|mimeType|mediaVersion/i);
+  assert.match(pushFunction, /select\("id,pair_id,sender_id,recipient_id,message_type,created_at"\)/);
+  assert.doesNotMatch(pushFunction, /select\("\*"\)/);
+});
+
+test('Push requests permission only after explicit opt-in and fails closed without configuration', () => {
+  assert.match(pushClient, /VITE_FCM_CONFIGURED === 'true'/);
+  assert.match(pushClient, /if \(!FCM_ANDROID_CONFIGURED \|\| !FCM_PROJECT_ID \|\| !ANDROID_NATIVE \|\| !supabase\)/);
+  assert.match(pushClient, /if \(!explicitUserAction\) return false/);
+  assert.match(pushClient, /PushNotifications\.requestPermissions\(\)/);
+  assert.match(pushClient, /supabase\.functions\.invoke\('send-chat-push'/);
+  assert.match(pushClient, /user_id: snapshot\.userId/);
+  assert.match(pushClient, /device_push_tokens/);
+  assert.match(client, /disablePushBeforeSignOut/);
+});
+
+test('Push tap routes to chat only after the existing local PIN gate', () => {
+  assert.match(pushClient, /pushNotificationActionPerformed/);
+  assert.match(pushClient, /ourspace:push-open-chat/);
+  assert.match(main, /pendingPushOpenChat=true/);
+  assert.match(main, /if\(pendingPushOpenChat\)\{pendingPushOpenChat=false;window\.switchView\('chat'\)\}/);
+});
+
+test('Phase 4 workflow keeps Firebase config optional and never tracks google-services.json', () => {
+  assert.match(workflow, /'phase-4\/\*\*'/);
+  assert.match(workflow, /FIREBASE_ANDROID_CONFIG_BASE64/);
+  assert.match(workflow, /VITE_FCM_CONFIGURED=false/);
+  assert.match(workflow, /VITE_FCM_CONFIGURED=true/);
+  assert.match(workflow, /com\.ourspace\.app/);
+  assert.match(gitignore, /^google-services\.json$/m);
+  assert.match(supabaseConfig, /\[functions\.send-chat-push\][\s\S]*?verify_jwt\s*=\s*true/);
+});
+
+test('Encrypted message sends request a generic push only after message insert succeeds', () => {
+  const textStart = client.indexOf('async function sendMessage()');
+  const textInsert = client.indexOf("supabase.from('messages').insert(record)", textStart);
+  const textPush = client.indexOf('void notifyPartnerForMessage(data.id)', textInsert);
+  assert.ok(textStart >= 0 && textInsert > textStart && textPush > textInsert);
+
+  const mediaStart = client.indexOf('async function sendMediaFile(file)');
+  const mediaInsert = client.indexOf("supabase.from('messages').insert(record)", mediaStart);
+  const mediaPush = client.indexOf('void notifyPartnerForMessage(data.id)', mediaInsert);
+  assert.ok(mediaStart >= 0 && mediaInsert > mediaStart && mediaPush > mediaInsert);
+  assert.match(client, /void setPushContext\(\{ userId: sessionUser\.id, pairId: pair\.id, verified: true \}\)/);
+});
+
+
+test('Push token refresh cannot recreate a token while opt-out or sign-out is revoking it', () => {
+  assert.match(pushClient, /let revokingPush = false/);
+  assert.match(pushClient, /currentContext && backendReady && !revokingPush/);
+  assert.match(pushClient, /if \(revokingPush \|\| !token \|\| !contextStillMatches\(snapshot\) \|\| !supabase\)/);
+  assert.match(pushClient, /async function turnOffPush\(\)[\s\S]*?revokingPush = true;[\s\S]*?revokingPush = false;/);
+  assert.match(pushClient, /export async function disablePushBeforeSignOut\(\)[\s\S]*?revokingPush = true;[\s\S]*?currentContext = null;[\s\S]*?revokingPush = false;/);
 });

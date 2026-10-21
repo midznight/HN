@@ -23,4 +23,11 @@ Pengguna mengonfirmasi chat teks dua arah Hamid ↔ Nur dan aplikasi tetap dapat
 
 Query read-only sekitar 18:44 WIB menunjukkan 21 pesan teks, 2 pesan media, 2 device keys, 2 verifikasi fingerprint dan 2 objek Storage. Masing-masing akun punya satu pesan media dengan objek cocok. Ini bukti upload/insertion server dua arah, bukan bukti penerima berhasil mendekripsi atau menyimpan.
 
-Fase 3 **belum dinyatakan diterima**. Berikutnya: pasang APK #117 langsung di atas aplikasi berjalan, uji picker/privacy shield di kedua HP, kemudian uji gambar/audio/video dua arah sampai berhasil decrypt/render/save, termasuk Android 11/API 30. Setelah itu uji batas file, MIME salah/tidak didukung, jaringan terputus, retry, dan lock/background. Fase 4 tetap ditahan. Tidak ada reset kunci, penghapusan pesan, atau perubahan data chat untuk mengaktifkan media.
+Fase 3 kemudian diterima oleh pengguna pada 21 Oktober 2026; status terkini mengikuti persetujuan tersebut. Detail checklist teknis tetap disimpan pada docs/PHASE3_MEDIA.md sebagai jejak historis. Tidak ada reset kunci, penghapusan pesan, atau perubahan data chat untuk menyelesaikan fase.
+
+
+## Pembaruan terbaru — 21 Oktober 2026
+
+Pengguna menyatakan Fase 3 sudah aman dan memberi izin melanjutkan. Fase 4 sekarang sedang diimplementasikan dengan notifikasi FCM generik, tabel token ber-RLS owner-only, ledger dispatch service-role-only, dan Edge Function yang memverifikasi JWT pengguna, membership pair, serta verifikasi fingerprint.
+
+Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SERVICE_ACCOUNT_JSON pada Supabase Edge Function Secrets masih membutuhkan setup. Build tanpa konfigurasi sengaja menonaktifkan push dan tidak meminta izin OS. Tidak ada plaintext atau metadata chat di payload FCM.

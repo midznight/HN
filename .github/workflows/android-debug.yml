@@ -1,7 +1,7 @@
 name: Build Our Space Android Debug APK
 on:
   push:
-    branches: [main, 'phase-1/**', 'phase-2/**', 'phase-3/**']
+    branches: [main, 'phase-1/**', 'phase-2/**', 'phase-3/**', 'phase-4/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +17,45 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
+      - name: Prepare optional Firebase Android configuration
+        env:
+          FIREBASE_ANDROID_CONFIG_BASE64: ${{ secrets.FIREBASE_ANDROID_CONFIG_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$FIREBASE_ANDROID_CONFIG_BASE64" ]]; then
+            {
+              echo "VITE_FCM_CONFIGURED=false"
+              echo "VITE_FCM_PROJECT_ID="
+            } >> "$GITHUB_ENV"
+            echo "Firebase client config absent; push remains disabled in this build."
+            exit 0
+          fi
+          python3 - <<'PY'
+          import base64, json, os, re
+          from pathlib import Path
+
+          try:
+              decoded = base64.b64decode(os.environ["FIREBASE_ANDROID_CONFIG_BASE64"], validate=True)
+              config = json.loads(decoded)
+          except Exception:
+              raise SystemExit("Firebase Android config secret is not valid base64 JSON.")
+          project_id = config.get("project_info", {}).get("project_id")
+          clients = config.get("client", [])
+          package_names = [
+              client.get("client_info", {}).get("android_client_info", {}).get("package_name")
+              for client in clients
+          ]
+          if not isinstance(project_id, str) or not re.fullmatch(r"[a-z0-9-]{3,100}", project_id):
+              raise SystemExit("Firebase config must include a valid project ID.")
+          if "com.ourspace.app" not in package_names:
+              raise SystemExit("Firebase config must contain the Android package com.ourspace.app.")
+          target = Path(os.environ["RUNNER_TEMP"]) / "our-space-google-services.json"
+          target.write_bytes(decoded)
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
+              env.write("VITE_FCM_CONFIGURED=true\n")
+              env.write("VITE_FCM_PROJECT_ID=" + project_id + "\n")
+          print("Firebase client config validated for the expected Android package.")
+          PY
       - name: Audit production dependency tree
         run: npm audit --omit=dev --audit-level=high
       - name: Run deterministic protocol tests
@@ -25,6 +64,41 @@ jobs:
         run: npm run build
       - name: Generate Android project and sync Capacitor
         run: npx cap add android && npx cap sync android
+      - name: Configure optional Firebase Android resources
+        run: |
+          set -euo pipefail
+          CONFIG="$RUNNER_TEMP/our-space-google-services.json"
+          if [[ ! -s "$CONFIG" ]]; then
+            echo "No Firebase client config; push remains disabled."
+            exit 0
+          fi
+          mkdir -p android/app
+          cp "$CONFIG" android/app/google-services.json
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          root = Path("android/build.gradle")
+          app = Path("android/app/build.gradle")
+          if not root.is_file() or not app.is_file():
+              raise SystemExit("Generated Android Gradle files were not found.")
+          root_text = root.read_text()
+          app_text = app.read_text()
+
+          if "com.google.gms:google-services" not in root_text:
+              match = re.search(r"(?s)(buildscript\s*\{.*?dependencies\s*\{)", root_text)
+              if not match:
+                  raise SystemExit("Could not find root Gradle buildscript dependencies.")
+              root_text = root_text[:match.end()] + "\n        classpath 'com.google.gms:google-services:4.4.2'" + root_text[match.end():]
+          if "com.google.gms.google-services" not in app_text:
+              plugin = re.search(r"(?m)^apply plugin: ['\"]com\.android\.application['\"]\s*$", app_text)
+              if not plugin:
+                  raise SystemExit("Could not find the Android application plugin declaration.")
+              app_text = app_text[:plugin.end()] + "\napply plugin: 'com.google.gms.google-services'" + app_text[plugin.end():]
+          root.write_text(root_text)
+          app.write_text(app_text)
+          print("Configured optional Google Services plugin without printing Firebase credentials.")
+          PY
       - name: Disable backup for Keystore-bound identity storage
         run: |
           python3 - <<'PY'

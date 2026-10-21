@@ -1,6 +1,6 @@
 # Progress — Our Space
 
-Pembaruan: 21 Oktober 2026, 18:53 WIB.
+Pembaruan: 21 Oktober 2026 — Fase 4 push.
 
 ## Baseline stabil yang dikonfirmasi pengguna
 
@@ -23,19 +23,25 @@ Pembaruan: 21 Oktober 2026, 18:53 WIB.
 - APK #124 berhasil dibangun; SHA-256 APK `2893ea1d9d6a4ebad786bbf44c2f9491fa7195cf39ad41ad833230fb2199aca6`. Sertifikat SHA-256-nya cocok dengan baseline: `6E48F45D9EEEFB56FD3BC3B4ADA108FDF0B73B7280E6DF6766EF699ADAE2956D`.
 - Snapshot backend hanya-baca sekitar 18:44 WIB, 21 Oktober 2026: 21 pesan teks, 2 pesan media, 2 device keys, 2 verifikasi fingerprint, dan 2 objek di bucket privat. Akun Hamid dan Nur masing-masing memiliki satu pesan media dengan objek Storage yang cocok. Ini membuktikan insert pesan dan upload objek dua arah, bukan keberhasilan dekripsi, tampilan, atau penyimpanan di penerima.
 
-## Gate penerimaan Fase 3
+## Status penerimaan Fase 3
 
-- [x] Tes protokol/security-contract, audit dependency, web build, Capacitor sync, dan APK build lulus di CI setelah merge.
-- [x] Migration, bucket privat, batas ukuran, MIME bucket, dan policy Storage diverifikasi.
-- [x] APK pasca-merge tersedia dan sertifikatnya cocok dengan baseline.
-- [x] PR #10: picker tanpa PIN ulang dan pilihan file tidak hilang telah dikonfirmasi pada build sebelumnya.
-- [x] PR #11/#12/#14: guard lock pada receive/send-side dan privacy shield telah lulus tes kontrak, audit dependency, web build, Capacitor sync, dan build APK #124.
-- [x] Bukti backend menunjukkan satu pesan media dan satu objek Storage yang cocok dari masing-masing akun.
-- [ ] Uji APK #124 pada kedua HP; pastikan privacy shield tidak merusak hasil pemilihan file dan tidak meminta PIN ulang.
-- [ ] Pastikan penerima berhasil mengunduh, mendekripsi, menampilkan, dan menyimpan gambar/audio/video pada kedua arah, termasuk Android 11/API 30.
-- [ ] Uji file di atas 3 MiB, MIME tidak didukung, kegagalan jaringan, retry, penguncian saat proses berlangsung, dan simpan lokal.
-- [ ] Catat hasil uji perangkat sebelum Fase 3 dinyatakan diterima.
+- [x] Pengguna menyatakan Fase 3 aman dan mengizinkan proyek berlanjut pada 21 Oktober 2026.
+- [x] Riwayat CI, migration, storage policy, dan APK ditulis di bagian atas sebagai jejak teknis.
+- Status fase mengikuti penerimaan pengguna; daftar uji granular di docs/PHASE3_MEDIA.md dipertahankan sebagai catatan bukti historis, bukan sebagai blocker untuk mulai Fase 4. Penerimaan ini bukan audit keamanan independen.
 
 ## Batas dan langkah selanjutnya
 
-Voice note/video note recording, file besar/chunking, multi-file, Double Ratchet/forward secrecy, dan multi-device belum termasuk atau belum tersedia. Jangan menghapus/merotasi kunci maupun menghapus pesan untuk mengatasi masalah UI. Fase 4 (push notifications) tetap menunggu uji penerimaan media nyata pada kedua HP.
+Voice note/video note recording, file besar/chunking, multi-file, Double Ratchet/forward secrecy, dan multi-device belum termasuk atau belum tersedia. Jangan menghapus/merotasi kunci maupun menghapus pesan untuk mengatasi masalah UI. Fase 4 fokus pada notifikasi generik yang tidak membocorkan isi chat.
+
+## Fase 3 — penerimaan pengguna
+
+Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizinkan proyek berlanjut. Status fase dicatat sebagai diterima oleh pengguna; ini bukan klaim audit keamanan independen.
+
+## Fase 4 — notifikasi push
+
+- Implementasi awal ada di branch phase-4/push-notifications.
+- FCM hanya menerima judul “Our Space”, isi generik “Ada pesan baru menunggu.”, dan data type=new_message. Teks/ciphertext, pengirim, nama file, metadata media, pair ID, dan message ID tidak masuk payload.
+- Tabel device_push_tokens memakai RLS owner-only. Ledger push_dispatches adalah service-role-only.
+- Edge Function memvalidasi JWT pengguna, sender id, pair dua anggota, verifikasi fingerprint penerima, umur pesan, dan deduplikasi dispatch.
+- Build tanpa FIREBASE_ANDROID_CONFIG_BASE64 tetap hijau tetapi fitur push nonaktif. Tanpa FCM_SERVICE_ACCOUNT_JSON di Supabase, server status ready=false dan aplikasi tidak meminta izin OS.
+- Gate berikutnya: CI, migration dan function deployment, konfigurasi manual Firebase/Supabase, lalu uji dua HP.

@@ -450,19 +450,20 @@
                                 <i data-lucide="chevron-right" class="w-4 h-4 text-surface-muted"></i>
                             </div>
                             
-                            <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-9 h-9 rounded-full bg-surface-bg border border-gray-100 text-surface-dark flex items-center justify-center"><i data-lucide="bell" class="w-4 h-4"></i></div>
-                                    <div>
-                                        <p class="text-xs sm:text-sm font-medium text-surface-dark">Notifikasi Pribadi</p>
-                                        <p class="text-[10px] text-surface-muted uppercase tracking-wider mt-0.5">Pengingat Otomatis</p>
+                            <div class="p-4 flex items-center justify-between gap-4">
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div class="w-9 h-9 rounded-full bg-surface-bg border border-gray-100 text-surface-dark flex items-center justify-center shrink-0"><i data-lucide="bell" class="w-4 h-4"></i></div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs sm:text-sm font-medium text-surface-dark">Notifikasi Push</p>
+                                        <p class="text-[10px] text-surface-muted mt-0.5">Pemberitahuan generik tanpa isi pesan</p>
                                     </div>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" value="" class="sr-only peer" checked>
-                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-surface-dark"></div>
+                                <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <input id="push-notifications-toggle" type="checkbox" class="sr-only peer" aria-label="Aktifkan notifikasi push" disabled>
+                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-surface-dark peer-disabled:opacity-50"></div>
                                 </label>
                             </div>
+                            <p id="push-notifications-status" role="status" aria-live="polite" class="px-4 pb-4 text-[10px] leading-relaxed text-surface-muted">Push nonaktif sampai konfigurasi Android dan server diverifikasi.</p>
                         </div>
 
                         <button class="w-full p-3.5 bg-white text-red-700 text-xs sm:text-sm font-medium rounded-2xl border border-red-100 hover:bg-red-50 transition flex items-center justify-center gap-2">
@@ -470,7 +471,7 @@
                         </button>
                     </div>
 
-                    <p class="text-center text-[10px] text-surface-muted mt-8 uppercase tracking-widest">Our Space · Fase 2<br>Pesan terenkripsi end-to-end</p>
+                    <p class="text-center text-[10px] text-surface-muted mt-8 uppercase tracking-widest">Our Space · E2EE<br>Isi pesan tetap privat</p>
                 </div>
             </div>
             
