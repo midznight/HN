@@ -16,6 +16,9 @@ const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/
 const vaultMigration = readFileSync(new URL('../supabase/migrations/20261021160156_create_encrypted_shared_vault.sql', import.meta.url), 'utf8');
 const vaultRealtimeMigration = readFileSync(new URL('../supabase/migrations/20261021160737_publish_vault_items_realtime.sql', import.meta.url), 'utf8');
 const vaultClient = readFileSync(new URL('../src/vault.js', import.meta.url), 'utf8');
+const callsMigration = readFileSync(new URL('../supabase/migrations/20261021161355_encrypted_webrtc_calls_and_history.sql', import.meta.url), 'utf8');
+const callsIndexMigration = readFileSync(new URL('../supabase/migrations/20261021161432_index_call_signal_member_foreign_keys.sql', import.meta.url), 'utf8');
+const callsClient = readFileSync(new URL('../src/calls.js', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
 const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
 const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
@@ -477,5 +480,46 @@ test('Phase 6 vault stores only encrypted metadata and enforces two-member verif
   assert.match(vaultClient, /function openPreview\(/);
   assert.match(vaultClient, /vault-preview-send[\s\S]*?addEventListener\('click'/);
   assert.doesNotMatch(vaultClient, /\.createSignedUrl\(/);
+});
+
+test('Phase 5 WebRTC call signaling and call history remain E2EE and require verified pair membership', () => {
+  assert.match(callsMigration, /create table if not exists public\.call_signals/i);
+  assert.match(callsMigration, /create table if not exists public\.call_records/i);
+  assert.match(callsMigration, /alter table public\.call_signals enable row level security/i);
+  assert.match(callsMigration, /alter table public\.call_records enable row level security/i);
+  assert.match(callsMigration, /recipient_id = \(select auth\.uid\(\)\)/i);
+  assert.match(callsMigration, /verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(callsMigration, /prune_expired_call_signals/i);
+  assert.match(callsMigration, /interval '1 hour'/i);
+  assert.match(callsMigration, /alter publication supabase_realtime add table public\.call_signals/i);
+  assert.match(callsMigration, /alter publication supabase_realtime add table public\.call_records/i);
+  assert.match(callsIndexMigration, /call_signals_sender_member_idx/i);
+  assert.match(callsIndexMigration, /call_signals_recipient_member_idx/i);
+  assert.doesNotMatch(callsMigration, /grant\s+update[^;]*(call_signals|call_records)/i);
+  assert.doesNotMatch(callsMigration, /grant\s+delete[^;]*(call_signals|call_records)/i);
+
+  const signalColumns = callsMigration.match(/create table if not exists public\.call_signals\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  const historyColumns = callsMigration.match(/create table if not exists public\.call_records\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  for (const [label, body] of [['signals', signalColumns], ['history', historyColumns]]) {
+    assert.ok(body, label + ' table declaration exists');
+    for (const forbidden of ['sdp', 'candidate', 'call_type', 'status', 'duration', 'plaintext', 'filename', 'object_path']) {
+      assert.ok(!new RegExp('^\\s*' + forbidden + '\\s+', 'im').test(body),
+        label + ' exposes private call metadata column: ' + forbidden);
+    }
+  }
+  assert.match(callsClient, /KeyStore\.encryptMessage\(/);
+  assert.match(callsClient, /KeyStore\.decryptMessage\(/);
+  assert.match(callsClient, /from\('call_signals'\)\.insert\(/);
+  assert.match(callsClient, /from\('call_records'\)\.insert\(/);
+  assert.match(callsClient, /new RTCPeerConnection\(\{ iceServers: STUN_SERVERS \}\)/);
+  assert.match(callsClient, /navigator\.mediaDevices\?\.getUserMedia/);
+  assert.match(callsClient, /currentContext\(ctx\)/);
+  assert.match(callsClient, /call\.pc\.close\(\)/);
+  assert.match(callsClient, /stopStream\(call\.localStream\)/);
+  assert.match(html, /id="call-modal"[^>]*role="dialog"/);
+  assert.match(html, /id="call-accept-button"/);
+  assert.match(html, /id="call-end-button"/);
+  assert.match(html, /id="call-audio-call"/);
+  assert.match(html, /id="call-video-call"/);
 });
 
