@@ -1,6 +1,6 @@
 # Fase 3 — Lampiran Media E2EE
 
-Status: implementasi awal melalui [PR #6](https://github.com/midznight/HN/pull/6); hardening lock #8, picker #10, guard receive-side/privacy shield #11/#12, serta sender-side lock guard #14 sudah merged. Migration telah diterapkan dan diverifikasi. CI #124 lulus dengan tree identik terhadap merge commit utama. Pengguna mengonfirmasi picker pada build sebelum shield; build #124 perlu retest nyata. Snapshot backend menunjukkan satu pesan media dan objek cocok dari setiap akun. Penerimaan decrypt/render/save tetap wajib.
+Status: pengguna menyatakan Fase 3 aman dan menyetujui proyek melanjutkan pada 21 Oktober 2026. Riwayat PR #6, #8, #10–#12, #14, migration, dan hasil CI tetap dicatat. Status diterima ini mengikuti keputusan pengguna; bukan klaim audit keamanan independen.
 
 ## Cakupan milestone ini
 
