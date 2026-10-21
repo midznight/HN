@@ -20,4 +20,4 @@ Pengguna menyatakan Fase 3 aman pada 21 Oktober 2026 dan proyek boleh berlanjut.
 - Jangan menyarankan uninstall untuk update rutin.
 - Jangan mengaktifkan layanan berbayar atau meminta kartu kredit.
 
-Fase 3 tetap berstatus **menunggu uji perangkat** sampai hasil nyata dua arah dicatat. Fase 4 jangan dimulai sebelum gate ini lulus.
+Fase 3 diterima pengguna pada 21 Oktober 2026. Blocker aktif saat ini adalah konfigurasi Firebase/Supabase untuk mengaktifkan Fase 4 dan uji push setelah konfigurasi tersedia.
