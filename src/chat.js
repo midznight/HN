@@ -507,6 +507,10 @@ async function decryptAndRender(row) {
     validateCiphertextMessage(row);
     const peerKey = partnerDeviceKey;
     if (!peerKey || peerKey.key_version !== row.key_version) return;
+    if (row.message_type === 'media') {
+      await decryptAndRenderMedia(row, peerKey);
+      return;
+    }
     const opened = await KeyStore.decryptMessage({
       peerPublicKey: peerKey.public_key,
       pairId: row.pair_id,
@@ -514,14 +518,178 @@ async function decryptAndRender(row) {
       senderId: row.sender_id,
       recipientId: row.recipient_id,
       keyVersion: row.key_version,
+      messageType: row.message_type,
       nonce: row.nonce,
       ciphertext: row.ciphertext,
     });
     renderMessage(row, opened.plaintext);
   } catch {
-    // Deliberately do not expose malformed plaintext or low-level crypto errors.
-    renderUndecryptableMessage();
+    if (row?.message_type === 'media') renderMediaFailure(row);
+    else renderUndecryptableMessage();
   }
+}
+
+async function decryptAndRenderMedia(row, peerKey) {
+  if (!appUnlocked || !partnerVerified) return;
+  const opened = await KeyStore.decryptMessage({
+    peerPublicKey: peerKey.public_key,
+    pairId: row.pair_id,
+    messageId: row.id,
+    senderId: row.sender_id,
+    recipientId: row.recipient_id,
+    keyVersion: row.key_version,
+    messageType: 'media',
+    nonce: row.nonce,
+    ciphertext: row.ciphertext,
+  });
+  const metadata = validateMediaMetadata(JSON.parse(opened.plaintext), row);
+  const result = await supabase.storage.from(MEDIA_BUCKET).download(metadata.objectPath);
+  if (result.error || !result.data) throw result.error || new Error('Lampiran tidak tersedia.');
+  if (!appUnlocked || !partnerVerified) return;
+
+  const encryptedBytes = new Uint8Array(await result.data.arrayBuffer());
+  const encryptedBase64 = bytesToBase64(encryptedBytes);
+  encryptedBytes.fill(0);
+  const openedMedia = await KeyStore.decryptMedia({
+    peerPublicKey: peerKey.public_key,
+    pairId: row.pair_id,
+    messageId: row.id,
+    senderId: row.sender_id,
+    recipientId: row.recipient_id,
+    keyVersion: row.key_version,
+    nonce: metadata.nonce,
+    ciphertext: encryptedBase64,
+  });
+  if (openedMedia.filename !== metadata.filename ||
+      openedMedia.mimeType !== metadata.mimeType ||
+      openedMedia.size !== metadata.size) {
+    throw new Error('Metadata media tidak cocok dengan lampiran.');
+  }
+  const mediaBytes = base64ToBytes(openedMedia.mediaBase64);
+  const blob = new Blob([mediaBytes], { type: openedMedia.mimeType });
+  mediaBytes.fill(0);
+  renderMediaMessage(row, blob, metadata);
+}
+
+
+
+function renderMediaMessage(row, blob, metadata) {
+  if (renderedIds.has(row.id)) return;
+  renderedIds.add(row.id);
+  const container = $('chat-container');
+  if (!container) return;
+  const outgoing = row.sender_id === sessionUser.id;
+  const line = document.createElement('div');
+  line.className = outgoing ? 'flex justify-end' : 'flex justify-start';
+  const bubble = document.createElement('div');
+  bubble.className = outgoing
+    ? 'max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-br-sm bg-surface-dark text-white px-3 py-3 shadow-sm break-words'
+    : 'max-w-[88%] sm:max-w-[78%] rounded-2xl rounded-bl-sm bg-white text-surface-dark border border-gray-100 px-3 py-3 shadow-sm break-words';
+  const objectUrl = URL.createObjectURL(blob);
+  mediaObjectUrls.add(objectUrl);
+
+  const filename = document.createElement('p');
+  filename.className = 'text-xs font-medium mb-2 break-all';
+  filename.textContent = metadata.filename;
+  bubble.appendChild(filename);
+
+  let mediaElement;
+  if (metadata.mimeType.startsWith('image/')) {
+    mediaElement = document.createElement('img');
+    mediaElement.alt = metadata.filename;
+    mediaElement.className = 'rounded-xl max-w-full max-h-72 object-contain';
+    mediaElement.loading = 'lazy';
+    mediaElement.decoding = 'async';
+    mediaElement.src = objectUrl;
+  } else if (metadata.mimeType.startsWith('video/')) {
+    mediaElement = document.createElement('video');
+    mediaElement.controls = true;
+    mediaElement.playsInline = true;
+    mediaElement.preload = 'metadata';
+    mediaElement.className = 'rounded-xl max-w-full max-h-72';
+    mediaElement.src = objectUrl;
+  } else {
+    mediaElement = document.createElement('audio');
+    mediaElement.controls = true;
+    mediaElement.preload = 'metadata';
+    mediaElement.className = 'w-full max-w-full';
+    mediaElement.src = objectUrl;
+  }
+  bubble.appendChild(mediaElement);
+
+  const details = document.createElement('p');
+  details.className = outgoing ? 'mt-2 text-[10px] text-white/70' : 'mt-2 text-[10px] text-surface-muted';
+  details.textContent = formatMediaSize(metadata.size);
+  bubble.appendChild(details);
+
+  const save = document.createElement('a');
+  save.href = objectUrl;
+  save.download = metadata.filename;
+  save.rel = 'noopener';
+  save.className = outgoing ? 'inline-block mt-2 text-[10px] underline text-white/80' : 'inline-block mt-2 text-[10px] underline text-brand-600';
+  save.textContent = 'Simpan ke perangkat';
+  bubble.appendChild(save);
+
+  const time = document.createElement('p');
+  time.className = outgoing ? 'mt-1 text-[9px] text-white/60 text-right' : 'mt-1 text-[9px] text-surface-muted text-right';
+  time.textContent = formatMessageTime(row.created_at);
+  bubble.appendChild(time);
+  line.appendChild(bubble);
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderMediaFailure(row) {
+  if (renderedIds.has(row.id)) return;
+  renderedIds.add(row.id);
+  const container = $('chat-container');
+  if (!container) return;
+  const line = document.createElement('div');
+  line.className = row.sender_id === sessionUser?.id ? 'flex justify-end' : 'flex justify-start';
+  const notice = document.createElement('div');
+  notice.className = 'max-w-[85%] rounded-xl border border-red-100 bg-red-50 p-3 text-xs text-red-800';
+  notice.appendChild(document.createTextNode('Lampiran tidak dapat dimuat atau diverifikasi. Isi tidak ditampilkan. '));
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.className = 'mt-2 underline font-medium';
+  retry.textContent = 'Coba lagi';
+  retry.addEventListener('click', () => {
+    renderedIds.delete(row.id);
+    line.remove();
+    decryptAndRender(row).catch(() => {});
+  }, { once: true });
+  notice.appendChild(retry);
+  line.appendChild(notice);
+  container.appendChild(line);
+  container.scrollTop = container.scrollHeight;
+}
+
+function bytesToBase64(bytes) {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length)));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function safeMediaFilename(value) {
+  const cleaned = String(value || 'lampiran').replace(/[\/\\]/g, '_').trim().slice(0, 120);
+  const noControls = Array.from(cleaned).filter((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127).join('');
+  return noControls || 'lampiran';
+}
+
+function formatMediaSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
 function renderMessage(row, text) {
