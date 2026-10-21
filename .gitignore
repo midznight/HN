@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+android/
+.env
+.env.*
+!.env.example
+local.properties
+google-services.json
+*.jks
+*.keystore
+*.p12
+supabase/.temp/
+.DS_Store

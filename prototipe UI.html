@@ -167,7 +167,7 @@
 
             <form id="login-form" class="w-full flex flex-col items-center" onsubmit="handleLogin(event)">
                 <div class="relative w-60 mb-4 group">
-                    <input type="password" id="pin-input" placeholder="Enter PIN (1208)" required autocomplete="off"
+                    <input type="password" id="pin-input" placeholder="Enter PIN" required autocomplete="off"
                         class="w-full pl-5 pr-10 py-2.5 bg-white/50 border border-white/70 backdrop-blur-md rounded-full focus:outline-none focus:bg-white/80 focus:ring-2 focus:ring-white transition-all text-center tracking-[0.3em] font-medium text-gray-900 placeholder:tracking-normal placeholder:font-normal placeholder:text-gray-500 shadow-sm text-base">
                     <button id="login-btn" type="submit" class="absolute inset-y-1 right-1 w-8 h-8 flex items-center justify-center bg-gray-900/10 text-gray-800 rounded-full hover:bg-gray-900/20 transition-all">
                         <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
@@ -706,42 +706,17 @@
         }
         
         // Login Logic
+        // This archived visual prototype does not authenticate users. The installed app owns the local PIN flow.
         function handleLogin(event) {
             event.preventDefault();
-            const pin = document.getElementById('pin-input').value;
-            const loginScreen = document.getElementById('login-screen');
-            const loginCard = document.getElementById('login-card');
-            const appLayout = document.getElementById('app-layout');
-            const btn = document.getElementById('login-btn');
-
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
-            lucide.createIcons();
-
-            setTimeout(() => {
-                if (pin === '1208') {
-                    loginScreen.classList.add('fade-out');
-                    
-                    setTimeout(() => {
-                        loginScreen.style.display = 'none';
-                        appLayout.classList.remove('hidden');
-                        appLayout.classList.add('flex', 'fade-in');
-                        
-                        const cContainer = document.getElementById('chat-container');
-                        if (cContainer) cContainer.scrollTop = cContainer.scrollHeight;
-                    }, 500); 
-                } else {
-                    loginCard.classList.add('shake-anim');
-                    document.getElementById('pin-input').value = '';
-                    document.getElementById('pin-input').placeholder = 'PIN salah!';
-                    
-                    btn.innerHTML = '<i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>';
-                    lucide.createIcons();
-                    
-                    setTimeout(() => {
-                        loginCard.classList.remove('shake-anim');
-                    }, 400);
-                }
-            }, 600);
+            const input = document.getElementById('pin-input');
+            const card = document.getElementById('login-card');
+            const button = document.getElementById('login-btn');
+            input.value = '';
+            input.placeholder = 'Use the installed app';
+            button.innerHTML = 'PIN gate is in the app';
+            card.classList.add('shake-anim');
+            setTimeout(() => card.classList.remove('shake-anim'), 400);
         }
     </script>
 </body>
