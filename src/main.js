@@ -45,13 +45,18 @@ App.addListener('appStateChange',({isActive})=>{
   if(!isActive&&!$('app-layout').classList.contains('hidden')){
     const picker=window.ourSpaceAttachmentPicker;
     if(picker?.isPending()){picker.onBackground();return}
+    const vault=window.ourSpaceVault;
+    if(vault?.isPickerPending?.()){vault.onPickerBackground();return}
     lock();
     return;
   }
-  if(isActive)window.ourSpaceAttachmentPicker?.onForeground();
+  if(isActive){
+    window.ourSpaceAttachmentPicker?.onForeground();
+    window.ourSpaceVault?.onPickerForeground?.();
+  }
 });
 App.addListener('backButton',()=>{
-  if(window.ourSpaceAttachmentPicker?.isPending())return;
+  if(window.ourSpaceAttachmentPicker?.isPending()||window.ourSpaceVault?.isPickerPending?.())return;
   const preview=$('media-preview-modal');
   if(preview&&!preview.classList.contains('hidden')){$('media-preview-cancel')?.click();return}
   if($('login-screen').classList.contains('hidden')){
