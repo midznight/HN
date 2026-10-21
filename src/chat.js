@@ -28,10 +28,13 @@ let attachmentPickerBackgrounded = false;
 let attachmentPickerResumeTimeout = null;
 let attachmentPickerPreviousVisibility = null;
 const ATTACHMENT_PICKER_RESUME_GRACE_MS = 12000;
+const VOICE_NOTE_MAX_DURATION_MS = 90_000;
+const VOICE_NOTE_STOP_BEFORE_LIMIT_BYTES = MAX_MEDIA_BYTES - 128 * 1024;
 
 const mediaObjectUrls = new Set();
 let pendingMediaFile = null;
 let pendingMediaPreviewUrl = null;
+let voiceRecordingSession = null;
 
 function closeMediaPreview() {
   const frame = $('media-preview-frame');
@@ -114,6 +117,186 @@ function openMediaPreview(file) {
   send.disabled = false;
   send.textContent = 'Kirim media';
   send.focus();
+}
+
+function setVoiceRecordUi(recording, message = '', isError = false) {
+  const button = $('chat-record-btn');
+  const status = $('chat-record-status');
+  if (button) {
+    button.dataset.recording = recording ? 'true' : 'false';
+    button.setAttribute('aria-label', recording ? 'Selesaikan rekaman suara' : 'Rekam pesan suara');
+    button.title = recording ? 'Selesaikan rekaman dan periksa pratinjau' : 'Rekam pesan suara';
+  }
+  if (status) {
+    status.textContent = message;
+    status.classList.toggle('hidden', !message);
+    status.classList.toggle('text-red-700', isError);
+    status.classList.toggle('text-[#9e3e54]', !isError);
+  }
+}
+
+function releaseVoiceRecordingSession(session) {
+  if (session.tick !== null) window.clearInterval(session.tick);
+  if (session.limitTimer !== null) window.clearTimeout(session.limitTimer);
+  session.tick = null;
+  session.limitTimer = null;
+  for (const track of session.stream?.getTracks?.() || []) {
+    try { track.stop(); } catch { /* stop microphone capture best-effort */ }
+  }
+  session.stream = null;
+  if (voiceRecordingSession === session) voiceRecordingSession = null;
+}
+
+function cancelVoiceRecording(silent = false) {
+  const session = voiceRecordingSession;
+  if (!session) {
+    if (!silent) setVoiceRecordUi(false, '');
+    return;
+  }
+  session.discard = true;
+  releaseVoiceRecordingSession(session);
+  try {
+    if (session.recorder?.state && session.recorder.state !== 'inactive') session.recorder.stop();
+  } catch { /* the recorder may already have stopped */ }
+  session.chunks = [];
+  if (!silent) setVoiceRecordUi(false, 'Rekaman dibatalkan. File tidak dikirim.');
+  else setVoiceRecordUi(false, '');
+}
+
+function formatRecordingElapsed(ms) {
+  const seconds = Math.max(0, Math.floor(ms / 1000));
+  return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+}
+
+async function startVoiceRecording() {
+  if (!appUnlocked || !partnerVerified || !sessionUser || !pair || isSending || voiceRecordingSession) return;
+  clearMessageError();
+  if (typeof MediaRecorder !== 'function' || !navigator.mediaDevices?.getUserMedia) {
+    messageError('Perekaman suara tidak tersedia di WebView ini. Pilih file audio dari galeri sebagai gantinya.');
+    return;
+  }
+
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: false,
+    });
+  } catch (error) {
+    const reason = error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError'
+      ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon Our Space di pengaturan Android.'
+      : 'Mikrofon belum tersedia. Periksa izin perangkat lalu coba lagi.';
+    setVoiceRecordUi(false, reason, true);
+    return;
+  }
+
+  if (!appUnlocked || !partnerVerified || !sessionUser || !pair) {
+    for (const track of stream.getTracks()) { try { track.stop(); } catch { /* best effort */ } }
+    return;
+  }
+
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
+  const selectedType = candidates.find((type) => MediaRecorder.isTypeSupported?.(type)) || '';
+  let recorder;
+  try {
+    recorder = selectedType
+      ? new MediaRecorder(stream, { mimeType: selectedType, audioBitsPerSecond: 64_000 })
+      : new MediaRecorder(stream);
+  } catch {
+    for (const track of stream.getTracks()) { try { track.stop(); } catch { /* best effort */ } }
+    setVoiceRecordUi(false, 'Perekam tidak mendukung format audio aman yang tersedia.', true);
+    return;
+  }
+
+  const session = {
+    stream,
+    recorder,
+    chunks: [],
+    totalBytes: 0,
+    startedAt: Date.now(),
+    tick: null,
+    limitTimer: null,
+    overflow: false,
+    discard: false,
+  };
+  voiceRecordingSession = session;
+  setVoiceRecordUi(true, 'Merekam suara · 00:00 · maksimal 3 MiB');
+  session.tick = window.setInterval(() => {
+    if (voiceRecordingSession !== session || session.discard) return;
+    setVoiceRecordUi(true, 'Merekam suara · ' + formatRecordingElapsed(Date.now() - session.startedAt) + ' · maksimal 3 MiB');
+  }, 500);
+  session.limitTimer = window.setTimeout(() => {
+    if (voiceRecordingSession !== session || session.recorder.state === 'inactive') return;
+    setVoiceRecordUi(true, 'Batas waktu tercapai. Menyiapkan pratinjau…');
+    try { session.recorder.stop(); } catch { cancelVoiceRecording(true); }
+  }, VOICE_NOTE_MAX_DURATION_MS);
+
+  recorder.addEventListener('dataavailable', (event) => {
+    if (session.discard || !event.data || event.data.size < 1) return;
+    session.totalBytes += event.data.size;
+    if (session.totalBytes > VOICE_NOTE_STOP_BEFORE_LIMIT_BYTES) {
+      session.overflow = true;
+      setVoiceRecordUi(false, 'Rekaman mendekati batas ukuran. Rekam lebih singkat lalu coba lagi.', true);
+      if (recorder.state !== 'inactive') {
+        try { recorder.stop(); } catch { /* onstop will release temporary data */ }
+      }
+      return;
+    }
+    session.chunks.push(event.data);
+  });
+  recorder.addEventListener('error', () => {
+    session.discard = true;
+    releaseVoiceRecordingSession(session);
+    session.chunks = [];
+    setVoiceRecordUi(false, 'Perekaman gagal. Tidak ada file yang dikirim.', true);
+  });
+  recorder.addEventListener('stop', () => {
+    const wasOverflow = session.overflow;
+    const shouldDiscard = session.discard || !appUnlocked || !partnerVerified || !sessionUser || !pair;
+    const chunks = session.chunks.slice();
+    const mimeType = (recorder.mimeType || chunks.find((chunk) => chunk.type)?.type || 'audio/webm')
+      .split(';')[0].trim().toLowerCase();
+    releaseVoiceRecordingSession(session);
+    session.chunks = [];
+    if (shouldDiscard) return;
+    if (wasOverflow) {
+      setVoiceRecordUi(false, 'Rekaman terlalu besar. Rekam lebih singkat; file belum dikirim.', true);
+      return;
+    }
+    if (!['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/mpeg', 'audio/wav'].includes(mimeType)) {
+      setVoiceRecordUi(false, 'Format rekaman tidak didukung perangkat ini. Gunakan lampiran audio dari galeri.', true);
+      return;
+    }
+    const blob = new Blob(chunks, { type: mimeType });
+    if (blob.size < 1 || blob.size > MAX_MEDIA_BYTES) {
+      setVoiceRecordUi(false, 'Ukuran rekaman di luar batas 3 MiB. Rekam lebih singkat.', true);
+      return;
+    }
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const extension = mimeType === 'audio/mp4' ? 'm4a' : mimeType === 'audio/wav' ? 'wav' : mimeType === 'audio/ogg' ? 'ogg' : mimeType === 'audio/mpeg' ? 'mp3' : 'webm';
+    const file = new File([blob], 'pesan-suara-' + stamp + '.' + extension, { type: mimeType, lastModified: Date.now() });
+    setVoiceRecordUi(false, 'Periksa pratinjau rekaman sebelum mengirim.');
+    openMediaPreview(file);
+  });
+
+  try {
+    recorder.start(1000);
+  } catch {
+    session.discard = true;
+    releaseVoiceRecordingSession(session);
+    session.chunks = [];
+    setVoiceRecordUi(false, 'Perekaman tidak dapat dimulai. Periksa izin mikrofon.', true);
+  }
+}
+
+function toggleVoiceRecording() {
+  const session = voiceRecordingSession;
+  if (session && session.recorder?.state === 'recording') {
+    setVoiceRecordUi(true, 'Menyiapkan pratinjau…');
+    try { session.recorder.stop(); } catch { cancelVoiceRecording(true); setVoiceRecordUi(false, 'Rekaman tidak dapat diselesaikan.', true); }
+    return;
+  }
+  void startVoiceRecording();
 }
 
 function initializeMediaPreviewControls() {
@@ -224,6 +407,7 @@ export async function initChat() {
   });
   $('chat-send-btn')?.addEventListener('click', sendMessage);
   $('chat-attach-btn')?.addEventListener('click', beginAttachmentPicker);
+  $('chat-record-btn')?.addEventListener('click', toggleVoiceRecording);
   $('chat-attachment-input')?.addEventListener('change', async (event) => {
     const picker = event.currentTarget;
     const file = picker?.files?.[0] || null;
@@ -360,6 +544,7 @@ function clearMediaObjectUrls() {
 
 export function onChatLocked() {
   clearAttachmentPickerState();
+  cancelVoiceRecording(true);
   closeMediaPreview();
   window.ourSpaceCalls?.onLocked();
   window.ourSpaceVault?.onLocked();
@@ -1155,6 +1340,7 @@ function updateComposerState() {
   if ($('chat-send-btn')) $('chat-send-btn').disabled = !enabled || isSending;
   if ($('chat-attach-btn')) $('chat-attach-btn').disabled = !enabled || isSending;
   if ($('chat-attachment-input')) $('chat-attachment-input').disabled = !enabled || isSending;
+  if ($('chat-record-btn')) $('chat-record-btn').disabled = !enabled || isSending || !voiceRecordingSession && typeof MediaRecorder !== 'function';
   if ($('chat-audio-call')) $('chat-audio-call').disabled = !enabled || isSending;
   if ($('chat-video-call')) $('chat-video-call').disabled = !enabled || isSending;
   if ($('chat-message-input')) $('chat-message-input').placeholder = enabled ? 'Ketik pesan terenkripsi…' : 'Verifikasi fingerprint untuk mulai chat';
