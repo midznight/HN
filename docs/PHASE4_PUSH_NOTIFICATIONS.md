@@ -23,10 +23,10 @@ Status: PR #16 dan hardening opt-out PR #18 sudah merged. CI #152 (source) dan #
 
 ## Pengaturan kredensial server
 
-1. Pastikan Firebase Cloud Messaging API aktif, lalu buat service account khusus untuk pengiriman FCM. Beri peran minimum yang diperlukan, `Firebase Cloud Messaging API Admin` (`roles/firebasecloudmessaging.admin`) pada project target, sesuai [panduan otorisasi HTTP v1 FCM](https://firebase.google.com/docs/cloud-messaging/send/v1-api) dan [daftar role/permission FCM](https://cloud.google.com/iam/docs/roles-permissions/firebasecloudmessaging). Unduh private-key JSON untuk akun tersebut. Perlakukan file sebagai rahasia berdaya tinggi; jangan taruh di GitHub repo, issue, log, source code, atau percakapan.
-2. Di Supabase Dashboard untuk project yang digunakan aplikasi, buka Edge Functions → Secrets dan tambahkan secret bernama FCM_SERVICE_ACCOUNT_JSON. Isi nilainya dengan seluruh isi service-account JSON. Jangan gunakan key ini pada APK/client.
-3. Edge Function membandingkan project ID service-account dengan project ID dari google-services.json. Toggle hanya diaktifkan bila keduanya cocok dan server bisa memakai kredensial service account.
-4. Jika kredensial belum tersedia/salah, aplikasi menampilkan status nonaktif dan tidak meminta izin Android. Ini disengaja fail-closed.
+Ikuti [docs/FCM-WORKLOAD-IDENTITY.md](FCM-WORKLOAD-IDENTITY.md) untuk membuat service account FCM tanpa kunci JSON, menyiapkan OIDC Workload Identity Provider dengan condition khusus dua akun, dan memberikan binding Workload Identity User per subject.
+2. Di Supabase Edge Function Secrets, set `GOOGLE_WIF_AUDIENCE`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, dan `FCM_PROJECT_ID` sesuai panduan. Private key JSON tidak dipakai.
+3. Status fungsi melakukan pertukaran STS dan impersonasi access token 10 menit. Toggle hanya aktif jika konfigurasi cocok dan Google menerima pertukaran itu.
+4. Jika kredensial/konfigurasi belum tersedia atau salah, aplikasi tetap nonaktif dan tidak meminta izin Android. Ini disengaja fail-closed.
 
 ## Uji penerimaan
 
@@ -40,4 +40,8 @@ Status: PR #16 dan hardening opt-out PR #18 sudah merged. CI #152 (source) dan #
 
 ## Batasan
 
-Firebase client config dan service-account key memerlukan tindakan manual di dashboard karena keduanya belum ada di repository/proyek ini. Implementasi belum dinyatakan aktif sampai kedua secret terpasang dan uji di dua HP lulus.
+Firebase client config dan WIF setup memerlukan tindakan manual di dashboard. Implementasi belum dinyatakan aktif sampai status probe Google berhasil, build baru menggunakan Firebase config, dan uji dua arah di kedua HP lulus.
+
+## Pembaruan keyless
+
+Perubahan implementasi terdapat pada PR #22. Jalur JSON-key lama diganti WIF melalui Supabase JWT dengan condition dua subject dan role FCM minimum. Periksa batas keamanan, prasyarat JWT asimetris, dan langkah aktivasi pada `docs/FCM-WORKLOAD-IDENTITY.md`. Konfigurasi Google serta pengiriman dua perangkat belum teruji.
