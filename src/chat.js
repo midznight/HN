@@ -176,6 +176,8 @@ async function startVoiceRecording() {
   updateComposerState();
   clearMessageError();
   if (typeof MediaRecorder !== 'function' || !navigator.mediaDevices?.getUserMedia) {
+    voiceRecordingStarting = false;
+    updateComposerState();
     messageError('Perekaman suara tidak tersedia di WebView ini. Pilih file audio dari galeri sebagai gantinya.');
     return;
   }
