@@ -234,7 +234,7 @@ Audit implementasi tetap harus menguji semua pasangan aktual, termasuk placehold
 | Aksi utama maksimal dua ketukan | **Lulus dengan pengecualian media yang disengaja** | Kirim teks, voice note, panggilan, dan masuk Brankas; pemilih media mempertahankan konfirmasi privasi |
 | Satu tujuan per layar | Lulus pada spesifikasi | Inventaris layar |
 | State kosong, memuat, error | Lulus pada spesifikasi/pratinjau | Daftar skenario dan tabel |
-| Kontras token inti AA | Lulus pada 9 pasangan | Tabel kontras; pasangan aktual perlu audit ulang |
+| Kontras token inti AA | Lulus pada 10 pasangan yang dicantumkan | Tabel rasio untuk pasangan spesifik; komposisi gradien dan semua state aktual perlu audit ulang |
 | Area sentuh ≥48 dp | Lulus aturan CSS, belum diuji fisik | CSS pratinjau |
 | Zoom tidak dilarang | Lulus di HTML preview | Tidak ada user-scalable=no |
 | Tanpa blur daftar scroll | Lulus di HTML preview | Tidak ada backdrop-filter |
