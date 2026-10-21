@@ -1,20 +1,26 @@
 # Blockers — Our Space
 
-Pembaruan: 21 Oktober 2026.
+Pembaruan: 21 Oktober 2026, 17:44 WIB.
 
 ## Blocker untuk penerimaan Fase 3
 
-- **CI pada commit final:** build/test kode media telah lulus pada run #75/#76/#79, tetapi run #80 yang memasukkan dokumentasi masih perlu status akhir sebelum PR merge.
-- **Tes dua perangkat:** belum ada bukti pengguna untuk upload/decrypt lampiran nyata di kedua HP; chat teks yang berhasil tidak membuktikan jalur media.
-- **Siklus update APK:** artefak setelah merge harus diuji terpasang sebagai pembaruan tanpa uninstall dan dengan signing stabil yang sama.
-- **Voice note/video note recording:** belum masuk implementasi milestone ini; memilih file audio/video yang sudah ada saja yang sedang dibuat.
-- **Batas API 23–30:** native media path harus dicoba di Android 11 karena JCA/provider/OEM dapat berbeda. CI build di runner bukan tes runtime OEM.
+- **Uji media pada perangkat nyata masih wajib.** CI #91 sukses, tetapi itu tidak membuktikan media terenkripsi dapat dikirim, didekripsi, ditampilkan, dan disimpan pada kedua HP.
+- **Pemasangan APK sebagai update.** APK hasil build pasca-merge memiliki sertifikat yang cocok dengan baseline yang diperiksa. Tetap pasang langsung di atas aplikasi yang berjalan; jika Android menampilkan signature mismatch, hentikan dan laporkan pesannya—jangan uninstall.
+- **Uji Android 11/API 30.** Chat teks sudah dikonfirmasi pada API 30; jalur media harus diuji secara khusus pada perangkat tersebut.
+- **Skenario kegagalan media.** Batas 3 MiB, MIME unsupported, jaringan terputus, retry unduh/dekripsi, simpan lokal, dan lock ketika operasi berjalan belum dilaporkan lulus oleh pengguna.
+
+## Sudah tidak memblokir tahap build
+
+- CI post-merge #91 sukses.
+- Migration Fase 3 sudah diterapkan dan diverifikasi.
+- Bucket Storage privat dan policy akses terpasang.
+- APK baru tersedia dan sertifikat cocok dengan APK baseline yang diperiksa.
 
 ## Tidak boleh dilakukan untuk mengatasi blocker
 
-- Jangan menghapus row `device_keys`, `key_verifications`, atau `messages` untuk membuat UI “lolos”.
-- Jangan mempublikasikan bucket atau mengirim file asli sebelum native encryption selesai.
-- Jangan memasang APK dengan tanda tangan berbeda atau menyuruh pengguna uninstall aplikasi.
-- Jangan mengaktifkan layanan berbayar atau meminta kartu kredit untuk fitur ini.
+- Jangan hapus row `device_keys`, `key_verifications`, atau `messages` untuk membuat UI “lolos”.
+- Jangan publikasikan bucket, unggah file asli, atau menaruh plaintext/kunci di log.
+- Jangan menyarankan uninstall untuk update rutin.
+- Jangan mengaktifkan layanan berbayar atau meminta kartu kredit.
 
-Blocker harus dicatat sebagai selesai hanya setelah bukti dari CI/dashboard/perangkat tersedia.
+Fase 3 tetap berstatus **menunggu uji perangkat** sampai hasil nyata dua arah dicatat. Fase 4 jangan dimulai sebelum gate ini lulus.

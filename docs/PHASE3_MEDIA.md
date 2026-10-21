@@ -1,6 +1,6 @@
 # Fase 3 — Lampiran Media E2EE
 
-Status: implementasi awal pada branch `phase-3/encrypted-media`. Migration sudah diterapkan dan diverifikasi di produksi; CI build kode media telah lulus pada run #75/#76/#79. Fase belum diterima sampai run terbaru terkonfirmasi dan tes langsung antarperangkat selesai.
+Status: implementasi awal sudah digabung ke `phase-2/e2ee-text-chat` melalui [PR #6](https://github.com/midznight/HN/pull/6). Hardening dekripsi saat lock sudah digabung melalui [PR #8](https://github.com/midznight/HN/pull/8). Migration diterapkan dan diverifikasi di produksi; GitHub Actions #91 untuk merge commit terakhir lulus. Fase belum diterima sampai tes langsung antarperangkat selesai.
 
 ## Cakupan milestone ini
 
@@ -26,19 +26,20 @@ Belum termasuk perekaman voice note/video note, thumbnail, kompresi, progress pe
 
 ## Storage dan kebijakan akses
 
-Bucket harus tetap **private**. RLS storage membatasi SELECT untuk anggota pair, INSERT untuk anggota yang sudah memiliki kunci sendiri dan memiliki catatan verifikasi fingerprint pasangan yang cocok, serta DELETE hanya untuk objek orphan yang belum memiliki row pesan. Sesudah row pesan tercatat, objek tidak boleh dihapus klien. Storage menyimpan ciphertext, bukan media asli.
+Bucket harus tetap **private**. RLS Storage membatasi SELECT untuk anggota pair, INSERT untuk anggota yang sudah memiliki kunci sendiri dan memiliki catatan verifikasi fingerprint pasangan yang cocok, serta DELETE hanya untuk objek orphan yang belum memiliki row pesan. Sesudah row pesan tercatat, objek tidak boleh dihapus klien. Storage menyimpan ciphertext, bukan media asli.
 
 Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path merupakan metadata routing yang terbatas; nama asli, MIME asli dan nonce media berada dalam metadata yang dienkripsi dalam row pesan. Ukuran ciphertext tetap dapat terlihat oleh penyedia storage.
 
 ## Urutan rollout dan status
 
-1. [x] `npm test`, dependency audit, Vite build, dan Gradle `assembleDebug` lulus pada commit kode media yang diuji CI.
-2. [x] Tinjau migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql`.
-3. [x] Migration aditif diterapkan ke project `sajlpngmpkizwjbarxlj`; tidak ada row pesan/key yang diubah dan fingerprint tidak dirotasi.
-4. [x] Verifikasi bucket private, limit 4 MiB untuk ciphertext, allowed MIME generic, constraint pesan dan policy RLS Storage. Jumlah row lama tetap sama.
-5. [ ] Setelah PR merge, ambil APK stabil baru dan pasang sebagai update tanpa uninstall pada kedua HP.
-6. [ ] Tes gambar, audio, video; uji file tidak didukung/lebih dari 3 MiB, jaringan terputus, upload berhasil tapi insert row gagal, dekripsi rusak, lock/background, retry dan Simpan ke Galeri. Di API 29+, verifikasi file muncul pada koleksi Galeri yang sesuai; API 23–28 pastikan jalur app-private ditampilkan.
-7. [ ] Tes akses Storage dengan akun di luar pair. Akun ketiga harus ditolak.
+1. [x] CI pasca-merge #91: dependency audit, deterministic tests, Vite build, Capacitor sync, Gradle APK assembly dan upload artifact sukses.
+2. [x] Migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql` diterapkan ke project `sajlpngmpkizwjbarxlj`.
+3. [x] Read-only check: bucket private, limit 4 MiB, MIME generik, constraint `message_type` dan policy Storage terpasang.
+4. [x] PR #8 menambahkan regression test untuk memastikan hasil decrypt tidak dirender setelah app lock.
+5. [x] APK pasca-merge dibuat; sertifikat penandatanganannya cocok dengan baseline API 30 yang diperiksa.
+6. [ ] Pasang APK stabil sebagai update tanpa uninstall pada kedua HP.
+7. [ ] Tes gambar, audio, video dua arah; uji file di atas 3 MiB/MIME unsupported, jaringan terputus, retry unduh/dekripsi, lock/background dan Simpan ke Galeri.
+8. [ ] Catat hasil pada Android 11/API 30 sebelum menyatakan fase diterima.
 
 ## Keamanan dan batas
 

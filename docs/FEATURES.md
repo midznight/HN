@@ -6,16 +6,16 @@ Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti penggun
 |---|---|---|
 | PIN lokal dan penguncian aplikasi | Tersedia | PIN lokal bukan kredensial Supabase dan bukan kunci E2EE. |
 | Dua akun privat Hamid dan Nur | Tersedia | Membership ditentukan di Supabase, bukan hanya pilihan nama lokal. |
-| Chat teks E2EE | Teruji pengguna | Dua arah berhasil pada kedua HP; fingerprint tetap setelah tutup/buka. |
+| Chat teks E2EE | Teruji pengguna | Dua arah berhasil pada kedua HP; aplikasi tetap bisa digunakan setelah ditutup/dibuka kembali. |
 | Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
 | Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
 | Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio | Implementasi awal pada branch `phase-3/encrypted-media` | CI dan migration Storage lulus; simpan menggunakan MediaStore API 29+ atau folder app-private pada API 23–28. Menunggu uji media nyata di dua HP. |
-| Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini. |
-| Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. |
+| Lampiran gambar/video/audio E2EE | Kandidat uji; kode merged dan CI lulus | Maksimal 3 MiB per file, Storage privat; masih menunggu uji kirim/terima dan simpan pada kedua HP. |
+| Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
+| Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. Menunggu penerimaan Fase 3. |
 | Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |
 | Brankas file terenkripsi | Belum (Fase 6) | Tidak aktif. |
-| Audit keamanan formal | Belum (Fase 7) | Tes unit bukan audit independen. |
+| Audit keamanan formal | Belum (Fase 7) | Tes unit dan build CI bukan audit independen. |
 
 ## Batas utama
 
