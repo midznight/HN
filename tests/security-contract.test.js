@@ -7,6 +7,7 @@ const hardening = readFileSync(new URL('../supabase/migrations/20261021010335_ph
 const native = readFileSync(new URL('../android-native/src/main/java/com/ourspace/app/OurSpaceKeyStorePlugin.java', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 test('all exposed chat tables have RLS and least-privilege grants', () => {
   for (const table of ['pairs', 'pair_members', 'device_keys', 'key_verifications', 'messages']) {
@@ -50,6 +51,18 @@ test('native implementation keeps ECDH private key inside Android Keystore', () 
   assert.match(native, /cipher\.updateAAD\(associatedData/);
   assert.doesNotMatch(native, /privateKey\.getEncoded\(/);
   assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.S/);
+});
+
+test('identity-key setup failures disclose safe platform diagnostics without insecure fallback', () => {
+  assert.match(native, /identityFailureMessage\(e\)/);
+  assert.match(native, /Chat E2EE memerlukan Android 12 atau lebih baru/);
+  assert.match(native, /Build\.VERSION\.SDK_INT/);
+  assert.doesNotMatch(native, /privateKey\.getEncoded\(/);
+});
+
+test('fingerprint confirmation starts hidden until a partner key exists', () => {
+  assert.match(html, /<button id="chat-confirm-key" type="button" class="hidden [^"]*">/);
+  assert.match(client, /classList\.toggle\('hidden', !peerKey \|\| partnerVerified\)/);
 });
 
 test('client recomputes remote key fingerprint and only trusts a matching verification', () => {
