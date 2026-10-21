@@ -158,7 +158,7 @@ Dokumen rancangan ada di [DESIGN.md](DESIGN.md), catatan ringkas di [docs/UI_UX_
 
 ### Membuka pratinjau di ponsel
 
-- Pratinjau sementara sudah diterbitkan pada Vercel: https://our-space-ui-preview-lz9lxlw7j-mi-d1.vercel.app/?_vercel_share=8Miqoe7AjJuCVOmroOYvlLBET8XgQzow (tautan akses berbagi berlaku sampai 22 Oktober 2026, 14:26 WIB). Project ini terpisah dari aplikasi produksi. Workflow GitHub Pages masih gagal karena konektor tidak punya izin untuk mengaktifkan Pages; jangan menganggap alamat Pages sudah aktif.
+- Pratinjau sementara versi visual terbaru sudah diterbitkan pada Vercel: https://our-space-ui-preview-8sezoppjz-mi-d1.vercel.app/?_vercel_share=ogXDsFTVMORfLi0v63Zo91mPZmlH62sb. Tautan berbagi bersifat sementara dan dapat kedaluwarsa; jika gagal dibuka, terbitkan ulang atau buat tautan berbagi baru dari project pratinjau. Project ini terpisah dari aplikasi produksi. Workflow GitHub Pages sebelumnya gagal karena konektor tidak punya izin untuk mengaktifkan Pages; jangan menganggap alamat Pages sudah aktif.
 - Pilih skenario dari menu paling atas untuk meninjau PIN, fingerprint, obrolan, error/offline, lampiran, media, voice note, panggilan, Kita, Brankas, serta pengaturan.
 - Untuk uji lokal, buka preview-ui/index.html langsung di Chrome atau jalankan server statis dari folder itu. File mandiri, tidak memerlukan dependency, npm install, akun, atau kartu kredit.
 - Workflow hanya mengunggah folder preview-ui, bukan root aplikasi. Jangan memindahkan halaman demo ke public/ atau mengganti index.html entry point aplikasi tanpa keputusan eksplisit.
