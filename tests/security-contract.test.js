@@ -527,3 +527,17 @@ test('Phase 5 WebRTC call signaling and call history remain E2EE and require ver
   assert.match(html, /id="chat-video-call"/);
 });
 
+test('voice notes are recorded locally, size-bounded, and sent only through media preview confirmation', () => {
+  assert.match(html, /id="chat-record-btn"/);
+  assert.match(html, /id="chat-record-status"[^>]*aria-live="polite"/);
+  assert.match(client, /async function startVoiceRecording\(\)/);
+  assert.match(client, /navigator\.mediaDevices\?\.getUserMedia/);
+  assert.match(client, /new MediaRecorder\(/);
+  assert.match(client, /VOICE_NOTE_MAX_DURATION_MS = 90_000/);
+  assert.match(client, /VOICE_NOTE_STOP_BEFORE_LIMIT_BYTES = MAX_MEDIA_BYTES - 128 \* 1024/);
+  assert.match(client, /if \(shouldDiscard\) return/);
+  assert.match(client, /openMediaPreview\(file\)/);
+  assert.match(client, /cancelVoiceRecording\(true\)/);
+  assert.doesNotMatch(client, /function startVoiceRecording[\s\S]*?supabase\.storage\.from\(MEDIA_BUCKET\)\.upload/);
+});
+
