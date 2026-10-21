@@ -1,31 +1,34 @@
 # Progress — Our Space
 
-Pembaruan: 21 Oktober 2026 (Asia/Jakarta).
+Pembaruan: 21 Oktober 2026, 17:44 WIB.
 
 ## Baseline stabil yang dikonfirmasi pengguna
 
-- Chat teks dua arah Hamid ↔ Nur berjalan.
-- Fingerprint tetap konsisten setelah aplikasi ditutup dan dibuka kembali.
-- HP pasangan Android 11/API 30 bisa menggunakan chat teks.
-- Build setelah dukungan API 30 digabung: GitHub Actions #73 sukses.
+- Chat teks E2EE Hamid ↔ Nur berhasil dikirim dua arah.
+- Pengguna mengonfirmasi aplikasi tetap dapat digunakan setelah ditutup/dibuka kembali.
+- Perangkat pasangan yang menggunakan Android 11/API 30 sudah bisa memakai chat teks.
+- Build baseline dukungan API 30 lulus pada GitHub Actions #73.
 
-## Sedang dikerjakan
+## Fase 3 — lampiran E2EE
 
-- Fase 3: lampiran gambar/video/audio terenkripsi pada branch `phase-3/encrypted-media`.
-- Native plugin memiliki `encryptMedia`/`decryptMedia`; key derivation dan AAD dipisah dari chat teks.
-- Client menambahkan file picker, enkripsi sebelum upload, private Storage, metadata terenkripsi, preview setelah dekripsi, batas 3 MiB dan penanganan gagal/retry.
-- Tombol Simpan ke Galeri menggunakan native MediaStore di API 29+; API 23–28 menyimpan ke folder Documents/Our Space dalam penyimpanan privat aplikasi.
-- Migration aditif sudah diterapkan ke Supabase produksi (migration `guarded_device_key_recovery` tetap ada; `phase3_encrypted_media` tercatat).
-- Verifikasi post-migration: bucket private, 4 MiB maksimum per object, MIME bucket hanya `application/octet-stream`, constraint `messages.message_type` mengizinkan text/media, dan policy Storage sudah tercatat.
-- Data sebelum/sesudah migration tidak berubah: 2 pesan teks, 0 media, 2 device keys, 2 fingerprint verifications.
-- CI build untuk kode media berhasil pada commit #75/#76/#79. Run #80 berisi dokumentasi dan masih harus dikonfirmasi.
+- Implementasi lampiran gambar/video/audio (file yang sudah ada, maksimal 3 MiB) telah digabung melalui [PR #6](https://github.com/midznight/HN/pull/6), merge commit `0297fe5bcd5a158c663dd231ba3835dd818d52d1`.
+- Hardening tambahan agar dekripsi asinkron tidak merender pesan/placeholder setelah aplikasi terkunci telah digabung melalui [PR #8](https://github.com/midznight/HN/pull/8), merge commit `4709be0b620db60e7d6ae1b3379ed20b92c43a7c`.
+- GitHub Actions #91 untuk commit merge terakhir lulus: audit dependency produksi, tes kontrak/protokol, build web, Capacitor sync, dan APK Android bertanda tangan stabil.
+- Migration `20261021170000_phase3_encrypted_media.sql` telah diterapkan dan diverifikasi di project Supabase produksi `sajlpngmpkizwjbarxlj`.
+- Bucket `our-space-encrypted-media` dikonfirmasi private, limit objek 4 MiB, dan hanya mengizinkan `application/octet-stream`. Policy SELECT, INSERT terverifikasi, serta DELETE orphan diterapkan pada Storage.
+- APK pasca-merge telah dibuat. Sertifikat penandatanganannya dibandingkan dengan APK baseline API 30 dan hasilnya sama: `6E48F45D9EEEFB56FD3BC3B4ADA108FDF0B73B7280E6DF6766EF699ADAE2956D`.
+- Snapshot database read-only pada 21 Oktober 2026 sekitar 17:42 WIB: 2 pesan teks, 0 pesan media, 2 device keys, 2 verifikasi fingerprint. Ini snapshot saat pencatatan, bukan jaminan jumlah akan tetap sama setelah penggunaan berikutnya.
 
-## Verifikasi yang masih harus selesai
+## Gate penerimaan Fase 3
 
-- [ ] Run CI final pada commit terbaru hijau.
-- [x] Review policy Storage insert/select/delete, bucket private dan limit ukuran.
-- [x] Migration diterapkan lalu verifikasi bucket/RLS/constraint di Supabase.
-- [ ] APK stabil pasca-merge tersedia.
-- [ ] Tes lampiran pada kedua HP, termasuk Android 11/API 30.
-- [ ] Coba kegagalan jaringan, file di atas 3 MiB, MIME unsupported, retry dan save lokal.
-- [ ] Update checklist berdasarkan hasil nyata.
+- [x] Tes protokol/security-contract, audit dependency, web build, Capacitor sync, dan APK build lulus di CI setelah merge.
+- [x] Migration, bucket privat, batas ukuran, MIME bucket, dan policy Storage diverifikasi.
+- [x] APK pasca-merge tersedia dan sertifikatnya cocok dengan baseline.
+- [ ] Pasang APK sebagai pembaruan langsung pada kedua HP tanpa uninstall.
+- [ ] Uji kirim/terima gambar, audio, dan video pada kedua arah, termasuk Android 11/API 30.
+- [ ] Uji file di atas 3 MiB, MIME tidak didukung, kegagalan jaringan, retry, penguncian saat proses berlangsung, dan simpan lokal.
+- [ ] Catat hasil uji perangkat sebelum Fase 3 dinyatakan diterima.
+
+## Batas dan langkah selanjutnya
+
+Voice note/video note recording, file besar/chunking, multi-file, Double Ratchet/forward secrecy, dan multi-device belum termasuk atau belum tersedia. Jangan menghapus/merotasi kunci maupun menghapus pesan untuk mengatasi masalah UI. Fase 4 (push notifications) tetap menunggu uji penerimaan media nyata pada kedua HP.

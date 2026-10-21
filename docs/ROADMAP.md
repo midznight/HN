@@ -4,10 +4,10 @@ Roadmap ini melengkapi `ARCHITECTURE.md`; perubahan fase tidak otomatis berarti 
 
 | Fase | Ruang lingkup | Status per 21 Oktober 2026 |
 |---|---|---|
-| 1 | Capacitor shell, PIN lokal, lifecycle Android, APK | Baseline tersedia; pengguna sudah memakai APK. |
-| 2 | Supabase Auth, key binding, fingerprint, chat teks E2EE | Teruji pengguna: chat dua arah dan reopen pada kedua HP. CI build #73 sukses setelah dukungan API 30 digabung. |
-| 3 | Media E2EE, progress/error, pratinjau dan save | Kode dan migration Storage sudah siap/diterapkan; CI build kode media berhasil. Menunggu tes kirim/terima media nyata pada dua HP sebelum fase diterima. |
-| 4 | FCM dengan payload generik dan izin Android | Menunggu Fase 3 diterima. |
+| 1 | Capacitor shell, PIN lokal, lifecycle Android, APK | Baseline tersedia; APK sudah dipakai pengguna. |
+| 2 | Supabase Auth, key binding, fingerprint, chat teks E2EE | Teruji pengguna: chat dua arah dan reopen di kedua HP, termasuk Android 11/API 30. |
+| 3 | Media E2EE, progress/error, pratinjau dan save | Kode merged (PR #6); lock-race hardening merged (PR #8); migration dan CI pasca-merge #91 lulus. Menunggu uji media nyata pada kedua HP. |
+| 4 | FCM dengan payload generik dan izin Android | Belum dimulai; menunggu Fase 3 diterima. |
 | 5 | WebRTC, signaling privat, TURN, caveat background | Belum dimulai. |
 | 6 | Brankas terenkripsi dan log panggilan nyata | Belum dimulai. |
 | 7 | Audit keamanan, akun ketiga/RLS, uji negatif dan dokumen rilis | Belum dimulai. |
@@ -15,10 +15,10 @@ Roadmap ini melengkapi `ARCHITECTURE.md`; perubahan fase tidak otomatis berarti 
 
 ## Gate penerimaan setiap fase
 
-1. Unit tests dan audit dependensi lulus.
+1. Unit/security-contract tests dan audit dependensi lulus.
 2. Build web dan APK bertanda tangan stabil lulus.
 3. Migrasi aditif ditinjau dan diverifikasi di Supabase.
-4. Fitur diuji pada kedua HP, termasuk Android 11/API 30.
-5. Kebocoran plaintext, peran ketiga, kesalahan jaringan, pemulihan dan regresi dinilai sebelum merge.
+4. Fitur diuji di kedua HP, termasuk Android 11/API 30.
+5. Kebocoran plaintext, akun di luar pair, kesalahan jaringan, pemulihan, penguncian, dan regresi dinilai sebelum fase diterima.
 
-**Prinsip rollout:** jangan uninstall APK untuk update biasa. Jangan reset key atau menghapus pesan yang sudah ada demi membuka fitur baru. Pilih opsi gratis; tidak menambah layanan berbayar atau meminta kartu kredit.
+**Prinsip rollout:** jangan uninstall APK untuk update biasa. Jangan reset key atau menghapus pesan lama untuk membuka fitur baru. Pilih opsi gratis; tidak menambah layanan berbayar atau meminta kartu kredit.
