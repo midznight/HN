@@ -99,19 +99,44 @@
         }
     .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* Our Space visual refresh — Fase 0.5, presentation layer only */
+.message-target-flash{animation:os-message-flash 1.1s ease-out}
+@keyframes os-message-flash{0%,100%{outline:0 solid transparent}20%{outline:3px solid #d98796;outline-offset:2px}}
+.message-annotation-tools{border-color:rgba(238,219,216,.65)!important}
+.message-annotation-action{white-space:nowrap}
+.message-emoji-picker{padding-top:4px}
+.message-reply-quote{font-size:12px}
+@media(prefers-reduced-motion:reduce){.message-target-flash{animation:none!important}}
+
+#call-inline-status{margin-bottom:0;line-height:1.5}
+#chat-record-btn[data-recording="true"]{background:#a72f3f;color:#fff;animation:os-record-pulse 1.4s ease-in-out infinite}
+@keyframes os-record-pulse{0%,100%{box-shadow:0 0 0 0 rgba(167,47,63,.12)}50%{box-shadow:0 0 0 5px rgba(167,47,63,.16)}}
+#chat-audio-call:disabled,#chat-video-call:disabled{opacity:.42;cursor:not-allowed}
+
+#call-video-stage video{max-height:42dvh;background:#34292b}
+#call-remote-audio{width:100%;max-width:280px;margin-top:16px}
+#call-modal button:focus-visible{outline:3px solid #d98796;outline-offset:3px}
+@media(max-width:767px){#call-modal>section{max-height:96dvh}#call-video-stage video{max-height:32dvh}}
+
+/* Preview dialog: local-only media review; no upload until explicit confirmation */
+#media-preview-modal{overscroll-behavior:contain}
+#media-preview-frame img,#media-preview-frame video{display:block;max-width:100%;max-height:52dvh;object-fit:contain;margin:auto}
+#media-preview-frame audio{width:100%;padding:12px}
+#media-preview-cancel:focus-visible,#media-preview-send:focus-visible{outline:3px solid #d98796;outline-offset:3px}
+@media(max-width:767px){#media-preview-modal{padding:0}#media-preview-modal>section{max-height:94dvh}#media-preview-frame{margin:14px 16px;min-height:120px}}
+
 /* Relationship card intentionally avoids a fabricated anniversary date */
 #view-home>div:nth-child(2)>div:first-child{
- background:radial-gradient(circle at 86% 18%,rgba(255,255,255,.20),transparent 30%),linear-gradient(135deg,#a64e63 0%,#c96c7c 52%,#e39b91 100%)!important;
- border-color:#d98b96!important;box-shadow:0 16px 34px rgba(164,78,99,.20)!important
+ background:radial-gradient(circle at 86% 18%,rgba(255,255,255,.20),transparent 30%),linear-gradient(135deg,#793C4A 0%,#9E3E54 52%,#B63F49 100%)!important;
+ border-color:#B63F49!important;box-shadow:0 16px 34px rgba(121,60,74,.20)!important
 }
 #view-home>div:nth-child(2)>div:first-child .text-gray-400{color:#ffe2e4!important}
 #view-home>div:nth-child(2)>div:first-child .text-gray-900{color:#793c4a!important}
 #view-home>div:nth-child(2)>div:first-child .border-gray-800{border-color:rgba(255,245,242,.7)!important}
 
 :root{
-  --os-bg:#fff7f3;--os-paper:#fffdfb;--os-raised:#fcece8;--os-ink:#34292b;
-  --os-muted:#76656a;--os-line:#eedbd8;--os-rose:#c65e70;--os-rose-deep:#9e3e54;
-  --os-peach:#f3c8b8;--os-sage:#dce8dc;--os-shadow:0 12px 34px rgba(105,54,66,.09);
+  --os-bg:#FFF7F2;--os-paper:#FFFEFC;--os-raised:#F9ECE7;--os-ink:#372632;
+  --os-muted:#786674;--os-line:#E8D2D0;--os-rose:#B63F49;--os-rose-deep:#793C4A;
+  --os-peach:#F3B8B4;--os-sage:#DCE8DC;--os-shadow:0 12px 34px rgba(105,54,66,.09);
 }
 html{background:var(--os-bg);color:var(--os-ink);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{background:var(--os-bg)!important;color:var(--os-ink)!important;min-height:100dvh}
@@ -120,8 +145,8 @@ body{background:var(--os-bg)!important;color:var(--os-ink)!important;min-height:
  radial-gradient(ellipse at 88% 38%,rgba(221,232,219,.64),transparent 34%),
  linear-gradient(145deg,#fff8f5 0%,#f8efeb 56%,#f5f1e9 100%)!important
 }
-#login-screen{background:rgba(255,247,243,.88)!important}
-#login-card{background:rgba(255,253,251,.96)!important;border:1px solid #f1d9d8!important;border-radius:32px!important;box-shadow:0 24px 72px rgba(137,70,83,.15)!important}
+#login-screen{background:rgba(255,247,242,.88)!important}
+#login-card{background:rgba(255,253,251,.96)!important;border:1px solid #E8D2D0!important;border-radius:32px!important;box-shadow:0 24px 72px rgba(137,70,83,.15)!important}
 #login-card h1,#login-card h2{letter-spacing:-.035em}
 #app-layout{gap:12px!important}
 #app-layout>nav{
@@ -181,7 +206,7 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
  #chat-composer{padding:10px 12px max(10px,env(safe-area-inset-bottom))!important}
  #view-home>div:first-child{padding-left:20px!important;padding-right:20px!important}
 }
-@media(prefers-reduced-motion:reduce){.app-view,button{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.app-view,button,#chat-record-btn{animation:none!important;transition:none!important}}
 
 </style>
 </head>
@@ -218,48 +243,25 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
         <!-- DESKTOP SIDEBAR / MOBILE BOTTOM NAV -->
         <nav class="mac-glass rounded-none sm:rounded-[22px] md:w-20 lg:w-64 flex md:flex-col justify-around md:justify-start items-center md:items-start p-2 md:p-4 lg:p-5 z-50 order-2 md:order-1 shrink-0 pb-safe shadow-xl">
-            
-            <!-- Window Controls (Traffic Lights) - Desktop Only -->
-            <div class="hidden md:flex items-center gap-2 mb-6 w-full px-2">
-                <div class="w-3 h-3 rounded-full bg-[#FF5F56] border border-black/10"></div>
-                <div class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-black/10"></div>
-                <div class="w-3 h-3 rounded-full bg-[#27C93F] border border-black/10"></div>
+            <div class="nav-brand hidden md:flex items-center gap-3 mb-6 w-full px-2">
+                <img src="/assets/brand-mark.svg" alt="" class="w-9 h-9 rounded-xl">
+                <span class="hidden lg:block font-serif text-lg text-[#9e3e54]">Our Space</span>
             </div>
-
-            <div class="hidden lg:flex items-center gap-3 mb-4 w-full px-2">
-                <h2 class="font-semibold text-[10px] text-gray-500 tracking-widest uppercase">WORKSPACE</h2>
-            </div>
-
-            <!-- Nav Items -->
-            <button onclick="switchView('home')" class="nav-item active flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group">
-                <i data-lucide="layout-grid" class="w-5 h-5 md:w-4 md:h-4 text-blue-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Dashboard</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-            
-            <button onclick="switchView('chat')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="message-square" class="w-5 h-5 md:w-4 md:h-4 text-green-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Messages</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-            
-            <button onclick="switchView('calls')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="video" class="w-5 h-5 md:w-4 md:h-4 text-emerald-600"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">FaceTime</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-
-            <button onclick="switchView('storage')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="folder" class="w-5 h-5 md:w-4 md:h-4 text-amber-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Drive</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-
-            <div class="md:mt-auto w-full pt-2 md:border-t border-white/20">
-                <button onclick="switchView('profile')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group">
-                    <i data-lucide="settings" class="w-5 h-5 md:w-4 md:h-4 text-gray-500"></i>
-                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Settings</span>
-                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+            <div class="nav-primary flex md:flex-col justify-around md:justify-start items-stretch md:items-stretch gap-1 w-full">
+                <button type="button" onclick="switchView('chat')" class="nav-item active flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Obrolan">
+                    <i data-lucide="message-circle" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Obrolan</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+                </button>
+                <button type="button" onclick="switchView('home')" class="nav-item flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Kita">
+                    <i data-lucide="heart" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Kita</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+                </button>
+                <button type="button" onclick="switchView('storage')" class="nav-item flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Brankas">
+                    <i data-lucide="lock-keyhole" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Brankas</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
                 </button>
             </div>
         </nav>
@@ -268,14 +270,15 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
         <main class="flex-1 flex flex-col h-full min-w-0 mac-glass-solid rounded-none sm:rounded-[22px] shadow-2xl relative order-1 md:order-2 overflow-hidden bg-white/90">
             
             <!-- HOME VIEW -->
-            <div id="view-home" class="app-view active flex-col h-full overflow-y-auto custom-scrollbar">
+            <div id="view-home" class="app-view flex-col h-full overflow-y-auto custom-scrollbar">
                 <div class="mac-glass sticky top-0 z-20 px-6 sm:px-8 py-4 border-b border-white/60 flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight">Ruang Privat Berdua</h2>
+                        <p class="text-[10px] uppercase tracking-[.22em] text-[#9e3e54] font-semibold mb-1">Ruang kecil kita</p>
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight">Kita</h2>
                         <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tempat kecil untuk Hamid & Nur.</p>
                     </div>
-                    <button class="p-2 bg-white/50 text-gray-700 rounded-full hover:bg-white border border-white/60 shadow-sm transition">
-                        <i data-lucide="bell" class="w-4 h-4"></i>
+                    <button id="kita-settings-btn" type="button" onclick="switchView('profile')" aria-label="Buka pengaturan" title="Pengaturan" class="p-3 min-w-12 min-h-12 bg-white/70 text-[#9e3e54] rounded-2xl hover:bg-white border border-[#eedbd8] shadow-sm transition">
+                        <i data-lucide="settings-2" class="w-5 h-5"></i>
                     </button>
                 </div>
 
@@ -374,7 +377,7 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
             </div>
 
             <!-- CHAT VIEW -->
-            <div id="view-chat" class="app-view flex-col h-full bg-surface-bg relative">
+            <div id="view-chat" class="app-view active flex-col h-full bg-surface-bg relative">
                 <header class="mac-glass h-[70px] border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 bg-white/90">
                     <div class="flex items-center gap-3">
                         <div class="relative">
@@ -388,8 +391,8 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
                     </div>
 
                     <div class="flex items-center gap-2 text-surface-muted">
-                        <button class="p-2 hover:bg-gray-100 hover:text-brand-500 rounded-full transition-colors"><i data-lucide="phone" class="w-4 h-4"></i></button>
-                        <button class="p-2 hover:bg-gray-100 hover:text-brand-500 rounded-full transition-colors"><i data-lucide="video" class="w-4 h-4"></i></button>
+                        <button id="chat-audio-call" type="button" disabled aria-label="Panggilan suara belum aktif" title="Panggilan suara belum aktif" class="p-3 min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] opacity-60 cursor-not-allowed"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                        <button id="chat-video-call" type="button" disabled aria-label="Panggilan video belum aktif" title="Panggilan video belum aktif" class="p-3 min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] opacity-60 cursor-not-allowed"><i data-lucide="video" class="w-5 h-5"></i></button>
                     </div>
                 </header>
 
@@ -432,13 +435,19 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
                         </section>
                     </div>
                 </div>
+                <div id="call-inline-status" class="hidden mx-4 mt-3 rounded-xl border border-[#eedbd8] bg-white p-3 text-xs text-[#76656a]" role="status" aria-live="polite"></div>
+                <div id="chat-annotation-status" class="hidden mx-4 mt-2 rounded-xl border border-[#eedbd8] bg-white p-3 text-xs text-[#76656a]" role="status" aria-live="polite"></div>
                 <div id="chat-container" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-36"></div>
 
                 <footer id="chat-composer" class="hidden absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
                     <p id="chat-upload-status" role="status" aria-live="polite" class="hidden text-[10px] text-surface-muted px-2 pb-2"></p>
+                    <p id="chat-record-status" role="status" aria-live="polite" class="hidden text-xs text-[#9e3e54] px-2 pb-2"></p>
                     <div class="flex items-end gap-2 bg-surface-bg p-2 rounded-2xl border border-gray-200 focus-within:border-brand-300 focus-within:shadow-soft transition-all">
-                        <button id="chat-attach-btn" type="button" disabled aria-label="Kirim gambar, video, atau audio terenkripsi" title="Lampiran terenkripsi · maksimal 3 MiB" class="p-2 text-surface-muted disabled:opacity-40 shrink-0 rounded-full hover:bg-white/70 transition">
+                        <button id="chat-attach-btn" type="button" disabled aria-label="Pilih gambar, video, atau audio" title="Lampiran terenkripsi · maksimal 3 MiB" class="p-2 min-w-11 min-h-11 text-surface-muted disabled:opacity-40 shrink-0 rounded-2xl hover:bg-white/70 transition">
                             <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                        <button id="chat-record-btn" type="button" disabled aria-label="Rekam pesan suara" title="Rekam pesan suara" data-recording="false" class="p-2 min-w-11 min-h-11 text-[#9e3e54] disabled:opacity-40 shrink-0 rounded-2xl hover:bg-[#fcece8] transition">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
                         </button>
                         <input id="chat-attachment-input" type="file" accept="image/*,video/*,audio/*" class="hidden" aria-label="Pilih gambar, video, atau audio">
 
@@ -472,17 +481,38 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
 <!-- STORAGE VIEW -->
             <div id="view-storage" class="app-view flex-col h-full bg-surface-bg">
-                <header class="mac-glass sticky top-0 z-20 px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white/90">
+                <header class="mac-glass sticky top-0 z-20 px-5 sm:px-7 py-4 border-b border-gray-100 flex justify-between items-center bg-white/90">
                     <div>
+                        <p class="text-[10px] uppercase tracking-[.2em] text-[#9e3e54] font-semibold mb-1">Ruang privat</p>
                         <h2 class="text-xl sm:text-2xl font-serif font-semibold text-surface-dark tracking-wide">Brankas Berdua</h2>
-                        <p class="text-[10px] sm:text-[11px] uppercase tracking-widest text-surface-muted mt-0.5">Kuota tampil setelah backend tersedia</p>
+                        <p class="text-[11px] sm:text-xs text-surface-muted mt-1">File dienkripsi sebelum diunggah.</p>
                     </div>
-                    <button class="p-2.5 sm:p-3 bg-surface-dark text-white rounded-full hover:bg-black shadow-soft transition-transform active:scale-95">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
+                    <button id="vault-add-button" type="button" aria-label="Tambah file ke Brankas" title="Tambah file" class="min-w-12 min-h-12 px-3 bg-[#c65e70] text-white rounded-2xl hover:bg-[#a64e63] shadow-sm transition-transform active:scale-95">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
                     </button>
+                    <input id="vault-file-input" type="file" accept="image/*,video/*,audio/*" class="hidden" aria-label="Pilih file untuk Brankas">
                 </header>
-
-                <div class="p-4 sm:p-6 flex-1 flex items-center justify-center pb-28 md:pb-10"><div class="text-center max-w-xs"><div class="w-14 h-14 mx-auto rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-4"><i data-lucide="lock-keyhole" class="w-6 h-6"></i></div><h3 class="font-serif text-lg mb-2">Brankas masih terkunci</h3><p class="text-xs text-surface-muted leading-relaxed">File dan kapasitas nyata akan tampil setelah backend terenkripsi diaktifkan.</p></div></div></div>
+                <div class="p-4 sm:p-6 flex-1 overflow-y-auto pb-28 md:pb-10">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="rounded-2xl border border-[#ead8d7] bg-[#fff4f0] p-4 mb-4 flex gap-3 items-start">
+                            <div class="w-10 h-10 shrink-0 rounded-xl bg-white text-[#9e3e54] flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+                            <div>
+                                <p class="text-sm font-semibold text-[#613641]">Hanya untuk kalian berdua</p>
+                                <p class="text-xs leading-relaxed text-[#76656a] mt-1">Nama file dan isi file dienkripsi di perangkat. File asli tidak diunggah ke server.</p>
+                            </div>
+                        </div>
+                        <p id="vault-status" class="hidden text-sm text-[#76656a] rounded-xl p-3 mb-3 bg-white border border-[#eedbd8]" role="status" aria-live="polite"></p>
+                        <div id="vault-empty" class="hidden text-center rounded-[26px] border border-dashed border-[#e8cdd0] bg-white/70 p-8 sm:p-12">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-[22px] bg-[#fcece8] text-[#9e3e54] flex items-center justify-center"><i data-lucide="folder-lock" class="w-7 h-7"></i></div>
+                            <h3 class="font-serif text-xl text-[#34292b]">Ruang ini masih kosong</h3>
+                            <p class="text-sm text-[#76656a] leading-relaxed mt-2 max-w-sm mx-auto">Simpan foto, video, atau audio setelah memeriksa pratinjaunya. File baru akan muncul setelah berhasil dienkripsi dan disimpan.</p>
+                            <button type="button" onclick="document.getElementById('vault-add-button')?.click()" class="mt-5 min-h-12 px-5 py-3 rounded-2xl bg-[#c65e70] text-white font-semibold">Tambah file pertama</button>
+                        </div>
+                        <div id="vault-items" class="space-y-3"></div>
+                        <p class="text-[11px] text-[#76656a] leading-relaxed mt-5">Batas file saat ini 3 MiB. Brankas memerlukan koneksi dan fingerprint pasangan yang sudah diverifikasi.</p>
+                    </div>
+                </div>
+            </div>
 
 <!-- PROFILE VIEW -->
             <div id="view-profile" class="app-view flex-col h-full bg-surface-bg">
@@ -565,6 +595,102 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
     </div>
 
+    <div id="media-preview-modal" class="hidden fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-[#34292b]/55 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="media-preview-title" aria-describedby="media-preview-description">
+      <section class="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] border border-[#eedbd8] bg-[#fffdfb] shadow-2xl">
+        <div class="p-5 sm:p-6 border-b border-[#eedbd8]">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-semibold tracking-[.2em] uppercase text-[#9e3e54] mb-1">Privasi sebelum berbagi</p>
+              <h2 id="media-preview-title" class="font-serif text-xl sm:text-2xl text-[#34292b]">Periksa sebelum mengirim</h2>
+              <p id="media-preview-description" class="text-sm text-[#76656a] mt-1">Media belum dikirim. Pastikan pilihanmu benar sebelum melanjutkan.</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-[#fcece8] px-3 py-1 text-[10px] font-semibold text-[#9e3e54]">PRATINJAU</span>
+          </div>
+        </div>
+        <div id="media-preview-frame" class="m-4 sm:m-5 min-h-40 rounded-2xl bg-[#f8efeb] overflow-hidden flex items-center justify-center"></div>
+        <div class="px-5 sm:px-6 pb-4">
+          <p id="media-preview-name" class="font-medium text-sm text-[#34292b] break-words"></p>
+          <p id="media-preview-meta" class="text-xs text-[#76656a] mt-1"></p>
+          <p id="media-preview-error" class="hidden text-sm text-red-700 bg-red-50 rounded-xl p-3 mt-3" role="status" aria-live="polite"></p>
+          <p class="text-xs text-[#76656a] leading-relaxed mt-3">File akan dienkripsi di perangkat sebelum diunggah. Batal akan menutup pratinjau tanpa mengirim.</p>
+        </div>
+        <div class="flex gap-3 p-5 sm:px-6 border-t border-[#eedbd8]">
+          <button id="media-preview-cancel" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl border border-[#e8cdd0] bg-white font-medium text-[#9e3e54]">Batal</button>
+          <button id="media-preview-send" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-[#c65e70] font-semibold text-white disabled:opacity-50">Kirim media</button>
+        </div>
+      </section>
+    </div>
+
+
+    <div id="call-modal" class="hidden fixed inset-0 z-[130] flex items-end sm:items-center justify-center bg-[#34292b]/80 p-0 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="call-modal-title">
+      <section class="w-full max-w-xl max-h-[96dvh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] border border-white/15 bg-[#fffaf8] shadow-2xl">
+        <header class="flex items-start justify-between gap-3 p-5 sm:p-6 border-b border-[#eedbd8]">
+          <div>
+            <p class="text-[10px] uppercase tracking-[.2em] font-semibold text-[#9e3e54]">Panggilan terenkripsi</p>
+            <h2 id="call-modal-title" class="font-serif text-2xl text-[#34292b] mt-1">Panggilan dengan pasangan</h2>
+            <p id="call-state-text" class="text-sm text-[#76656a] mt-2" role="status" aria-live="polite">Menyiapkan koneksi…</p>
+          </div>
+          <button id="call-close-button" type="button" aria-label="Tutup tampilan panggilan" class="min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] font-semibold">Tutup</button>
+        </header>
+        <div id="call-video-stage" class="hidden p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="relative min-h-40 rounded-2xl overflow-hidden bg-[#34292b]">
+            <video id="call-remote-video" autoplay playsinline class="w-full h-full min-h-40 object-cover"></video>
+            <span class="absolute bottom-2 left-2 rounded-lg bg-black/50 text-white text-[10px] px-2 py-1">Pasangan</span>
+          </div>
+          <div class="relative min-h-40 rounded-2xl overflow-hidden bg-[#efe1df]">
+            <video id="call-local-video" autoplay playsinline muted class="w-full h-full min-h-40 object-cover"></video>
+            <span class="absolute bottom-2 left-2 rounded-lg bg-black/50 text-white text-[10px] px-2 py-1">Kamu</span>
+          </div>
+        </div>
+        <div id="call-audio-stage" class="flex flex-col items-center justify-center text-center p-8 sm:p-12">
+          <div class="w-20 h-20 rounded-[28px] bg-[#fcece8] text-[#9e3e54] flex items-center justify-center mb-4"><i data-lucide="phone-call" class="w-8 h-8"></i></div>
+          <p class="font-serif text-xl text-[#34292b]">Ruang pribadi berdua</p>
+          <p id="call-audio-subtitle" class="text-sm text-[#76656a] mt-2">Suara hanya aktif setelah panggilan tersambung.</p>
+          <audio id="call-remote-audio" autoplay></audio>
+        </div>
+        <div class="px-5 sm:px-6 pb-5">
+          <div class="rounded-xl bg-[#fff0ea] border border-[#eedbd8] p-3 text-[11px] text-[#765059] leading-relaxed">
+            Panggilan langsung memakai jalur peer-to-peer dan STUN Cloudflare. Alamat IP jaringan dapat terlihat oleh pihak pasangan dan layanan STUN. Panggilan akan berakhir ketika aplikasi dikunci; panggilan masuk saat aplikasi tertutup belum didukung.
+          </div>
+        </div>
+        <footer class="flex flex-wrap justify-center gap-3 p-5 border-t border-[#eedbd8]">
+          <button id="call-accept-button" type="button" class="hidden min-h-12 px-5 py-3 rounded-2xl bg-[#2e7d5b] text-white font-semibold">Angkat</button>
+          <button id="call-reject-button" type="button" class="hidden min-h-12 px-5 py-3 rounded-2xl border border-[#e8cdd0] bg-white text-[#9e3e54] font-semibold">Tolak</button>
+          <button id="call-mute-button" type="button" class="hidden min-h-12 px-5 py-3 rounded-2xl bg-[#fcece8] text-[#9e3e54] font-semibold">Bisukan mikrofon</button>
+          <button id="call-camera-button" type="button" class="hidden min-h-12 px-5 py-3 rounded-2xl bg-[#fcece8] text-[#9e3e54] font-semibold">Matikan kamera</button>
+          <button id="call-end-button" type="button" class="hidden min-h-12 px-5 py-3 rounded-2xl bg-[#a72f3f] text-white font-semibold">Akhiri panggilan</button>
+        </footer>
+      </section>
+    </div>
+    <div id="vault-preview-modal" class="hidden fixed inset-0 z-[121] flex items-end sm:items-center justify-center bg-[#34292b]/55 p-3 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vault-preview-title">
+      <section class="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] border border-[#eedbd8] bg-[#fffdfb] shadow-2xl">
+        <div class="p-5 sm:p-6 border-b border-[#eedbd8]">
+          <p class="text-[10px] font-semibold tracking-[.2em] uppercase text-[#9e3e54] mb-1">Pratinjau privat</p>
+          <h2 id="vault-preview-title" class="font-serif text-xl sm:text-2xl text-[#34292b]">Simpan ke Brankas?</h2>
+          <p class="text-sm text-[#76656a] mt-1">Belum ada file yang diunggah. Periksa dulu, lalu konfirmasi.</p>
+        </div>
+        <div id="vault-preview-frame" class="m-4 sm:m-5 min-h-40 rounded-2xl bg-[#f8efeb] overflow-hidden flex items-center justify-center"></div>
+        <div class="px-5 sm:px-6 pb-4">
+          <p id="vault-preview-name" class="font-medium text-sm text-[#34292b] break-words"></p>
+          <p id="vault-preview-meta" class="text-xs text-[#76656a] mt-1"></p>
+          <p class="text-xs text-[#76656a] leading-relaxed mt-3">Setelah kamu memilih Simpan, file dienkripsi di perangkat dan ciphertext disimpan dalam bucket privat.</p>
+        </div>
+        <div class="flex gap-3 p-5 sm:px-6 border-t border-[#eedbd8]">
+          <button id="vault-preview-cancel" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl border border-[#e8cdd0] bg-white font-medium text-[#9e3e54]">Batal</button>
+          <button id="vault-preview-send" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-[#c65e70] font-semibold text-white disabled:opacity-50">Simpan ke Brankas</button>
+        </div>
+      </section>
+    </div>
+    <div id="vault-viewer-modal" class="hidden fixed inset-0 z-[122] flex items-center justify-center bg-[#34292b]/85 p-3 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vault-viewer-title">
+      <section class="w-full max-w-3xl max-h-[94dvh] overflow-y-auto rounded-[26px] border border-white/20 bg-[#fffdfb] shadow-2xl">
+        <header class="sticky top-0 z-10 flex items-center justify-between gap-3 p-4 border-b border-[#eedbd8] bg-[#fffdfb]">
+          <h2 id="vault-viewer-title" class="font-serif text-lg text-[#34292b] break-words">File Brankas</h2>
+          <button id="vault-viewer-close" type="button" aria-label="Tutup file" class="min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] font-semibold">Tutup</button>
+        </header>
+        <div id="vault-viewer-frame" class="p-3 sm:p-5 min-h-40 flex items-center justify-center"></div>
+        <p class="px-5 pb-5 text-xs leading-relaxed text-[#76656a]">File didekripsi hanya di perangkat ini. Tutup atau kunci aplikasi untuk membersihkan pratinjau sementara.</p>
+      </section>
+    </div>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>

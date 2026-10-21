@@ -8,11 +8,21 @@ const native = readFileSync(new URL('../android-native/src/main/java/com/ourspac
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const previewHtml = readFileSync(new URL('../preview-ui/index.html', import.meta.url), 'utf8');
+const tailwind = readFileSync(new URL('../tailwind.config.cjs', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021102710_phase3_encrypted_media.sql', import.meta.url), 'utf8');
 const pushMigration = readFileSync(new URL('../supabase/migrations/20261021123417_phase4_push_notifications.sql', import.meta.url), 'utf8');
 const pushClient = readFileSync(new URL('../src/push-notifications.js', import.meta.url), 'utf8');
 const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/index.ts', import.meta.url), 'utf8');
+const vaultMigration = readFileSync(new URL('../supabase/migrations/20261021160156_create_encrypted_shared_vault.sql', import.meta.url), 'utf8');
+const vaultRealtimeMigration = readFileSync(new URL('../supabase/migrations/20261021160737_publish_vault_items_realtime.sql', import.meta.url), 'utf8');
+const vaultClient = readFileSync(new URL('../src/vault.js', import.meta.url), 'utf8');
+const callsMigration = readFileSync(new URL('../supabase/migrations/20261021161355_encrypted_webrtc_calls_and_history.sql', import.meta.url), 'utf8');
+const callsIndexMigration = readFileSync(new URL('../supabase/migrations/20261021161432_index_call_signal_member_foreign_keys.sql', import.meta.url), 'utf8');
+const callsClient = readFileSync(new URL('../src/calls.js', import.meta.url), 'utf8');
+const annotationsMigration = readFileSync(new URL('../supabase/migrations/20261021163650_create_encrypted_message_annotations.sql', import.meta.url), 'utf8');
+const annotationsClient = readFileSync(new URL('../src/message-annotations.js', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
 const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
 const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
@@ -205,11 +215,15 @@ test('Android gallery picking defers only the expected app background lock and s
   assert.match(client, /window\.ourSpaceAttachmentPicker = \{/);
   assert.match(client, /if \(!attachmentPickerPending \|\| !attachmentPickerBackgrounded\) return/);
   assert.match(client, /if \(attachmentPickerPending \&\& attachmentPickerBackgrounded\) finishAttachmentPicker\(false\)/);
-  assert.match(client, /export function onChatLocked\(\) \{\s+clearAttachmentPickerState\(\)/);
+  assert.match(client, /export function onChatLocked\(\) \{[\s\S]{0,100}clearAttachmentPickerState\(\)/);
   assert.match(main, /ourspace:attachment-picker-cancelled/);
   assert.match(main, /if\(picker\?\.isPending\(\)\)\{picker\.onBackground\(\);return\}/);
-  assert.match(main, /if\(isActive\)window\.ourSpaceAttachmentPicker\?\.onForeground\(\)/);
-  assert.match(main, /backButton[\s\S]*?ourSpaceAttachmentPicker\?\.isPending\(\)\)return/);
+  assert.match(main, /if\(isActive\)\{[\s\S]*?window\.ourSpaceAttachmentPicker\?\.onForeground\(\)[\s\S]*?window\.ourSpaceVault\?\.onPickerForeground\?\.\(\)/);
+  assert.match(main, /backButton[\\s\\S]*?ourSpaceAttachmentPicker\\?\\.isPending\\(\\)\\|\\|window\\.ourSpaceVault\\?\\.isPickerPending/);
+  assert.match(main, /ourSpaceVault\?\.isPickerPending\?\.\(\)/);
+  assert.match(vaultClient, /function beginVaultPicker\(\)/);
+  assert.match(vaultClient, /PICKER_RESUME_GRACE_MS/);
+  assert.match(vaultClient, /finishPicker\(Boolean\(file\)\)/);
 });
 
 
@@ -415,3 +429,181 @@ test('FCM server auth uses short-lived Workload Identity Federation and no servi
   assert.ok(pushFunction.includes('await getAccessToken(wifConfig, jwt)'));
   assert.ok(pushFunction.includes('return jsonResponse({ ready: false })'));
 });
+
+test('media picker only opens a local preview; upload requires explicit confirmation', () => {
+  assert.match(html, /id="media-preview-modal"[^>]*role="dialog"/);
+  assert.match(html, /id="media-preview-cancel"/);
+  assert.match(html, /id="media-preview-send"/);
+  const pickerStart = client.indexOf("$('chat-attachment-input')?.addEventListener('change'");
+  assert.ok(pickerStart >= 0, 'attachment picker listener exists');
+  const pickerBlock = client.slice(pickerStart, pickerStart + 900);
+  assert.match(pickerBlock, /openMediaPreview\(file\)/);
+  assert.doesNotMatch(pickerBlock, /sendMediaFile\(file\)/);
+  assert.match(client, /send\.addEventListener\('click', async \(\) => \{[\s\S]*?await sendMediaFile\(file\);/);
+  assert.match(client, /export function onChatLocked\(\) \{[\s\S]{0,100}closeMediaPreview\(\);/);
+});
+
+test('navigation uses three core tabs and defaults to Obrolan after the PIN gate', () => {
+  const navStart = html.indexOf('<nav class="mac-glass');
+  const navEnd = html.indexOf('</nav>', navStart);
+  assert.ok(navStart >= 0 && navEnd > navStart, 'primary navigation exists');
+  const nav = html.slice(navStart, navEnd);
+  assert.equal((nav.match(/class="nav-item/g) || []).length, 3);
+  assert.match(nav, /switchView\('chat'\)[\s\S]*?Obrolan/);
+  assert.match(nav, /switchView\('home'\)[\s\S]*?Kita/);
+  assert.match(nav, /switchView\('storage'\)[\s\S]*?Brankas/);
+  assert.match(html, /id="kita-settings-btn"[^>]*switchView\('profile'\)/);
+  assert.match(main, /currentView='chat'/);
+  assert.match(main, /preview&&!preview\.classList\.contains\('hidden'\)/);
+});
+
+test('Phase 6 vault stores only encrypted metadata and enforces two-member verified E2EE access', () => {
+  assert.match(vaultMigration, /create table if not exists public\.vault_items/i);
+  assert.match(vaultMigration, /alter table public\.vault_items enable row level security/i);
+  assert.match(vaultMigration, /private\.is_pair_member\(pair_id\)/i);
+  assert.match(vaultMigration, /sender_id = \(select auth\.uid\(\)\)/i);
+  assert.match(vaultMigration, /key_verifications[\s\S]*?verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(vaultMigration, /grant select, insert, delete on table public\.vault_items to authenticated/i);
+  assert.doesNotMatch(vaultMigration, /grant\s+update[^;]*vault_items/i);
+  const match = vaultMigration.match(/create table if not exists public\.vault_items\s*\(([\s\S]*?)\n\);/i);
+  assert.ok(match, 'vault table declaration must be present');
+  const columns = match[1].split('\n')
+    .map((line) => line.trim().match(/^([a-z_]+)\s+/i)?.[1])
+    .filter(Boolean);
+  assert.ok(columns.includes('ciphertext'));
+  assert.ok(columns.includes('nonce'));
+  for (const forbidden of ['plaintext', 'body', 'content', 'filename', 'mime_type', 'object_path', 'file_url']) {
+    assert.ok(!columns.includes(forbidden), 'vault plaintext metadata column found: ' + forbidden);
+  }
+  assert.match(vaultRealtimeMigration, /alter publication supabase_realtime add table public\.vault_items/i);
+  assert.match(vaultClient, /KeyStore\.encryptMedia\(/);
+  assert.match(vaultClient, /KeyStore\.encryptMessage\([\s\S]*?messageType: 'media'/);
+  assert.match(vaultClient, /KeyStore\.decryptMessage\(/);
+  assert.match(vaultClient, /KeyStore\.decryptMedia\(/);
+  assert.match(vaultClient, /from\('vault_items'\)/);
+  assert.match(vaultClient, /from\(BUCKET\)\.upload\(/);
+  assert.match(vaultClient, /from\(BUCKET\)\.download\(/);
+  assert.match(vaultClient, /currentContext\(context\)/);
+  assert.match(vaultClient, /function validateMetadata\(/);
+  assert.match(vaultClient, /function openPreview\(/);
+  assert.match(vaultClient, /vault-preview-send[\s\S]*?addEventListener\('click'/);
+  assert.doesNotMatch(vaultClient, /\.createSignedUrl\(/);
+});
+
+test('Phase 5 WebRTC call signaling and call history remain E2EE and require verified pair membership', () => {
+  assert.match(callsMigration, /create table if not exists public\.call_signals/i);
+  assert.match(callsMigration, /create table if not exists public\.call_records/i);
+  assert.match(callsMigration, /alter table public\.call_signals enable row level security/i);
+  assert.match(callsMigration, /alter table public\.call_records enable row level security/i);
+  assert.match(callsMigration, /recipient_id = \(select auth\.uid\(\)\)/i);
+  assert.match(callsMigration, /verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(callsMigration, /prune_expired_call_signals/i);
+  assert.match(callsMigration, /interval '1 hour'/i);
+  assert.match(callsMigration, /alter publication supabase_realtime add table public\.call_signals/i);
+  assert.match(callsMigration, /alter publication supabase_realtime add table public\.call_records/i);
+  assert.match(callsIndexMigration, /call_signals_sender_member_idx/i);
+  assert.match(callsIndexMigration, /call_signals_recipient_member_idx/i);
+  assert.doesNotMatch(callsMigration, /grant\s+update[^;]*(call_signals|call_records)/i);
+  assert.doesNotMatch(callsMigration, /grant\s+delete[^;]*(call_signals|call_records)/i);
+
+  const signalColumns = callsMigration.match(/create table if not exists public\.call_signals\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  const historyColumns = callsMigration.match(/create table if not exists public\.call_records\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  for (const [label, body] of [['signals', signalColumns], ['history', historyColumns]]) {
+    assert.ok(body, label + ' table declaration exists');
+    for (const forbidden of ['sdp', 'candidate', 'call_type', 'status', 'duration', 'plaintext', 'filename', 'object_path']) {
+      assert.ok(!new RegExp('^\\s*' + forbidden + '\\s+', 'im').test(body),
+        label + ' exposes private call metadata column: ' + forbidden);
+    }
+  }
+  assert.match(callsClient, /KeyStore\.encryptMessage\(/);
+  assert.match(callsClient, /KeyStore\.decryptMessage\(/);
+  assert.match(callsClient, /from\('call_signals'\)\.insert\(/);
+  assert.match(callsClient, /from\('call_records'\)\.insert\(/);
+  assert.match(callsClient, /new RTCPeerConnection\(\{ iceServers: STUN_SERVERS \}\)/);
+  assert.match(callsClient, /navigator\.mediaDevices\?\.getUserMedia/);
+  assert.match(callsClient, /sameContext\(ctx\)/);
+  assert.match(callsClient, /call\.pc\.close\(\)/);
+  assert.match(callsClient, /stopStream\(call\.localStream\)/);
+  assert.match(html, /id="call-modal"[^>]*role="dialog"/);
+  assert.match(html, /id="call-accept-button"/);
+  assert.match(html, /id="call-end-button"/);
+  assert.match(html, /id="chat-audio-call"/);
+  assert.match(html, /id="chat-video-call"/);
+});
+
+test('voice notes are recorded locally, size-bounded, and sent only through media preview confirmation', () => {
+  assert.match(html, /id="chat-record-btn"/);
+  assert.match(html, /id="chat-record-status"[^>]*aria-live="polite"/);
+  assert.match(client, /async function startVoiceRecording\(\)/);
+  assert.match(client, /navigator\.mediaDevices\?\.getUserMedia/);
+  assert.match(client, /new MediaRecorder\(/);
+  assert.match(client, /VOICE_NOTE_MAX_DURATION_MS = 90_000/);
+  assert.match(client, /VOICE_NOTE_STOP_BEFORE_LIMIT_BYTES = MAX_MEDIA_BYTES - 128 \* 1024/);
+  assert.match(client, /if \(shouldDiscard\) return/);
+  assert.match(client, /openMediaPreview\(file\)/);
+  assert.match(client, /cancelVoiceRecording\(true\)/);
+  assert.match(client, /let voiceRecordingEpoch = 0/);
+  assert.match(client, /const requestEpoch = voiceRecordingEpoch/);
+  assert.match(client, /requestEpoch !== voiceRecordingEpoch \|\| !appUnlocked/);
+  assert.match(client, /export function onChatLocked\(\) \{\s*voiceRecordingEpoch\+\+/);
+  const voiceStart = client.indexOf('async function startVoiceRecording()');
+  const voiceEnd = client.indexOf('function toggleVoiceRecording()', voiceStart);
+  assert.ok(voiceStart >= 0 && voiceEnd > voiceStart, 'voice recording function is bounded');
+  assert.doesNotMatch(client.slice(voiceStart, voiceEnd), /supabase\.storage\.from\(MEDIA_BUCKET\)\.upload/);
+});
+
+
+test('replies and emoji reactions use E2EE envelopes with no plaintext relation columns', () => {
+  assert.match(annotationsMigration, /create table if not exists public\.message_annotations/i);
+  assert.match(annotationsMigration, /alter table public\.message_annotations enable row level security/i);
+  assert.match(annotationsMigration, /verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(annotationsMigration, /grant select, insert on table public\.message_annotations to authenticated/i);
+  assert.doesNotMatch(annotationsMigration, /grant\s+(update|delete)[^;]*message_annotations/i);
+  assert.match(annotationsMigration, /alter publication supabase_realtime add table public\.message_annotations/i);
+  const body = annotationsMigration.match(/create table if not exists public\.message_annotations\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  assert.ok(body, 'message annotation table declaration is present');
+  for (const forbidden of ['target_message_id', 'reply_message_id', 'emoji', 'active', 'plaintext', 'body', 'message_text']) {
+    assert.ok(!new RegExp('^\\s*' + forbidden + '\\s+', 'im').test(body),
+      'annotation metadata must not be stored in plaintext column: ' + forbidden);
+  }
+  assert.match(annotationsClient, /KeyStore\.encryptMessage\(/);
+  assert.match(annotationsClient, /KeyStore\.decryptMessage\(/);
+  assert.match(annotationsClient, /kind: 'reaction'/);
+  assert.match(annotationsClient, /kind: 'reply'/);
+  assert.match(annotationsClient, /REACTION_EMOJIS/);
+  assert.match(annotationsClient, /window\.ourSpaceAnnotations = \{/);
+  assert.match(client, /ourSpaceAnnotations\?\.registerMessage\(row, line/);
+  assert.match(client, /attachReply\?\.\(data\.id, replyContext\)/);
+  assert.match(main, /initMessageAnnotations\(\)/);
+  assert.match(html, /id="chat-annotation-status"/);
+});
+
+test('production UI and interactive preview use the approved rose-coral design tokens', () => {
+  assert.match(html, /viewport-fit=cover/);
+  assert.doesNotMatch(html, /user-scalable\s*=\s*no|maximum-scale\s*=/i);
+  assert.match(html, /--os-bg:#FFF7F2/);
+  assert.match(html, /--os-ink:#372632/);
+  assert.match(html, /--os-rose:#B63F49/);
+  assert.match(tailwind, /brand:\{50:'#FFF7F2'/);
+  assert.match(previewHtml, /--bg:#FFF7F2/);
+  assert.match(previewHtml, /--accent:#D65355/);
+  assert.match(previewHtml, /--bg:#171319/);
+  assert.match(previewHtml, /--accent:#F39A8E/);
+  assert.doesNotMatch(previewHtml, /#F7F4EE|#70502F|#151614/);
+});
+
+test('relationship card does not fabricate an anniversary date', () => {
+  assert.match(html, /Ruang Kita/);
+  assert.match(html, /Tanggal jadian belum dikonfirmasi/);
+  assert.doesNotMatch(html, />\s*Anniversary\s*</i);
+});
+
+test('Android release candidate builds signed debug and release APKs and verifies matching certificates', () => {
+  assert.match(workflow, /assembleDebug assembleRelease/);
+  assert.match(workflow, /our-space-release-apk/);
+  assert.match(workflow, /app-release\.apk/);
+  assert.match(workflow, /apksigner.*--print-certs|apksigner.*verify/);
+  assert.match(workflow, /V2 Signer: certificate SHA-256 digest:/);
+  assert.match(workflow, /test "\$DEBUG_CERT" = "\$RELEASE_CERT"/);
+});
+

@@ -1,7 +1,7 @@
 name: Build Our Space Android Debug APK
 on:
   push:
-    branches: [main, 'phase-1/**', 'phase-2/**', 'phase-3/**', 'phase-4/**']
+    branches: [main, 'phase-0.5/**', 'phase-1/**', 'phase-2/**', 'phase-3/**', 'phase-4/**', 'phase-5/**', 'phase-6/**', 'phase-7/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -123,6 +123,33 @@ jobs:
               raise SystemExit("Failed to disable backup for Keystore-bound app identity.")
           print("Disabled Android app backup for identity data tied to Android Keystore.")
           PY
+      - name: Declare microphone and camera permissions for WebRTC
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          if not path.is_file():
+              raise SystemExit("Generated AndroidManifest.xml was not found.")
+          text = path.read_text()
+          start = text.find("<application")
+          if start < 0:
+              raise SystemExit("Could not find Android application manifest node.")
+          permissions = [
+              '    <uses-permission android:name="android.permission.RECORD_AUDIO" />',
+              '    <uses-permission android:name="android.permission.CAMERA" />',
+          ]
+          for permission in permissions:
+              name = permission.split('"')[1]
+              if name not in text:
+                  text = text[:start] + permission + "\\n" + text[start:]
+                  start = text.find("<application")
+          path.write_text(text)
+          for name in ("android.permission.RECORD_AUDIO", "android.permission.CAMERA"):
+              if name not in path.read_text():
+                  raise SystemExit("Failed to declare " + name)
+          print("Declared runtime microphone and camera permissions; user consent is still required by Android.")
+          PY
       - name: Inject maintained native Keystore plugin
         run: |
           mkdir -p android/app/src/main/java/com/ourspace/app
@@ -200,16 +227,56 @@ jobs:
               f'{indent}    }}\n'
           )
           text = text[:match.start()] + signing + debug + text[match.end():]
+          release_match = re.search(r"(?m)^([ \t]*)release[ \t]*\{[ \t]*$", text)
+          if not release_match:
+              raise SystemExit("Could not find the generated release build type.")
+          release_indent = release_match.group(1)
+          release_open = release_match.end()
+          text = (
+              text[:release_open]
+              + "\n"
+              + release_indent
+              + "    signingConfig signingConfigs.stable"
+              + text[release_open:]
+          )
           path.write_text(text)
-          print(f"Configured stable APK signing; versionCode={version_code}.")
+          print(f"Configured stable APK signing for debug and release; versionCode={version_code}.")
           PY
-      - name: Assemble debug APK with stable signature
+      - name: Build debug and release APKs with stable signature
         working-directory: android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew --no-daemon assembleDebug
+        run: ./gradlew --no-daemon assembleDebug assembleRelease
+      - name: Verify stable APK signature and package metadata
+        run: |
+          set -euo pipefail
+          DEBUG_APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_APK="android/app/build/outputs/apk/release/app-release.apk"
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -s "$DEBUG_APK" || { echo "::error::Debug APK artifact is missing."; exit 1; }
+          test -s "$RELEASE_APK" || { echo "::error::Release APK artifact is missing."; exit 1; }
+          test -n "$SDK_ROOT" || { echo "::error::Android SDK root is unavailable."; exit 1; }
+          BUILDTOOLS="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -x "$BUILDTOOLS/apksigner" || { echo "::error::apksigner is unavailable."; exit 1; }
+          test -x "$BUILDTOOLS/aapt" || { echo "::error::aapt is unavailable."; exit 1; }
+          for APK in "$DEBUG_APK" "$RELEASE_APK"; do
+            "$BUILDTOOLS/apksigner" verify --verbose --print-certs "$APK"
+            BADGING="$("$BUILDTOOLS/aapt" dump badging "$APK")"
+            EXPECTED="package: name='com.ourspace.app' versionCode='$GITHUB_RUN_NUMBER' versionName='0.1.$GITHUB_RUN_NUMBER'"
+            grep -F "$EXPECTED" <<< "$BADGING" || { echo "::error::Unexpected package or version metadata in $APK."; exit 1; }
+            PERMISSIONS="$("$BUILDTOOLS/aapt" dump permissions "$APK")"
+            grep -F "android.permission.RECORD_AUDIO" <<< "$PERMISSIONS" || { echo "::error::Microphone permission missing in $APK."; exit 1; }
+            grep -F "android.permission.CAMERA" <<< "$PERMISSIONS" || { echo "::error::Camera permission missing in $APK."; exit 1; }
+          done
+          DEBUG_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$DEBUG_APK" | awk -F': ' '/V2 Signer: certificate SHA-256 digest:/ {print $NF; exit}')"
+          RELEASE_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$RELEASE_APK" | awk -F': ' '/V2 Signer: certificate SHA-256 digest:/ {print $NF; exit}')"
+          test -n "$DEBUG_CERT" -a -n "$RELEASE_CERT" || { echo "::error::Could not extract signing certificate digest."; exit 1; }
+          test "$DEBUG_CERT" = "$RELEASE_CERT" || { echo "::error::Debug and release APK signatures differ."; exit 1; }
+          echo "Stable signer SHA-256: $RELEASE_CERT"
+          echo "APK SHA-256:"
+          sha256sum "$DEBUG_APK" "$RELEASE_APK"
       - name: Remove signing keystore from workspace
         if: always()
         run: rm -f android/app/our-space-signing.jks
@@ -219,3 +286,9 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: our-space-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
