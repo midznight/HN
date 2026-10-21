@@ -102,3 +102,30 @@ Belum ada fitur yang dinyatakan lulus pada Fase 0. Checklist harus dilaporkan se
 ## 8. Aksi dashboard yang belum dilakukan
 
 Fase 0 hanya membaca repo dan menulis dokumentasi. Belum ada Firebase project, Supabase project/user/bucket/table, GitHub Secret, package Android, APK atau migration yang dibuat/diubah oleh pekerjaan ini.
+
+
+## 9. Fase 1 — kerangka Android dan uji PIN lokal
+
+Branch implementasi: `phase-1/capacitor-offline-shell`. Perubahan fase ini mempertahankan markup utama prototipe, mengganti font/ikon/build CDN dengan paket yang dibundel saat build, mengganti gambar Unsplash dengan SVG lokal, serta menambahkan gate PIN dan pemilihan identitas lokal.
+
+### Build otomatis
+
+1. Buka **Actions → Build Our Space Android Debug APK** pada repositori dan pilih run dari branch `phase-1/capacitor-offline-shell` bila workflow belum berjalan otomatis.
+2. Tunggu semua langkah hijau. Jika gagal, buka log job dan catat langkah error; jangan menganggap APK tersedia bila job gagal.
+3. Unduh artifact `our-space-debug-apk`, pindahkan APK ke Android, lalu instal. APK debug belum ditandatangani untuk distribusi Play Store.
+4. Pastikan perangkat memiliki Android WebView/Chrome yang diperbarui. Aset tampilan dibundel dalam APK; PIN gate dirancang tetap bisa dibuka dalam mode pesawat.
+
+### Tes penerimaan Fase 1
+
+- Pada instalasi pertama, pilih tepat satu identitas (**Aku Hamid** atau **Aku Nur**), buat PIN 6–12 digit, lalu konfirmasi PIN. Jangan gunakan `1208` atau tanggal jadian sebagai PIN.
+- Tutup dan buka kembali aplikasi: identitas tetap dipilih, layar terkunci meminta PIN. PIN salah harus ditolak; setelah tiga kegagalan, jeda percobaan meningkat. PIN benar membuka UI.
+- Aktifkan mode pesawat lalu buka aplikasi dan navigasikan Dashboard, Messages, FaceTime, Drive, Settings. Tidak boleh ada permintaan aset ke domain pihak ketiga.
+- Pada Android, pindah ke aplikasi lain lalu kembali: aplikasi meminta PIN lagi. Tekan Back pada tampilan selain Dashboard: kembali ke Dashboard; Back di Dashboard mengunci aplikasi.
+- Uji keyboard, safe area, dan scroll pada layar kecil. Jika animasi lambat, blur harus beralih ke fallback tanpa blur.
+- Dashboard opsional ditandai **Belum aktif**. Chat, log panggilan, dan Brankas menampilkan keadaan kosong, bukan pesan/log/kuota contoh. Chat sengaja dinonaktifkan sampai Fase 2.
+
+### Batas yang diketahui
+
+- PIN hash + salt disimpan menggunakan Capacitor Preferences dan diverifikasi dengan PBKDF2-HMAC-SHA-256. Ini adalah pengunci lokal, bukan kunci E2EE atau autentikasi server. Fase 1 belum membuat akun Supabase atau kunci ECDH.
+- Paket langsung di `package.json` memakai versi eksplisit. Workflow menggunakan `npm install` karena lockfile belum dikomit; setelah build pertama sukses, lockfile hasil resolusi perlu ditinjau dan dikomit sebelum menyebut dependency tree sepenuhnya reproducible.
+- Fase 1 belum dianggap lulus sebelum workflow menghasilkan APK dan tes instalasi nyata di HP berhasil. Build CI tidak menggantikan uji perangkat.
