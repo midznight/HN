@@ -16,6 +16,11 @@ let pendingPreviewUrl = null;
 let viewerUrl = null;
 let channel = null;
 let channelPairId = null;
+let pickerPending = false;
+let pickerBackgrounded = false;
+let pickerResumeTimeout = null;
+let pickerPreviousVisibility = null;
+const PICKER_RESUME_GRACE_MS = 12_000;
 let itemsById = new Map();
 
 function currentContext(expected) {
@@ -566,6 +571,46 @@ function closeVaultPreview() {
   $('vault-file-input') && ($('vault-file-input').value = '');
 }
 
+function clearPickerState() {
+  if (pickerResumeTimeout !== null) window.clearTimeout(pickerResumeTimeout);
+  pickerResumeTimeout = null;
+  pickerPending = false;
+  pickerBackgrounded = false;
+  if (pickerPreviousVisibility !== null) {
+    const appLayout = $('app-layout');
+    if (appLayout) appLayout.style.visibility = pickerPreviousVisibility;
+    pickerPreviousVisibility = null;
+  }
+}
+
+function finishPicker(fileSelected) {
+  const shouldRelock = !fileSelected && pickerPending && pickerBackgrounded;
+  clearPickerState();
+  if (shouldRelock) window.dispatchEvent(new Event('ourspace:attachment-picker-cancelled'));
+}
+
+function beginVaultPicker() {
+  if (!currentContext() || pickerPending || busy) return;
+  const picker = $('vault-file-input');
+  if (!picker) return;
+  if (pickerResumeTimeout !== null) window.clearTimeout(pickerResumeTimeout);
+  pickerResumeTimeout = null;
+  pickerPending = true;
+  pickerBackgrounded = false;
+  picker.value = '';
+  try {
+    picker.click();
+    const appLayout = $('app-layout');
+    if (appLayout && pickerPreviousVisibility === null) {
+      pickerPreviousVisibility = appLayout.style.visibility;
+      appLayout.style.visibility = 'hidden';
+    }
+  } catch {
+    finishPicker(false);
+    sayStatus('Pemilih file tidak dapat dibuka. Coba lagi.', true);
+  }
+}
+
 function initControls() {
   if ($('vault-add-button')) {
     $('vault-add-button').addEventListener('click', () => {
@@ -573,12 +618,13 @@ function initControls() {
         sayStatus('Buka Obrolan, masuk ke akun privat, dan verifikasi fingerprint pasangan terlebih dahulu.', true);
         return;
       }
-      $('vault-file-input')?.click();
+      beginVaultPicker();
     });
   }
   $('vault-file-input')?.addEventListener('change', (event) => {
     const file = event.currentTarget?.files?.[0] || null;
     if (event.currentTarget) event.currentTarget.value = '';
+    finishPicker(Boolean(file));
     if (file) openPreview(file);
   });
   $('vault-preview-cancel')?.addEventListener('click', closeVaultPreview);
@@ -611,12 +657,24 @@ export function initVault() {
   initialized = true;
   initControls();
   window.ourSpaceVault = {
+    isPickerPending: () => pickerPending,
+    onPickerBackground: () => {
+      if (pickerPending) pickerBackgrounded = true;
+    },
+    onPickerForeground: () => {
+      if (!pickerPending || !pickerBackgrounded) return;
+      if (pickerResumeTimeout !== null) window.clearTimeout(pickerResumeTimeout);
+      pickerResumeTimeout = window.setTimeout(() => {
+        if (pickerPending && pickerBackgrounded) finishPicker(false);
+      }, PICKER_RESUME_GRACE_MS);
+    },
     onViewOpened: async () => {
       const context = currentContext();
       if (context) attachRealtime(context);
       await refreshVault();
     },
     onLocked: () => {
+      clearPickerState();
       closeVaultPreview();
       clearViewer();
       itemsById = new Map();
