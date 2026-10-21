@@ -1,6 +1,6 @@
 # Progress — Our Space
 
-Pembaruan: 21 Oktober 2026, 18:53 WIB.
+Pembaruan: 21 Oktober 2026 — Fase 4 push.
 
 ## Baseline stabil yang dikonfirmasi pengguna
 
@@ -39,3 +39,17 @@ Pembaruan: 21 Oktober 2026, 18:53 WIB.
 ## Batas dan langkah selanjutnya
 
 Voice note/video note recording, file besar/chunking, multi-file, Double Ratchet/forward secrecy, dan multi-device belum termasuk atau belum tersedia. Jangan menghapus/merotasi kunci maupun menghapus pesan untuk mengatasi masalah UI. Fase 4 (push notifications) tetap menunggu uji penerimaan media nyata pada kedua HP.
+
+
+## Fase 3 — penerimaan pengguna
+
+Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizinkan proyek berlanjut. Status fase dicatat sebagai diterima oleh pengguna; ini bukan klaim audit keamanan independen.
+
+## Fase 4 — notifikasi push
+
+- Implementasi awal ada di branch phase-4/push-notifications.
+- FCM hanya menerima judul “Our Space”, isi generik “Ada pesan baru menunggu.”, dan data type=new_message. Teks/ciphertext, pengirim, nama file, metadata media, pair ID, dan message ID tidak masuk payload.
+- Tabel device_push_tokens memakai RLS owner-only. Ledger push_dispatches adalah service-role-only.
+- Edge Function memvalidasi JWT pengguna, sender id, pair dua anggota, verifikasi fingerprint penerima, umur pesan, dan deduplikasi dispatch.
+- Build tanpa FIREBASE_ANDROID_CONFIG_BASE64 tetap hijau tetapi fitur push nonaktif. Tanpa FCM_SERVICE_ACCOUNT_JSON di Supabase, server status ready=false dan aplikasi tidak meminta izin OS.
+- Gate berikutnya: CI, migration dan function deployment, konfigurasi manual Firebase/Supabase, lalu uji dua HP.
