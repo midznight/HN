@@ -1,6 +1,6 @@
 # Our Space — Arsitektur dan Batas Keamanan
 
-**Status:** Fase 0 — rancangan saja; belum ada fitur diimplementasikan.  
+**Status:** rancangan arsitektur hidup. Kerangka Android Fase 1 dan sumber E2EE teks Fase 2 tersedia di branch fase; lihat bagian riwayat implementasi paling bawah. Penerimaan tetap bergantung pada CI, backend, dan uji perangkat.  
 **Tanggal verifikasi layanan:** 20 Oktober 2026.  
 **Repositori:** [midznight/HN](https://github.com/midznight/HN). File acuan aktual: [prototipe UI.html](https://github.com/midznight/HN/blob/main/prototipe%20UI.html).
 
@@ -123,3 +123,13 @@ Semua versi dependency dipin pada manifest dan lockfile saat implementasi. Janga
 - **Fase 8:** tidak dikerjakan kecuali diminta.
 
 Fase 0 tidak mengubah UI/kode fitur, tidak menjalankan migrasi, tidak membuat akun cloud, dan tidak menyatakan fitur telah lulus uji.
+
+
+## 7. Status implementasi (21 Oktober 2026)
+
+- Fase 1: sumber kerangka Capacitor/PIN ada pada `phase-1/capacitor-offline-shell`; build APK CI pernah sukses dan pengguna melaporkan telah menguji aplikasi pada HP.
+- Fase 2: kode sumber native Keystore/E2EE, UI login/fingerprint, validasi pesan, migration SQL dan dokumentasi tersedia pada `phase-2/e2ee-text-chat`. Migration belum dianggap terpasang hanya karena file SQL committed.
+- Algoritma saat ini: ECDH P-256 melalui Android Keystore (API 31+), HKDF-HMAC-SHA-256, AES-256-GCM dengan nonce random 96-bit dan AAD yang mengikat pair ID, message ID, sender, recipient, key version, serta tipe pesan.
+- Auth session disegel dengan AES-256-GCM menggunakan key lain di Android Keystore. JavaScript menerima plaintext hanya untuk render lokal dan tidak mengirim plaintext ke database.
+- Database design menerapkan RLS untuk membership, public key, verifikasi fingerprint, dan append-only ciphertext message. Akun third-party belum dibuktikan dengan tes nyata.
+- Batasan belum terselesaikan: tidak ada Double Ratchet/forward secrecy, multi-device, key recovery/rotation otomatis, media, push, atau call. Jangan menyatakan setara dengan messenger audited.
