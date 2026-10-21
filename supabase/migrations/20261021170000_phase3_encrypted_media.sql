@@ -54,6 +54,10 @@ create policy "our space verified members can upload encrypted objects"
       join public.pair_members peer_member
         on peer_member.pair_id = own_member.pair_id
        and peer_member.user_id <> own_member.user_id
+      join public.device_keys own_key
+        on own_key.pair_id = own_member.pair_id
+       and own_key.user_id = own_member.user_id
+       and own_key.algorithm = 'ECDH-P256'
       join public.device_keys peer_key
         on peer_key.pair_id = peer_member.pair_id
        and peer_key.user_id = peer_member.user_id
@@ -71,8 +75,10 @@ create policy "our space verified members can upload encrypted objects"
     and right(name, 4) = '.bin'
   );
 
+-- Permit cleanup only for an uploaded object whose message envelope was not committed.
+-- Once a media message row exists, the append-only object cannot be deleted by either client.
 drop policy if exists "our space media senders can delete their own encrypted objects" on storage.objects;
-create policy "our space media senders can delete their own encrypted objects"
+create policy "our space media senders can delete only unreferenced encrypted objects"
   on storage.objects
   for delete
   to authenticated
@@ -87,6 +93,14 @@ create policy "our space media senders can delete their own encrypted objects"
     )
     and array_length(storage.foldername(name), 1) = 2
     and right(name, 4) = '.bin'
+    and not exists (
+      select 1
+      from public.messages m
+      where m.pair_id::text = (storage.foldername(name))[1]
+        and m.sender_id = (select auth.uid())
+        and m.id::text = left(split_part(name, '/', 3), 36)
+        and m.message_type = 'media'
+    )
   );
 
 comment on constraint messages_message_type_check on public.messages is
