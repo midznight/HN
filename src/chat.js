@@ -1,10 +1,9 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { supabase, hasSupabaseConfig } from './supabase.js';
-import { ensureDeviceIdentityKey, requireAndroidE2EE } from './secure-keys.js';
+import { OurSpaceKeyStore as KeyStore, ensureDeviceIdentityKey, requireAndroidE2EE } from './secure-keys.js';
 import { createMessageId, normalizeTextMessage, validateCiphertextMessage } from './chat-protocol.js';
 
-const KeyStore = registerPlugin('OurSpaceKeyStore');
 const $ = (id) => document.getElementById(id);
 const PIN_IDENTITY_KEY = 'os.identity.v1';
 const EXPECTED_KEY_VERSION = 1;
