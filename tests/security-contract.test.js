@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const schema = readFileSync(new URL('../supabase/migrations/20261021010159_phase2_e2ee_text_chat.sql', import.meta.url), 'utf8');
-const hardening = readFileSync(new URL('../supabase/migrations/20261021010335_phase2_key_fingerprint_integrity.sql', import.meta.url), 'utf8');
+const schema = readFileSync(new URL('../supabase/migrations/20261021014018_phase2_e2ee_text_chat.sql', import.meta.url), 'utf8');
+const hardening = readFileSync(new URL('../supabase/migrations/20261021014020_phase2_key_fingerprint_integrity.sql', import.meta.url), 'utf8');
 const native = readFileSync(new URL('../android-native/src/main/java/com/ourspace/app/OurSpaceKeyStorePlugin.java', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
-const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021170000_phase3_encrypted_media.sql', import.meta.url), 'utf8');
+const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021102710_phase3_encrypted_media.sql', import.meta.url), 'utf8');
 const pushMigration = readFileSync(new URL('../supabase/migrations/20261021123417_phase4_push_notifications.sql', import.meta.url), 'utf8');
 const pushClient = readFileSync(new URL('../src/push-notifications.js', import.meta.url), 'utf8');
 const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/index.ts', import.meta.url), 'utf8');
@@ -106,7 +106,7 @@ test('local fingerprint panel is rendered before server-key mismatch can abort s
 });
 
 test('guarded device-key recovery requires an authenticated own member, valid fingerprint, and empty pair history', () => {
-  const recovery = readFileSync(new URL('../supabase/migrations/20261021152500_guarded_device_key_recovery.sql', import.meta.url), 'utf8');
+  const recovery = readFileSync(new URL('../supabase/migrations/20261021083734_guarded_device_key_recovery.sql', import.meta.url), 'utf8');
   assert.match(recovery, /create or replace function private\.recover_own_device_key_if_unused/i);
   assert.match(recovery, /create or replace function public\.recover_own_device_key_if_unused[\s\S]*?security invoker/i);
   assert.match(recovery, /security definer/i);
