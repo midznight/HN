@@ -22,6 +22,7 @@ Pembaruan: 21 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur y
 
 - Migrasi vault_items dan publikasi Realtime telah diterapkan ke project Supabase sajlpngmpkizwjbarxlj; RLS aktif dan objek tetap berada di bucket privat.
 - CI terbaru dan upload → list → open/decrypt → delete harus diuji di kedua HP. Pastikan picker file Android tidak memicu relock yang menghilangkan seleksi.
+- Voice note, emoji reaction dan reply link kini memiliki implementasi awal, tetapi perlu tes izin mic, ukuran audio, state reaction, balasan yang targetnya media, sinkronisasi realtime dan mismatch key.
 - Pembersihan object ciphertext yang gagal dapat meninggalkan orphan; status UI menyatakan keterbatasan itu. Jangan mengklaim penghapusan fisik pasti jika Storage gagal.
 
 ## Konfigurasi keamanan/Auth
