@@ -1,7 +1,7 @@
 name: Build Our Space Android Debug APK
 on:
   push:
-    branches: [main, 'phase-1/**', 'phase-2/**', 'phase-3/**', 'phase-4/**']
+    branches: [main, 'phase-0.5/**', 'phase-1/**', 'phase-2/**', 'phase-3/**', 'phase-4/**', 'phase-5/**', 'phase-6/**', 'phase-7/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -122,6 +122,33 @@ jobs:
           if 'android:allowBackup="false"' not in path.read_text():
               raise SystemExit("Failed to disable backup for Keystore-bound app identity.")
           print("Disabled Android app backup for identity data tied to Android Keystore.")
+          PY
+      - name: Declare microphone and camera permissions for WebRTC
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          if not path.is_file():
+              raise SystemExit("Generated AndroidManifest.xml was not found.")
+          text = path.read_text()
+          start = text.find("<application")
+          if start < 0:
+              raise SystemExit("Could not find Android application manifest node.")
+          permissions = [
+              '    <uses-permission android:name="android.permission.RECORD_AUDIO" />',
+              '    <uses-permission android:name="android.permission.CAMERA" />',
+          ]
+          for permission in permissions:
+              name = permission.split('"')[1]
+              if name not in text:
+                  text = text[:start] + permission + "\\n" + text[start:]
+                  start = text.find("<application")
+          path.write_text(text)
+          for name in ("android.permission.RECORD_AUDIO", "android.permission.CAMERA"):
+              if name not in path.read_text():
+                  raise SystemExit("Failed to declare " + name)
+          print("Declared runtime microphone and camera permissions; user consent is still required by Android.")
           PY
       - name: Inject maintained native Keystore plugin
         run: |
