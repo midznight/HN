@@ -1,4 +1,11 @@
 export const TEXT_MESSAGE_MAX_CHARS = 4000;
+export const MAX_MEDIA_BYTES = 3 * 1024 * 1024;
+const ALLOWED_MEDIA_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif',
+  'video/mp4', 'video/webm', 'video/3gpp',
+  'audio/mp4', 'audio/aac', 'audio/mpeg', 'audio/ogg', 'audio/webm',
+  'audio/wav', 'audio/x-wav', 'audio/3gpp', 'audio/amr',
+]);
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
@@ -31,7 +38,7 @@ export function validateCiphertextMessage(row) {
     }
   }
   if (row.sender_id === row.recipient_id) throw new Error('Pengirim dan penerima tidak boleh sama.');
-  if (row.message_type !== 'text' || row.key_version !== 1) {
+  if (!['text', 'media'].includes(row.message_type) || row.key_version !== 1) {
     throw new Error('Versi atau tipe pesan belum didukung.');
   }
   if (typeof row.nonce !== 'string' || !/^[A-Za-z0-9+/]{16}$/.test(row.nonce)) {
@@ -45,4 +52,29 @@ export function validateCiphertextMessage(row) {
     throw new Error('Waktu pesan tidak valid.');
   }
   return row;
+}
+
+export function validateMediaMetadata(value, row) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Metadata lampiran tidak valid.');
+  }
+  if (value.mediaVersion !== 1 || typeof value.objectPath !== 'string' ||
+      value.objectPath !== row.pair_id + '/' + row.sender_id + '/' + row.id + '.bin') {
+    throw new Error('Lokasi lampiran tidak valid.');
+  }
+  if (typeof value.filename !== 'string' || !value.filename.trim() ||
+      value.filename.length > 255 || /[\\u0000-\\u001f\\/\\\\]/.test(value.filename)) {
+    throw new Error('Nama lampiran tidak valid.');
+  }
+  if (typeof value.mimeType !== 'string' || !ALLOWED_MEDIA_TYPES.has(value.mimeType)) {
+    throw new Error('Jenis lampiran tidak didukung.');
+  }
+  if (!Number.isSafeInteger(value.size) || value.size < 1 || value.size > MAX_MEDIA_BYTES) {
+    throw new Error('Ukuran lampiran tidak valid.');
+  }
+  return value;
+}
+
+export function isSupportedMediaMimeType(mimeType) {
+  return typeof mimeType === 'string' && ALLOWED_MEDIA_TYPES.has(mimeType.trim().toLowerCase());
 }
