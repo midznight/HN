@@ -9,6 +9,7 @@ import { initChat, onChatLocked, onChatUnlocked } from './chat.js';
 import { initPushNotifications } from './push-notifications.js';
 import { initVault } from './vault.js';
 import { initCalls } from './calls.js';
+import { initMessageAnnotations } from './message-annotations.js';
 
 const K={identity:'os.identity.v1',salt:'os.pin.salt.v1',hash:'os.pin.hash.v1',failures:'os.pin.failures.v1',lockUntil:'os.pin.lockUntil.v1'};
 const ITERATIONS=210000, $=id=>document.getElementById(id);
@@ -68,6 +69,7 @@ App.addListener('backButton',()=>{
 }
 function frameMonitor(){const now=performance.now();if(now-previousFrame>40)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);previousFrame=now;if(++frameSamples>=90){document.documentElement.classList.toggle('no-blur',slowFrames>25);frameSamples=0;slowFrames=0}requestAnimationFrame(frameMonitor)}
 requestAnimationFrame(frameMonitor);
+initMessageAnnotations();
 initChat().catch(()=>{});
 initVault();
 initCalls();
