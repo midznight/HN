@@ -25,6 +25,7 @@ let pendingLocalRecoveryKey = null;
 let attachmentPickerPending = false;
 let attachmentPickerBackgrounded = false;
 let attachmentPickerResumeTimeout = null;
+let attachmentPickerPreviousVisibility = null;
 const ATTACHMENT_PICKER_RESUME_GRACE_MS = 12000;
 const mediaObjectUrls = new Set();
 
@@ -187,6 +188,13 @@ function beginAttachmentPicker() {
   try {
     // Mark the expected temporary activity switch before launching Android's picker.
     picker.click();
+    // Shield private chat contents behind the system picker and in app-task previews.
+    // Keep the WebView mounted so the selected File can still reach its change event.
+    const appLayout = $('app-layout');
+    if (appLayout && attachmentPickerPreviousVisibility === null) {
+      attachmentPickerPreviousVisibility = appLayout.style.visibility;
+      appLayout.style.visibility = 'hidden';
+    }
   } catch {
     finishAttachmentPicker(false);
     messageError('Galeri tidak dapat dibuka. Coba lagi.');
@@ -198,6 +206,11 @@ function clearAttachmentPickerState() {
   attachmentPickerResumeTimeout = null;
   attachmentPickerPending = false;
   attachmentPickerBackgrounded = false;
+  if (attachmentPickerPreviousVisibility !== null) {
+    const appLayout = $('app-layout');
+    if (appLayout) appLayout.style.visibility = attachmentPickerPreviousVisibility;
+    attachmentPickerPreviousVisibility = null;
+  }
 }
 
 function finishAttachmentPicker(fileSelected) {
@@ -621,7 +634,14 @@ async function decryptAndRenderMedia(row, peerKey) {
   if (result.error || !result.data) throw result.error || new Error('Lampiran tidak tersedia.');
   if (result.data.size > MAX_MEDIA_BYTES + 1024) throw new Error('Ukuran ciphertext lampiran tidak valid.');
 
-  const encryptedBytes = new Uint8Array(await result.data.arrayBuffer());
+  const encryptedBuffer = await result.data.arrayBuffer();
+  // A lock can happen while Blob.arrayBuffer() is pending. Do not start another
+  // native media operation once the session is no longer authorized to continue.
+  if (!appUnlocked || !partnerVerified || !sessionUser) {
+    new Uint8Array(encryptedBuffer).fill(0);
+    return;
+  }
+  const encryptedBytes = new Uint8Array(encryptedBuffer);
   const encryptedBase64 = bytesToBase64(encryptedBytes);
   encryptedBytes.fill(0);
   const openedMedia = await KeyStore.decryptMedia({
