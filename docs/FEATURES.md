@@ -1,6 +1,6 @@
 # Our Space — Daftar Fitur
 
-Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti pengguna telah menyatakan tes tersebut berhasil; status itu bukan audit keamanan independen.
+Status diperbarui: 21 Oktober 2026, 18:45 WIB. Status “teruji pengguna” berarti pengguna telah menyatakan tes tersebut berhasil; status itu bukan audit keamanan independen.
 
 | Fitur | Status | Catatan |
 |---|---|---|
@@ -10,7 +10,7 @@ Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti penggun
 | Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
 | Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
 | Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | Picker sudah dikonfirmasi pulih. Backend menunjukkan satu pesan media dan objek cocok dari tiap akun. Decrypt/render/save di perangkat penerima, semua format, dan skenario gagal belum terverifikasi. |
+| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | PR #10–#12 merged; CI #117 lulus. Upload dua arah terbukti di backend dan picker versi awal dikonfirmasi. Privacy shield APK #117 dan penerimaan/dekripsi/render/save media di HP penerima perlu diuji nyata; skenario gagal belum lengkap. |
 | Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
 | Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. Menunggu penerimaan Fase 3. |
 | Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |
