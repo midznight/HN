@@ -26,3 +26,14 @@ Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4 opt-out hardening.
 19. **Jangan simpan kunci service account FCM permanen.** Karena pembuatan key JSON diblokir kebijakan organisasi dan kunci berumur panjang berisiko tinggi, PR #22 memilih Google Workload Identity Federation dengan token FCM berumur 10 menit. Provider hanya boleh mengizinkan UUID dua anggota; dokumentasi mencatat bahwa sesi dua akun tepercaya secara teknis bisa melakukan pertukaran langsung di luar fungsi. Jika isolasi server-only diperlukan, evaluasi runtime dengan identitas terkelola dan periksa biaya sebelum provisioning.
 
 20. **Deploy tanpa mengaktifkan fitur.** Setelah CI #171 lulus, fungsi WIF v2 dapat dideploy lebih awal karena tetap fail-closed saat secret/provider belum tersedia. Menjaga `verify_jwt=true`; deployment bukan klaim bahwa Google auth atau delivery sudah teruji.
+
+## Keputusan implementasi Fase 0.5 dan akhir fase — 21 Oktober 2026
+
+14. **Tanggal jadian belum ditetapkan.** UI tidak menampilkan hitung hari, countdown, atau cerita/kenangan yang bergantung pada tanggal palsu. Kartu diganti menjadi “Ruang Kita”.
+15. **Tiga tab utama:** Obrolan, Kita, Brankas. Setelah PIN, Obrolan dibuka secara default; settings dicapai dari Kita; panggilan tidak menambah tab terpisah.
+16. **Media perlu persetujuan kontekstual:** pilih file → pratinjau → Kirim atau Batal. Ini disengaja untuk mencegah salah-kirim. Upload tidak boleh dimulai hanya karena file dipilih.
+17. **Brankas memakai E2EE yang sudah ada.** Tidak membuat algoritma baru: objek menggunakan enkripsi native media existing; metadata menggunakan envelope pesan E2EE existing. Bucket tetap privat, tidak mempublikasikan signed URL, dan plaintext metadata tidak ditambahkan sebagai kolom.
+18. **Panggilan harus fail-closed.** SDP/riwayat ditulis sebagai ciphertext; aplikasi perlu sesi pair dan fingerprint valid. Jika signaling/permission gagal, tidak berpura-pura panggilan tersambung. Sesi berhenti saat lock; incoming call pada app tertutup belum didukung.
+19. **Anggaran Rp0 tetap berlaku.** Implementasi call tidak menambahkan TURN berbayar. STUN-only tidak menjamin koneksi di semua jaringan; jangan menyamarkan batas teknis itu.
+20. **Status “siap rilis” berdasar bukti.** CI hijau tidak menggantikan uji dua HP, stable-signature APK update, konfigurasi WIF untuk FCM, atau audit release security.
+
