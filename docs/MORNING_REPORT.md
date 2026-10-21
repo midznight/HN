@@ -76,3 +76,11 @@ Push belum aktif. CI #171 memastikan Firebase Android config di GitHub Actions s
 - Build APK signed stabil terbaru dan update in-place belum diverifikasi pada kedua perangkat. Tidak boleh uninstall atau reset key untuk mengatasi blocker.
 - Status rilis: kandidat implementasi/QA, belum “production ready”.
 
+## Pembaruan lanjutan — voice note/reaction/reply (21 Oktober 2026)
+
+- Media recorder lokal tersedia dengan limit konservatif dan tidak auto-send.
+- Reply link dan emoji reactions diimplementasikan melalui E2EE table message_annotations, tanpa mengubah format pesan teks lama.
+- Call foreground resume mencoba memproses sinyal yang baru diterima tetapi belum ditangani; offer usang tetap dibatasi oleh TTL.
+- Font web bundle dipangkas menjadi tiga weight.
+- Web CI pernah sukses pada commit sebelumnya; pekerjaan setelahnya tetap perlu menunggu CI dan Android build di HEAD. APK/install in-place, dua HP, push WIF, Auth leaked-password protection, dan TURN untuk konektivitas panggilan universal belum terverifikasi.
+
