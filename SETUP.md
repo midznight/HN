@@ -151,3 +151,17 @@ Node.js 22 diperlukan oleh versi Supabase JS yang dipin. Semua dependency langsu
 ## 11. Fase 3 — media terenkripsi (branch pengembangan)
 
 Lihat [docs/PHASE3_MEDIA.md](docs/PHASE3_MEDIA.md). Perubahan media belum aktif di project produksi sampai migration dan build selesai diverifikasi. Saat ini milestone awal hanya mendukung pemilihan file gambar/video/audio yang sudah ada (maksimal 3 MiB), bukan perekaman voice/video note. Jangan menjalankan reset kunci atau menghapus baris pesan/key untuk mengaktifkan fitur ini.
+
+## 12. Fase 0.5 — Redesain UI/UX sebelum Fase 1
+
+Dokumen rancangan ada di [DESIGN.md](DESIGN.md), catatan ringkas di [docs/UI_UX_PHASE_REPORT.md](docs/UI_UX_PHASE_REPORT.md), dan pratinjau statis Android di folder [preview-ui](preview-ui/). Semua data preview bertanda **CONTOH**; pratinjau tidak tersambung ke Supabase, tidak mengenkripsi/mengunggah apa pun, dan tidak masuk ke APK produksi karena bukan entry point aplikasi.
+
+### Membuka pratinjau di ponsel
+
+- Saat GitHub Pages aktif, buka tautan yang dihasilkan workflow **Deploy Our Space UI Preview** pada tab Actions, atau alamat Pages proyek: https://midznight.github.io/HN/
+- Pilih skenario dari menu paling atas untuk meninjau PIN, fingerprint, obrolan, error/offline, lampiran, media, voice note, panggilan, Kita, Brankas, serta pengaturan.
+- Untuk uji lokal, buka preview-ui/index.html langsung di Chrome atau jalankan server statis dari folder itu. File mandiri, tidak memerlukan dependency, npm install, akun, atau kartu kredit.
+- Workflow hanya mengunggah folder preview-ui, bukan root aplikasi. Jangan memindahkan halaman demo ke public/ atau mengganti index.html entry point aplikasi tanpa keputusan eksplisit.
+
+**Gate:** fase desain ini harus ditinjau terlebih dahulu. Jangan implementasikan redesign ke APK dan jangan mulai pekerjaan fase berikutnya sampai pengguna menulis “lanjut” atau memberikan revisi.
+
