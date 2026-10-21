@@ -430,9 +430,13 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
                 <footer id="chat-composer" class="hidden absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
                     <p id="chat-upload-status" role="status" aria-live="polite" class="hidden text-[10px] text-surface-muted px-2 pb-2"></p>
+                    <p id="chat-record-status" role="status" aria-live="polite" class="hidden text-xs text-[#9e3e54] px-2 pb-2"></p>
                     <div class="flex items-end gap-2 bg-surface-bg p-2 rounded-2xl border border-gray-200 focus-within:border-brand-300 focus-within:shadow-soft transition-all">
-                        <button id="chat-attach-btn" type="button" disabled aria-label="Kirim gambar, video, atau audio terenkripsi" title="Lampiran terenkripsi · maksimal 3 MiB" class="p-2 text-surface-muted disabled:opacity-40 shrink-0 rounded-full hover:bg-white/70 transition">
+                        <button id="chat-attach-btn" type="button" disabled aria-label="Pilih gambar, video, atau audio" title="Lampiran terenkripsi · maksimal 3 MiB" class="p-2 min-w-11 min-h-11 text-surface-muted disabled:opacity-40 shrink-0 rounded-2xl hover:bg-white/70 transition">
                             <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                        <button id="chat-record-btn" type="button" disabled aria-label="Rekam pesan suara" title="Rekam pesan suara" data-recording="false" class="p-2 min-w-11 min-h-11 text-[#9e3e54] disabled:opacity-40 shrink-0 rounded-2xl hover:bg-[#fcece8] transition">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
                         </button>
                         <input id="chat-attachment-input" type="file" accept="image/*,video/*,audio/*" class="hidden" aria-label="Pilih gambar, video, atau audio">
 
