@@ -53,7 +53,8 @@ function readWifConfig(): FcmWifConfig | null {
   }
   if (!serviceAccountEmail.includes("@") ||
       !serviceAccountEmail.endsWith(".iam.gserviceaccount.com") ||
-      /[\s/]/.test(serviceAccountEmail)) {
+      serviceAccountEmail.includes(" ") || serviceAccountEmail.includes("\n") ||
+      serviceAccountEmail.includes("\t") || serviceAccountEmail.includes("/")) {
     return null;
   }
   if (!/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(projectId)) return null;
