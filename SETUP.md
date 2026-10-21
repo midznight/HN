@@ -135,14 +135,19 @@ Branch implementasi: `phase-1/capacitor-offline-shell`. Perubahan fase ini mempe
 
 Implementasi berada di branch `phase-2/e2ee-text-chat`. Lihat [docs/PHASE2_E2EE.md](docs/PHASE2_E2EE.md) untuk ancaman keamanan, langkah menyiapkan pasangan, serta checklist penerimaan.
 
-- Gunakan APK Android dan Android 12/API 31 atau lebih baru. ECDH harus berjalan lewat Android Keystore; jangan mencoba mengganti private key dengan nilai yang disimpan di Preferences.
+- Gunakan APK Android API 23 atau lebih baru. API 31+ menggunakan ECDH di Android Keystore; API 23–30 memakai private key P-256 yang dibungkus AES-GCM di native code. Jangan menyimpan private key plaintext di Preferences atau JavaScript.
 - Pastikan kedua user Auth sudah dibuat di project Supabase yang sama. Nonaktifkan pendaftaran publik dan seed persis satu baris pasangan beserta dua membership admin-only sesuai UUID dari Auth Users.
 - Jalankan migration `supabase/migrations/20261021010159_phase2_e2ee_text_chat.sql` setelah project berstatus ACTIVE. Jangan menjalankan script seed dengan placeholder.
 - Login dari HP masing-masing menggunakan akun miliknya sendiri. Jangan menempelkan password/token/private key pada repo, log CI, issue, atau chat.
 - Bandingkan seluruh fingerprint 64 karakter melalui kanal independen. Tombol konfirmasi bukan bukti cryptographic dengan sendirinya; jika tidak sama, berhenti dan jangan kirim pesan.
 - Sebelum menulis E2EE “lulus”, uji pengiriman dua arah, manipulasi ciphertext/metadata, akun ketiga/RLS, lock saat background, dan reopen setelah relock.
-- Fase 2 belum mempunyai forward secrecy atau multi-device; kehilangan/rotasi key memerlukan prosedur manual yang belum dikerjakan.
+- Fase 2 belum mempunyai forward secrecy atau multi-device. Pemulihan public key dibatasi dan menolak pasangan yang sudah memiliki pesan atau verifikasi; ini tidak memulihkan private key yang hilang.
 
 ### Dependency reproducibility
 
 Node.js 22 diperlukan oleh versi Supabase JS yang dipin. Semua dependency langsung dipatok, tetapi `package-lock.json` harus tersedia dan diperiksa sebelum release dianggap reproducible. Jangan rilis APK bila CI tidak hijau.
+
+
+## 11. Fase 3 — media terenkripsi (branch pengembangan)
+
+Lihat [docs/PHASE3_MEDIA.md](docs/PHASE3_MEDIA.md). Perubahan media belum aktif di project produksi sampai migration dan build selesai diverifikasi. Saat ini milestone awal hanya mendukung pemilihan file gambar/video/audio yang sudah ada (maksimal 3 MiB), bukan perekaman voice/video note. Jangan menjalankan reset kunci atau menghapus baris pesan/key untuk mengaktifkan fitur ini.

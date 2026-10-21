@@ -1,5 +1,8 @@
 # APK Android: pembaruan tanpa uninstall
 
+> **Peringatan status saat ini (21 Oktober 2026):** prosedur reset di bawah ditulis untuk migrasi tanda tangan/identitas yang lebih awal. Jangan menjalankan SQL reset key untuk pembaruan biasa. Kedua HP sekarang sudah bisa chat dan memiliki pesan tersimpan; menghapus binding/verifikasi dapat mengunci atau merusak akses ke riwayat. Build baru harus dipasang sebagai pembaruan dengan tanda tangan yang sama, tanpa uninstall. Gunakan prosedur pemulihan terjaga dari kode aplikasi hanya jika aplikasi sendiri menawarkannya dan kondisi database memenuhi guard; jangan hapus private key manual.
+
+
 Jika kamu tidak bisa menjalankan `keytool` sendiri, gunakan berkas keystore yang disiapkan secara privat untuk project ini. Unduh paket keystore langsung dari percakapan tepercaya, bukan dari repository publik. Di dalamnya ada file backup JKS dan berkas teks berisi empat nilai secret. Jangan pernah mengunggah paket tersebut ke GitHub sebagai file biasa; salin nilainya hanya ke **Settings → Secrets and variables → Actions**. Paket privat ini tidak disimpan dalam repository.
 
 GitHub Actions menjalankan build pada runner sementara. Jangan memakai debug keystore default runner untuk APK yang harus dipasang sebagai update, karena kunci debug dapat berubah pada setiap run. Workflow sekarang dirancang menandatangani APK dengan keystore stabil yang disimpan sebagai GitHub Actions Secrets dan menaikkan versionCode setiap build.

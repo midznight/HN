@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   TEXT_MESSAGE_MAX_CHARS,
+  MAX_MEDIA_BYTES,
   createMessageId,
+  isSupportedMediaMimeType,
   normalizeTextMessage,
   validateCiphertextMessage,
+  validateMediaMetadata,
 } from '../src/chat-protocol.js';
 
 const uuidA = 'a0a0a0a0-a0a0-4a0a-8a0a-a0a0a0a0a0a0';
@@ -48,4 +51,31 @@ test('rejects mismatched actors and malformed nonce/ciphertext', () => {
   assert.throws(() => validateCiphertextMessage(row({ recipient_id: uuidA })), /tidak boleh sama/);
   assert.throws(() => validateCiphertextMessage(row({ nonce: 'short' })), /Nonce/);
   assert.throws(() => validateCiphertextMessage(row({ ciphertext: 'not base64 !!!' })), /Ciphertext/);
+});
+
+test('accepts the generic media message envelope without accepting arbitrary message types', () => {
+  assert.equal(validateCiphertextMessage(row({ message_type: 'media' })).message_type, 'media');
+  assert.throws(() => validateCiphertextMessage(row({ message_type: 'video' })), /Versi atau tipe/);
+});
+
+test('validates encrypted media metadata against the message identity and strict size/type limits', () => {
+  const mediaRow = row({ message_type: 'media' });
+  const metadata = {
+    mediaVersion: 1,
+    objectPath: mediaRow.pair_id + '/' + mediaRow.sender_id + '/' + mediaRow.id + '.bin',
+    filename: 'foto.png',
+    mimeType: 'image/png',
+    size: 2048,
+    nonce: 'MDEyMzQ1Njc4OWFi',
+  };
+  assert.equal(validateMediaMetadata(metadata, mediaRow).filename, 'foto.png');
+  assert.equal(MAX_MEDIA_BYTES, 3 * 1024 * 1024);
+  assert.equal(isSupportedMediaMimeType('image/png'), true);
+  assert.equal(isSupportedMediaMimeType('audio/webm'), true);
+  assert.equal(isSupportedMediaMimeType('image/svg+xml'), false);
+  assert.throws(() => validateMediaMetadata({ ...metadata, objectPath: 'other/path' }, mediaRow), /Lokasi/);
+  assert.throws(() => validateMediaMetadata({ ...metadata, filename: '../private.png' }, mediaRow), /Nama lampiran/);
+  assert.throws(() => validateMediaMetadata({ ...metadata, mimeType: 'image/svg+xml' }, mediaRow), /Jenis lampiran/);
+  assert.throws(() => validateMediaMetadata({ ...metadata, size: MAX_MEDIA_BYTES + 1 }, mediaRow), /Ukuran lampiran/);
+  assert.throws(() => validateMediaMetadata({ ...metadata, nonce: 'bad' }, mediaRow), /Nonce/);
 });

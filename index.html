@@ -349,10 +349,13 @@
                 <div id="chat-container" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-36"></div>
 
                 <footer id="chat-composer" class="hidden absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
+                    <p id="chat-upload-status" role="status" aria-live="polite" class="hidden text-[10px] text-surface-muted px-2 pb-2"></p>
                     <div class="flex items-end gap-2 bg-surface-bg p-2 rounded-2xl border border-gray-200 focus-within:border-brand-300 focus-within:shadow-soft transition-all">
-                        <button disabled aria-label="Lampiran aktif setelah Fase 3" class="p-2 text-surface-muted opacity-40 shrink-0">
+                        <button id="chat-attach-btn" type="button" disabled aria-label="Kirim gambar, video, atau audio terenkripsi" title="Lampiran terenkripsi · maksimal 3 MiB" class="p-2 text-surface-muted disabled:opacity-40 shrink-0 rounded-full hover:bg-white/70 transition">
                             <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
+                        <input id="chat-attachment-input" type="file" accept="image/*,video/*,audio/*" class="hidden" aria-label="Pilih gambar, video, atau audio">
+
                         
                         <textarea 
                             id="chat-message-input"

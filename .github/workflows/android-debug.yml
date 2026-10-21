@@ -1,7 +1,7 @@
 name: Build Our Space Android Debug APK
 on:
   push:
-    branches: [main, 'phase-1/**', 'phase-2/**']
+    branches: [main, 'phase-1/**', 'phase-2/**', 'phase-3/**']
   workflow_dispatch:
 permissions:
   contents: read

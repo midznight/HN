@@ -26,7 +26,7 @@
 
 Jalur API 23–30 tidak pernah menulis private key plaintext ke file atau Preferences, tidak mengirimkannya ke JavaScript/server, dan tidak membuat kunci pengganti otomatis saat catatan atau kunci pembungkus hilang. Jika data identitas tidak lengkap atau autentikasi AES-GCM gagal, aplikasi gagal tertutup dan meminta pemulihan yang eksplisit. Penyimpanan identitas dibungkus oleh Android Keystore dan tidak boleh dipulihkan dari backup yang tidak memiliki kunci pembungkus. Tombol konfirmasi fingerprint hanya boleh tampil setelah kunci publik pasangan berhasil dimuat.
 
-Setiap pengguna hanya didukung dengan satu perangkat/kunci pada Fase 2. Rotasi kunci, multi-device, recovery riwayat, ratchet, dan forward secrecy belum diimplementasikan. Ini berarti pencurian private key statis dapat membahayakan ciphertext lama yang masih tersedia; aplikasi belum boleh diklaim setara dengan messenger yang memiliki ratchet dan audit independen.
+Setiap pengguna hanya didukung dengan satu perangkat/kunci. Ada pemulihan public-key terbatas hanya jika pasangan tidak memiliki pesan dan catatan verifikasi; ini bukan pemulihan private key lama. Multi-device, recovery riwayat, ratchet, dan forward secrecy belum diimplementasikan. Ini berarti pencurian private key statis dapat membahayakan ciphertext lama yang masih tersedia; aplikasi belum boleh diklaim setara dengan messenger yang memiliki ratchet dan audit independen.
 
 Jika kunci lokal hilang atau fingerprint lokal berbeda dari database, chat dihentikan. Jangan menghapus atau mengganti kunci secara otomatis. Rotasi/reset harus memakai prosedur terverifikasi pada fase audit.
 
@@ -61,7 +61,7 @@ Fingerprint berisi 64 karakter hex SHA-256. Pengguna harus membandingkan semua k
 
 - [ ] `npm test`, build Vite, `npx cap sync android`, dan Gradle `assembleDebug` semuanya sukses pada Actions.
 - [ ] Pada Android 12+, key baru dibuat di Android Keystore; public key/fingerprint sama setelah aplikasi ditutup dan dibuka.
-- [ ] Android di bawah API 31 tidak bisa mengaktifkan chat E2EE.
+- [x] Android 11/API 30 telah dicoba pengguna untuk chat dua arah. API 23–30 memakai private key P-256 yang dibungkus AES-GCM menggunakan kunci AES non-exportable Android Keystore; proteksinya lebih lemah terhadap compromise proses daripada API 31+.
 - [ ] Login dengan akun ketiga tidak dapat membaca membership, public key, fingerprint, atau pesan.
 - [ ] Dua akun yang benar dapat membaca dua membership, tetapi user tidak dapat menambah anggota baru.
 - [ ] Pesan tidak dapat dikirim sebelum fingerprint penerima diverifikasi.
@@ -69,5 +69,6 @@ Fingerprint berisi 64 karakter hex SHA-256. Pengguna harus membandingkan semua k
 - [ ] Modifikasi nonce, ciphertext, `message_id`, sender, recipient, key version atau pair ID menyebabkan dekripsi gagal dan isi tidak ditampilkan.
 - [ ] Mode pesawat/putus jaringan menghasilkan error tanpa menyimpan plaintext; reconnect mengirim/memuat ciphertext dengan benar.
 - [ ] PIN lock/masuk background menghapus teks yang terlihat dari DOM dan menghentikan channel Realtime.
+- [ ] Setelah Fase 3 aktif, lampiran gambar/video/audio dienkripsi sebelum upload, file Storage yang diunduh tetap ciphertext, dan file hanya ditampilkan setelah native GCM authentication berhasil.
 
 Build CI dan unit test JavaScript tidak membuktikan bahwa Android Keystore bekerja di semua OEM, bahwa proyek Supabase sudah seeded, atau bahwa E2EE berfungsi antara dua perangkat. Checklist tersebut harus diisi setelah uji nyata.

@@ -8,6 +8,7 @@ const native = readFileSync(new URL('../android-native/src/main/java/com/ourspac
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021170000_phase3_encrypted_media.sql', import.meta.url), 'utf8');
 
 test('all exposed chat tables have RLS and least-privilege grants', () => {
   for (const table of ['pairs', 'pair_members', 'device_keys', 'key_verifications', 'messages']) {
@@ -45,7 +46,7 @@ test('native implementation preserves ECDH protocol while using strongest availa
   assert.match(native, /KeyAgreement\.getInstance\("ECDH"\)/);
   assert.match(native, /AES\/GCM\/NoPadding/);
   assert.match(native, /HmacSHA256/);
-  assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version\)/);
+  assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version, messageType\)/);
   assert.match(native, /aes-256-gcm\/v1/);
   assert.match(native, /clear\(plainBytes\);/);
   assert.match(native, /cipher\.updateAAD\(associatedData/);
@@ -124,4 +125,50 @@ test('Supabase auth session persistence stores only a sealed envelope', () => {
   assert.match(session, /sealSessionValue\(\{ value \}\)/);
   assert.match(session, /openSessionValue\(envelope\)/);
   assert.doesNotMatch(session, /Preferences\.set\(\{\s*key,\s*value\s*\}\)/);
+});
+
+test('Phase 3 stores only encrypted media in a private bucket with membership and verified-peer policies', () => {
+  assert.match(mediaMigration, /check \(message_type in \('text', 'media'\)\)/i);
+  assert.match(mediaMigration, /our-space-encrypted-media[\s\S]*?false[\s\S]*?4194304/i);
+  assert.match(mediaMigration, /for select\s+to authenticated[\s\S]*?storage\.foldername\(name\)/i);
+  assert.match(mediaMigration, /for insert\s+to authenticated[\s\S]*?key_verifications/i);
+  assert.match(mediaMigration, /for delete\s+to authenticated[\s\S]*?auth\.uid\(\)/i);
+  assert.doesNotMatch(mediaMigration, /public\s*=\s*true/i);
+  assert.match(native, /public void encryptMedia\(PluginCall call\)/);
+  assert.match(native, /public void decryptMedia\(PluginCall call\)/);
+  assert.match(native, /MAX_MEDIA_BYTES = 3 \* 1024 \* 1024/);
+  const mediaEncryptIndex = native.indexOf('public void encryptMedia(PluginCall call)');
+  const explicitNonceIndex = native.indexOf('nonce = new byte[GCM_NONCE_BYTES]', mediaEncryptIndex);
+  const randomNonceIndex = native.indexOf('new SecureRandom().nextBytes(nonce)', explicitNonceIndex);
+  const gcmInitIndex = native.indexOf('new GCMParameterSpec(GCM_TAG_BITS, nonce)', randomNonceIndex);
+  assert.ok(mediaEncryptIndex >= 0 && explicitNonceIndex > mediaEncryptIndex);
+  assert.ok(randomNonceIndex > explicitNonceIndex && gcmInitIndex > randomNonceIndex);
+  assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version, "media\/blob"\)/);
+  assert.match(native, /associatedData\(pairId, messageId, senderId, recipientId, version, "media\/blob"\)/);
+  assert.match(client, /supabase\.storage\.from\(MEDIA_BUCKET\)\.upload\(objectPath, encryptedBlob/);
+  assert.match(client, /supabase\.storage\.from\(MEDIA_BUCKET\)\.download\(metadata\.objectPath\)/);
+  assert.match(client, /messageType: 'media'/);
+  assert.match(html, /id="chat-attach-btn"/);
+  assert.match(html, /id="chat-attachment-input"/);
+  assert.match(native, /public void saveMediaToGallery\(PluginCall call\)/);
+  assert.match(native, /MediaStore\.MediaColumns\.RELATIVE_PATH/);
+  assert.match(native, /Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.Q/);
+  assert.match(native, /getExternalFilesDir\(Environment\.DIRECTORY_DOCUMENTS\)/);
+  assert.match(client, /KeyStore\.saveMediaToGallery\(/);
+  assert.match(client, /Simpan ke perangkat/);
+  assert.match(client, /saved\.destination === 'gallery'/);
+  assert.match(client, /if \(!appUnlocked \|\| !partnerVerified\) return;\s+if \(openedMedia\.filename/);
+  assert.match(client, /clearMediaObjectUrls\(\);\s+container\.replaceChildren\(\)/);
+  assert.match(client, /if \(!appUnlocked \|\| !partnerVerified \|\| !sessionUser\)/);
+});
+
+test('media display and download happen only after native authenticated decryption', () => {
+  const downloadIndex = client.indexOf('.download(metadata.objectPath)');
+  const decryptIndex = client.indexOf('KeyStore.decryptMedia({', downloadIndex);
+  const renderIndex = client.indexOf('renderMediaMessage(row, blob, metadata)', decryptIndex);
+  assert.ok(downloadIndex >= 0);
+  assert.ok(decryptIndex > downloadIndex);
+  assert.ok(renderIndex > decryptIndex);
+  assert.match(client, /URL\.revokeObjectURL/);
+  assert.match(client, /file\.size > MAX_MEDIA_BYTES/);
 });
