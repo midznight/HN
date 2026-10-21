@@ -63,11 +63,18 @@ export function validateMediaMetadata(value, row) {
     throw new Error('Lokasi lampiran tidak valid.');
   }
   if (typeof value.filename !== 'string' || !value.filename.trim() ||
-      value.filename.length > 255 || /[\\u0000-\\u001f\\/\\\\]/.test(value.filename)) {
+      value.filename.length > 255 ||
+      Array.from(value.filename).some((character) => {
+        const code = character.charCodeAt(0);
+        return code < 32 || code === 127 || character === '/' || character === String.fromCharCode(92);
+      })) {
     throw new Error('Nama lampiran tidak valid.');
   }
   if (typeof value.mimeType !== 'string' || !ALLOWED_MEDIA_TYPES.has(value.mimeType)) {
     throw new Error('Jenis lampiran tidak didukung.');
+  }
+  if (typeof value.nonce !== 'string' || !/^[A-Za-z0-9+/]{16}$/.test(value.nonce)) {
+    throw new Error('Nonce lampiran tidak valid.');
   }
   if (!Number.isSafeInteger(value.size) || value.size < 1 || value.size > MAX_MEDIA_BYTES) {
     throw new Error('Ukuran lampiran tidak valid.');
