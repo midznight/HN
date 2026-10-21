@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build:css": "tailwindcss -c tailwind.config.cjs -i ./src/tailwind.css -o ./src/tailwind.generated.css --minify",
-    "build": "npm run build:css && vite build"
+    "build": "npm run build:css && vite build",
+    "test": "node --test"
   },
   "dependencies": {
     "@capacitor/android": "6.2.0",
@@ -15,7 +16,8 @@
     "@capacitor/preferences": "6.0.2",
     "@fontsource/inter": "5.1.1",
     "@fontsource/playfair-display": "5.1.1",
-    "lucide": "0.468.0"
+    "lucide": "0.468.0",
+    "@supabase/supabase-js": "2.118.0"
   },
   "devDependencies": {
     "@capacitor/cli": "6.2.0",
@@ -24,6 +26,6 @@
     "vite": "6.0.7"
   },
   "engines": {
-    "node": ">=20 <23"
+    "node": ">=22 <23"
   }
 }
