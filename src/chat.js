@@ -192,6 +192,19 @@ function uuidLooksValid(value) {
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+export function getPrivateChatContext() {
+  if (!appUnlocked || !sessionUser || !pair || !partnerMember ||
+      !partnerDeviceKey || !partnerVerified) return null;
+  return Object.freeze({
+    userId: sessionUser.id,
+    pairId: pair.id,
+    partnerId: partnerMember.user_id,
+    partnerPublicKey: partnerDeviceKey.public_key,
+    keyVersion: EXPECTED_KEY_VERSION,
+    partnerVerified: true,
+  });
+}
+
 export async function initChat() {
   initializeMediaPreviewControls();
   if (initialized) return;
