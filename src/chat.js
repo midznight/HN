@@ -36,6 +36,7 @@ let pendingMediaFile = null;
 let pendingMediaPreviewUrl = null;
 let voiceRecordingSession = null;
 let voiceRecordingStarting = false;
+let voiceRecordingEpoch = 0;
 
 function closeMediaPreview() {
   const frame = $('media-preview-frame');
@@ -171,6 +172,7 @@ function formatRecordingElapsed(ms) {
 
 async function startVoiceRecording() {
   if (!appUnlocked || !partnerVerified || !sessionUser || !pair || isSending || voiceRecordingSession || voiceRecordingStarting) return;
+  const requestEpoch = voiceRecordingEpoch;
   voiceRecordingStarting = true;
   setVoiceRecordUi(false, 'Meminta izin mikrofon…');
   updateComposerState();
@@ -200,8 +202,11 @@ async function startVoiceRecording() {
 
   voiceRecordingStarting = false;
   updateComposerState();
-  if (!appUnlocked || !partnerVerified || !sessionUser || !pair) {
+  if (requestEpoch !== voiceRecordingEpoch || !appUnlocked || !partnerVerified || !sessionUser || !pair) {
     for (const track of stream.getTracks()) { try { track.stop(); } catch { /* best effort */ } }
+    voiceRecordingStarting = false;
+    updateComposerState();
+    setVoiceRecordUi(false, '');
     return;
   }
 
@@ -553,6 +558,7 @@ function clearMediaObjectUrls() {
 }
 
 export function onChatLocked() {
+  voiceRecordingEpoch++;
   clearAttachmentPickerState();
   cancelVoiceRecording(true);
   closeMediaPreview();
