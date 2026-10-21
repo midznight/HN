@@ -7,7 +7,7 @@ Roadmap ini melengkapi `ARCHITECTURE.md`; perubahan fase tidak otomatis berarti 
 | 1 | Capacitor shell, PIN lokal, lifecycle Android, APK | Baseline tersedia; APK sudah dipakai pengguna. |
 | 2 | Supabase Auth, key binding, fingerprint, chat teks E2EE | Teruji pengguna: chat dua arah dan reopen di kedua HP, termasuk Android 11/API 30. |
 | 3 | Media E2EE, progress/error, pratinjau dan save | Diterima oleh pengguna pada 21 Oktober 2026. Detail implementasi dan batas teknis ada di docs/PHASE3_MEDIA.md. |
-| 4 | FCM dengan payload generik dan izin Android | PR #16 merged, CI #146 lulus, migration applied, Edge Function send-chat-push ACTIVE dengan verify_jwt=true. Aktivasi menunggu FIREBASE_ANDROID_CONFIG_BASE64 di GitHub dan FCM_SERVICE_ACCOUNT_JSON di Supabase, lalu uji dua HP. |
+| 4 | FCM dengan payload generik dan izin Android | PR #16/#18 merged; migration applied, Edge Function send-chat-push ACTIVE dengan verify_jwt=true, dan CI #152/#153 lulus. Aktivasi menunggu FIREBASE_ANDROID_CONFIG_BASE64 di GitHub dan FCM_SERVICE_ACCOUNT_JSON di Supabase, lalu uji dua HP. |
 | 5 | WebRTC, signaling privat, TURN, caveat background | Belum dimulai. |
 | 6 | Brankas terenkripsi dan log panggilan nyata | Belum dimulai. |
 | 7 | Audit keamanan, akun ketiga/RLS, uji negatif dan dokumen rilis | Belum dimulai. |

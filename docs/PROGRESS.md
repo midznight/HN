@@ -17,7 +17,7 @@ Pembaruan: 21 Oktober 2026 — Fase 4 push.
 - PR #10 memperbaiki picker galeri; pengguna mengonfirmasi alur kembali tanpa PIN ulang dan pilihan file tidak hilang pada build sebelum privacy shield.
 - PR #11/#12 menambahkan guard receive-side di batas dekripsi metadata, Storage download, dan `Blob.arrayBuffer()`, serta menyembunyikan konten aplikasi selama picker sistem terbuka.
 - PR #14 menghentikan alur pengirim jika aplikasi terkunci saat `File.arrayBuffer()` berlangsung, melepas referensi Base64 setelah enkripsi, dan menahan error lama agar tidak muncul di tampilan terkunci.
-- Tree kode build #124 identik dengan merge commit utama `44e4e5f1c9a63b35793f2d85773df354ec49afc9`. Privacy shield dan guard pengirim versi terbaru tetap perlu diuji fisik pada kedua HP.
+- Tree kode build #124 identik dengan merge commit utama `44e4e5f1c9a63b35793f2d85773df354ec49afc9`. Setelah itu pengguna menerima Fase 3 pada 21 Oktober 2026; penerimaan mengikuti konfirmasi pengguna, bukan audit keamanan independen.
 - Migration `20261021170000_phase3_encrypted_media.sql` telah diterapkan dan diverifikasi di project Supabase produksi `sajlpngmpkizwjbarxlj`.
 - Bucket `our-space-encrypted-media` dikonfirmasi private, limit objek 4 MiB, dan hanya mengizinkan `application/octet-stream`. Policy SELECT, INSERT terverifikasi, serta DELETE orphan diterapkan pada Storage.
 - APK #124 berhasil dibangun; SHA-256 APK `2893ea1d9d6a4ebad786bbf44c2f9491fa7195cf39ad41ad833230fb2199aca6`. Sertifikat SHA-256-nya cocok dengan baseline: `6E48F45D9EEEFB56FD3BC3B4ADA108FDF0B73B7280E6DF6766EF699ADAE2956D`.
@@ -39,7 +39,7 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 
 ## Fase 4 — notifikasi push
 
-- Implementasi awal ada di branch phase-4/push-notifications.
+- PR #16 menggabungkan implementasi Fase 4 ke integration branch; PR #18 menambahkan konsistensi opt-out/token/logout. CI #152 pada source commit dan #153 pasca-merge keduanya lulus penuh.
 - FCM hanya menerima judul “Our Space”, isi generik “Ada pesan baru menunggu.”, dan data type=new_message. Teks/ciphertext, pengirim, nama file, metadata media, pair ID, dan message ID tidak masuk payload.
 - Tabel device_push_tokens memakai RLS owner-only. Ledger push_dispatches adalah service-role-only.
 - Edge Function memvalidasi JWT pengguna, sender id, pair dua anggota, verifikasi fingerprint penerima, umur pesan, dan deduplikasi dispatch.
@@ -47,5 +47,6 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - PR #16 merged ke integration branch pada commit 16441c87c14b454ab74409a72cfbd53e71446c70; post-merge CI #146 sukses dengan dependency audit, security-contract tests, web build, Capacitor sync, dan signed APK.
 - Migration Fase 4 sudah diterapkan di project Supabase sajlpngmpkizwjbarxlj; device_push_tokens dan push_dispatches terverifikasi ber-RLS. Belum ada token/dispatch yang tersimpan.
 - Edge Function send-chat-push sudah ACTIVE dengan verify_jwt=true.
-- CI #146 mengonfirmasi FIREBASE_ANDROID_CONFIG_BASE64 belum tersedia; APK build ini secara sengaja menonaktifkan push. Secret server FCM_SERVICE_ACCOUNT_JSON harus ditambahkan di Supabase sebelum status ready.
-- Berikutnya: masukkan dua secret melalui dashboard masing-masing (jangan di chat/repo), jalankan build baru, lalu uji push dua arah di kedua HP.
+- PR #18 membuat opt-out lebih aman: preferensi lokal ditulis sebelum token server dihapus; kegagalan simpan preferensi memblokir logout; token server sisa direkonsiliasi pada login terverifikasi berikutnya.
+- Build #153 menciptakan APK bertanda tangan tetapi Firebase client config belum tersedia, sehingga push sengaja nonaktif. Kredensial server FCM_SERVICE_ACCOUNT_JSON belum dikonfigurasi/terverifikasi.
+- Berikutnya: masukkan dua konfigurasi melalui dashboard masing-masing (jangan di chat/repo), jalankan build baru, lalu uji push dua arah di kedua HP.

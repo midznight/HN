@@ -1,6 +1,6 @@
 # Decisions — Our Space
 
-Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4.
+Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4 opt-out hardening.
 
 1. **Pertahankan chat teks yang sudah berjalan.** Tidak mereset pair, fingerprint, private key, pesan atau membership untuk mengaktifkan media. Migration Fase 3 hanya memperluas constraint tipe pesan dan menambah private Storage/policies.
 2. **Tidak membuat bucket public.** Media asli dienkripsi di perangkat; Storage hanya berisi ciphertext dengan content type generik.
@@ -20,3 +20,5 @@ Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4.
 15. **Push opt-in dan fail-closed.** Izin OS tidak diminta saat startup. Client harus dibangun dengan Google Services config dan Edge Function harus memvalidasi service account serta project ID sebelum toggle aktif.
 16. **Token hanya milik pemilik.** RLS membatasi CRUD device_push_tokens untuk auth.uid() sendiri; push_dispatches tidak punya grant user dan hanya service_role boleh mengaksesnya.
 17. **Logout mencabut token dahulu.** Jika token belum berhasil dicabut karena network error, tahan proses logout agar perangkat tidak terus menerima notifikasi akun yang ditinggalkan tanpa konfirmasi.
+
+18. **Opt-out harus konsisten secara durabel.** Simpan preferensi lokal nonaktif sebelum menghapus token server; jika penghapusan gagal, kembalikan preferensi aktif bila memungkinkan. Saat login terverifikasi berikutnya, jika preferensi lokal nonaktif tetapi token server masih ada, coba hapus token sisa. Jangan meneruskan logout bila preferensi opt-out tidak dapat dipersistenkan.

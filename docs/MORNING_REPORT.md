@@ -41,3 +41,11 @@ Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SER
 - Edge Function send-chat-push berstatus ACTIVE, verify_jwt=true. Kode menerima current Supabase key environment format maupun nama legacy.
 - Build #146 mencatat FIREBASE_ANDROID_CONFIG_BASE64 tidak tersedia dan karena itu sengaja membangun APK dengan push nonaktif. FCM_SERVICE_ACCOUNT_JSON perlu disetel di Supabase Edge Function Secrets.
 - Tidak ada service berbayar atau secret yang dimasukkan ke repository/chat. Push belum dinyatakan aktif sampai kedua secret valid, build baru menghasilkan konfigurasi Firebase, dan uji push generik berhasil pada kedua HP.
+
+
+## Pembaruan Fase 4 — opt-out hardening
+
+- PR #18 merged pada commit 2c67e9ad939097fa5be79869de65a3af7f93dc57. CI #152 untuk source dan CI #153 pasca-merge lulus penuh, termasuk tes kontrak keamanan, build web, Capacitor sync, dan APK bertanda tangan stabil.
+- Perbaikan mengurutkan preferensi opt-out sebelum penghapusan token server, menahan logout jika preferensi tidak dapat disimpan, dan mencoba membersihkan token sisa saat login terverifikasi berikutnya.
+- Migration Fase 4 sudah diterapkan; Edge Function send-chat-push ACTIVE dengan verify_jwt=true. Belum ada token terdaftar atau dispatch.
+- Build #153 mencatat Firebase client config tidak tersedia; push tetap nonaktif hingga secret FIREBASE_ANDROID_CONFIG_BASE64 di GitHub dan FCM_SERVICE_ACCOUNT_JSON di Supabase valid. Setelah itu masih wajib uji dua HP.
