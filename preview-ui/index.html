@@ -196,7 +196,7 @@ body::after{width:180px;height:180px;left:-115px;bottom:8%;border:1px solid rgba
 :root[data-theme="dark"] .preview-bar{background:rgba(33,28,36,.94);border-bottom-color:var(--border)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .preview-bar{background:rgba(33,28,36,.94);border-bottom-color:var(--border)}}
 .brand{gap:12px}
-.brand-mark{width:44px;height:44px;border-radius:17px 17px 17px 7px;background:linear-gradient(145deg,#F28D83,#D65355 60%,#A84D67);color:#fff;box-shadow:0 7px 15px rgba(214,83,85,.23);font-size:16px;transform:rotate(-3deg)}
+.brand-mark{width:44px;height:44px;border-radius:17px 17px 17px 7px;background:linear-gradient(145deg,#B63F49,#A83A4B 60%,#753B58);color:#fff;box-shadow:0 7px 15px rgba(214,83,85,.23);font-size:16px;transform:rotate(-3deg)}
 .brand-title{font-size:17px;letter-spacing:-.045em}
 .brand-sub{letter-spacing:.01em}
 .demo-pill{border-color:#F1C6C0;background:#FFF0EC;color:#A8424A;font-size:11px;padding:6px 10px}
@@ -250,7 +250,7 @@ body::after{width:180px;height:180px;left:-115px;bottom:8%;border:1px solid rgba
 .composer{gap:7px;border:1px solid var(--border);border-radius:23px;background:var(--raised);padding:4px 5px}
 .composer .icon-button{border-radius:17px;color:var(--muted-strong)}
 .composer input{height:46px;border:0;border-radius:18px;background:transparent;padding:0 9px}
-.send-button{width:46px;min-width:46px;height:46px;border-radius:17px 17px 8px 17px;background:linear-gradient(145deg,#EB786F,#D65355);border-color:transparent;box-shadow:0 4px 10px rgba(214,83,85,.23)}
+.send-button{width:46px;min-width:46px;height:46px;border-radius:17px 17px 8px 17px;background:linear-gradient(145deg,#B63F49,#A83A4B);border-color:transparent;box-shadow:0 4px 10px rgba(168,58,75,.25)}
 .bottom-nav{position:relative;padding:7px 9px calc(7px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid rgba(232,210,208,.55);gap:6px}
 .tab{min-height:58px;border-radius:18px;font-size:12px;font-weight:700;gap:4px}
 .tab svg{width:22px;height:22px;transition:transform var(--motion)}
@@ -262,12 +262,12 @@ body::after{width:180px;height:180px;left:-115px;bottom:8%;border:1px solid rgba
 .section-title{font-size:16px;letter-spacing:-.025em}
 .section-sub{line-height:1.5}
 .card{border:1px solid rgba(232,210,208,.84);border-radius:24px;padding:17px;background:linear-gradient(165deg,var(--surface),var(--bg));box-shadow:0 5px 17px rgba(72,36,56,.035)}
-.relationship-card{background:linear-gradient(128deg,#DA6560 0%,#C25568 53%,#80546D 100%);border:0;border-radius:28px;padding:23px;min-height:196px;box-shadow:0 12px 26px rgba(177,73,89,.20)}
+.relationship-card{background:linear-gradient(128deg,#B84557 0%,#A74262 53%,#70445F 100%);border:0;border-radius:28px;padding:23px;min-height:196px;box-shadow:0 12px 26px rgba(177,73,89,.20)}
 .relationship-card::before{content:"";position:absolute;right:-42px;bottom:-76px;width:205px;height:205px;border:1px solid rgba(255,255,255,.25);border-radius:50%;box-shadow:0 0 0 18px rgba(255,255,255,.055),0 0 0 38px rgba(255,255,255,.04),0 0 0 60px rgba(255,255,255,.025);pointer-events:none}
 .relationship-card::after{content:"♡";position:absolute;right:16px;top:4px;font:100px/1 Georgia,serif;color:rgba(255,255,255,.12);transform:rotate(12deg);pointer-events:none}
-.relationship-card .kicker{position:relative;z-index:1;color:#FFE4DF;letter-spacing:.11em;font-size:10px}
+.relationship-card .kicker{position:relative;z-index:1;color:#FFFFFF;letter-spacing:.11em;font-size:10px}
 .relationship-card h2{position:relative;z-index:1;font:600 27px/1.16 Georgia,"Times New Roman",serif;letter-spacing:-.03em;max-width:300px;margin:11px 0}
-.relationship-card p{position:relative;z-index:1;color:#FFF6F3;opacity:.98;max-width:320px}
+.relationship-card p{position:relative;z-index:1;color:#FFFFFF;opacity:.98;max-width:320px}
 .relationship-card .button{position:relative;z-index:1;margin-top:17px;min-height:46px;background:#FFF7F2;border-color:#FFF7F2;color:#8E3E4B;border-radius:16px;font-weight:750;box-shadow:0 4px 10px rgba(58,24,41,.10)}
 .row-link{border-radius:19px;border-color:rgba(232,210,208,.9);background:var(--surface);padding:11px 13px;box-shadow:0 3px 9px rgba(72,36,56,.025)}
 .row-icon{width:43px;height:43px;border-radius:16px 16px 16px 6px;background:linear-gradient(145deg,#FFE8E1,#F9D6D0);color:#BC4C54}
@@ -294,7 +294,7 @@ body::after{width:180px;height:180px;left:-115px;bottom:8%;border:1px solid rgba
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .state-symbol{background:linear-gradient(145deg,#4F303B,#382631);color:#FFB5A9}}
 .center-state h2{font:600 25px/1.17 Georgia,"Times New Roman",serif;letter-spacing:-.025em}
 .button,.icon-button{border-radius:17px;transition:transform var(--motion),box-shadow var(--motion),background var(--motion)}
-.button.primary{background:linear-gradient(135deg,#E66C63,#D65355);border-color:transparent;box-shadow:0 5px 13px rgba(214,83,85,.19)}
+.button.primary{background:linear-gradient(135deg,#B63F49,#A83A4B);border-color:transparent;color:#FFFFFF;box-shadow:0 5px 13px rgba(168,58,75,.22)}
 .button.soft{background:var(--accent-soft);border-color:transparent;color:var(--accent-pressed)}
 .button:active,.icon-button:active{transform:scale(.975)}
 .call-stage{position:relative;background:radial-gradient(ellipse at 50% 18%,#FBE5DF 0,rgba(251,229,223,.45) 25%,var(--surface) 59%);overflow:hidden}
@@ -306,7 +306,7 @@ body::after{width:180px;height:180px;left:-115px;bottom:8%;border:1px solid rgba
 .call-action.answer .circle{background:linear-gradient(145deg,#5FAE8D,#27745F);border:0;color:#fff;box-shadow:0 5px 14px rgba(39,116,95,.2)}
 .call-action.decline .circle{background:linear-gradient(145deg,#E76A73,#B53242);border:0;color:#fff}
 .gate-card{border:1px solid rgba(232,210,208,.9);border-radius:30px;background:linear-gradient(160deg,var(--surface),var(--bg));box-shadow:0 16px 36px rgba(72,36,56,.09);padding:26px 21px}
-.gate-mark{width:72px;height:72px;border-radius:25px 25px 25px 9px;background:linear-gradient(145deg,#F28D83,#D65355 58%,#9F506D);color:#fff;font:40px/1 Georgia,serif;box-shadow:0 9px 18px rgba(214,83,85,.23);transform:rotate(-4deg)}
+.gate-mark{width:72px;height:72px;border-radius:25px 25px 25px 9px;background:linear-gradient(145deg,#B63F49,#A83A4B 58%,#753B58);color:#fff;font:40px/1 Georgia,serif;box-shadow:0 9px 18px rgba(214,83,85,.23);transform:rotate(-4deg)}
 .gate-card h2{font:600 27px/1.13 Georgia,"Times New Roman",serif;letter-spacing:-.03em}
 .gate-card input{border-color:var(--border);border-radius:17px;background:var(--bg)}
 .identity{border-radius:18px;transition:background var(--motion),border-color var(--motion)}
