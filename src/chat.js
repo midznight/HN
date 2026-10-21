@@ -35,6 +35,7 @@ const mediaObjectUrls = new Set();
 let pendingMediaFile = null;
 let pendingMediaPreviewUrl = null;
 let voiceRecordingSession = null;
+let voiceRecordingStarting = false;
 
 function closeMediaPreview() {
   const frame = $('media-preview-frame');
@@ -169,7 +170,10 @@ function formatRecordingElapsed(ms) {
 }
 
 async function startVoiceRecording() {
-  if (!appUnlocked || !partnerVerified || !sessionUser || !pair || isSending || voiceRecordingSession) return;
+  if (!appUnlocked || !partnerVerified || !sessionUser || !pair || isSending || voiceRecordingSession || voiceRecordingStarting) return;
+  voiceRecordingStarting = true;
+  setVoiceRecordUi(false, 'Meminta izin mikrofon…');
+  updateComposerState();
   clearMessageError();
   if (typeof MediaRecorder !== 'function' || !navigator.mediaDevices?.getUserMedia) {
     messageError('Perekaman suara tidak tersedia di WebView ini. Pilih file audio dari galeri sebagai gantinya.');
@@ -183,6 +187,8 @@ async function startVoiceRecording() {
       video: false,
     });
   } catch (error) {
+    voiceRecordingStarting = false;
+    updateComposerState();
     const reason = error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError'
       ? 'Izin mikrofon ditolak. Aktifkan izin mikrofon Our Space di pengaturan Android.'
       : 'Mikrofon belum tersedia. Periksa izin perangkat lalu coba lagi.';
@@ -190,6 +196,8 @@ async function startVoiceRecording() {
     return;
   }
 
+  voiceRecordingStarting = false;
+  updateComposerState();
   if (!appUnlocked || !partnerVerified || !sessionUser || !pair) {
     for (const track of stream.getTracks()) { try { track.stop(); } catch { /* best effort */ } }
     return;
@@ -1345,7 +1353,7 @@ function updateComposerState() {
   if ($('chat-send-btn')) $('chat-send-btn').disabled = !enabled || isSending;
   if ($('chat-attach-btn')) $('chat-attach-btn').disabled = !enabled || isSending;
   if ($('chat-attachment-input')) $('chat-attachment-input').disabled = !enabled || isSending;
-  if ($('chat-record-btn')) $('chat-record-btn').disabled = !enabled || isSending || !voiceRecordingSession && typeof MediaRecorder !== 'function';
+  if ($('chat-record-btn')) $('chat-record-btn').disabled = !enabled || isSending || voiceRecordingStarting || (!voiceRecordingSession && typeof MediaRecorder !== 'function');
   if ($('chat-audio-call')) $('chat-audio-call').disabled = !enabled || isSending;
   if ($('chat-video-call')) $('chat-video-call').disabled = !enabled || isSending;
   if ($('chat-message-input')) $('chat-message-input').placeholder = enabled ? 'Ketik pesan terenkripsi…' : 'Verifikasi fingerprint untuk mulai chat';
