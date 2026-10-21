@@ -80,7 +80,7 @@ test('guarded device-key recovery requires an authenticated own member, valid fi
   assert.match(recovery, /security definer/i);
   assert.match(recovery, /set search_path = ''/i);
   assert.match(recovery, /auth\.uid\(\)/i);
-  assert.match(recovery, /extensions\.digest\(decode\(p_public_key, 'base64'\), 'sha256'\)/i);
+  assert.match(recovery, /extensions\.digest\(v_decoded_key, 'sha256'\)/i);
   assert.match(recovery, /from public\.messages[\s\S]*?raise exception/i);
   assert.match(recovery, /from public\.key_verifications[\s\S]*?raise exception/i);
   assert.match(recovery, /update public\.device_keys[\s\S]*?public_key = p_public_key[\s\S]*?fingerprint = p_fingerprint/i);
