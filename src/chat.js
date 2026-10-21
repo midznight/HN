@@ -2,11 +2,12 @@ import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 import { supabase, hasSupabaseConfig } from './supabase.js';
 import { OurSpaceKeyStore as KeyStore, ensureDeviceIdentityKey, requireAndroidE2EE } from './secure-keys.js';
-import { createMessageId, normalizeTextMessage, validateCiphertextMessage } from './chat-protocol.js';
+import { createMessageId, normalizeTextMessage, validateCiphertextMessage, validateMediaMetadata, isSupportedMediaMimeType, MAX_MEDIA_BYTES } from './chat-protocol.js';
 
 const $ = (id) => document.getElementById(id);
 const PIN_IDENTITY_KEY = 'os.identity.v1';
 const EXPECTED_KEY_VERSION = 1;
+const MEDIA_BUCKET = 'our-space-encrypted-media';
 
 let initialized = false;
 let appUnlocked = false;
@@ -21,6 +22,7 @@ let realtimeChannel = null;
 let renderedIds = new Set();
 let isSending = false;
 let pendingLocalRecoveryKey = null;
+const mediaObjectUrls = new Set();
 
 function messageError(message) {
   const node = $('chat-alert');
@@ -85,6 +87,13 @@ export async function initChat() {
     }
   });
   $('chat-send-btn')?.addEventListener('click', sendMessage);
+  $('chat-attach-btn')?.addEventListener('click', () => $('chat-attachment-input')?.click());
+  $('chat-attachment-input')?.addEventListener('change', async (event) => {
+    const picker = event.currentTarget;
+    const file = picker?.files?.[0];
+    if (picker) picker.value = '';
+    if (file) await sendMediaFile(file);
+  });
 
   const logoutButton = document.querySelector('#view-profile button.text-red-700');
   logoutButton?.addEventListener('click', async (event) => {
@@ -583,6 +592,8 @@ function updateComposerState() {
   const enabled = Boolean(appUnlocked && sessionUser && partnerVerified && partnerDeviceKey && pair);
   if ($('chat-message-input')) $('chat-message-input').disabled = !enabled;
   if ($('chat-send-btn')) $('chat-send-btn').disabled = !enabled || isSending;
+  if ($('chat-attach-btn')) $('chat-attach-btn').disabled = !enabled || isSending;
+  if ($('chat-attachment-input')) $('chat-attachment-input').disabled = !enabled || isSending;
   if ($('chat-message-input')) $('chat-message-input').placeholder = enabled ? 'Ketik pesan terenkripsi…' : 'Verifikasi fingerprint untuk mulai chat';
 }
 
@@ -656,6 +667,8 @@ async function signOut() {
 }
 
 function clearPrivateState() {
+  for (const url of mediaObjectUrls) URL.revokeObjectURL(url);
+  mediaObjectUrls.clear();
   sessionUser = null;
   pair = null;
   ownMember = null;
