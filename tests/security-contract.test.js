@@ -65,6 +65,16 @@ test('fingerprint confirmation starts hidden until a partner key exists', () => 
   assert.match(client, /classList\.toggle\('hidden', !peerKey \|\| partnerVerified\)/);
 });
 
+test('local fingerprint panel is rendered before server-key mismatch can abort setup', () => {
+  const localKeyIndex = client.indexOf('const localKey = await ensureDeviceIdentityKey();');
+  const panelIndex = client.indexOf('await updateFingerprintPanel(localKey, null);', localKeyIndex);
+  const serverMismatchIndex = client.indexOf('Fingerprint kunci lokal berbeda dari kunci yang tercatat di server.', localKeyIndex);
+  assert.ok(localKeyIndex >= 0, 'local identity key must be loaded');
+  assert.ok(panelIndex > localKeyIndex, 'local fingerprint panel must render after key load');
+  assert.ok(serverMismatchIndex > panelIndex, 'mismatch guard must run after diagnostic fingerprint rendering');
+  assert.match(client, /Pengiriman dihentikan; jangan hapus kunci atau mengganti fingerprint secara otomatis/);
+});
+
 test('client recomputes remote key fingerprint and only trusts a matching verification', () => {
   assert.match(client, /fingerprintPublicKey/);
   assert.match(client, /calculated\.fingerprint !== partnerDeviceKey\.fingerprint/);

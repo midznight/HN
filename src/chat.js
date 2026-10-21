@@ -237,6 +237,11 @@ async function bootstrapPrivateChat() {
     const localKey = await ensureDeviceIdentityKey();
     if (!appUnlocked) return;
 
+    // Show the local fingerprint immediately, even if the server has a stale key record.
+    // This is diagnostic-only: mismatch checks below still abort and keep chat locked.
+    await updateFingerprintPanel(localKey, null);
+    if (!appUnlocked) return;
+
     const { data: existingKey, error: existingError } = await supabase
       .from('device_keys')
       .select('id,pair_id,user_id,public_key,fingerprint,key_version,algorithm')
