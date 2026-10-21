@@ -3,7 +3,7 @@
 -- no messages and no key verification records. The client must require an
 -- explicit user confirmation; no chat unlock or trust is granted by this RPC.
 
-create or replace function public.recover_own_device_key_if_unused(
+create or replace function private.recover_own_device_key_if_unused(
   p_pair_id uuid,
   p_public_key text,
   p_fingerprint text
@@ -80,6 +80,25 @@ begin
    where id = v_existing.id
      and pair_id = p_pair_id
      and user_id = v_user_id;
+end;
+$function$;
+
+revoke all on function private.recover_own_device_key_if_unused(uuid, text, text) from public, anon;
+grant execute on function private.recover_own_device_key_if_unused(uuid, text, text) to authenticated;
+
+-- Public API wrapper is SECURITY INVOKER; privileged work stays in the private schema.
+create or replace function public.recover_own_device_key_if_unused(
+  p_pair_id uuid,
+  p_public_key text,
+  p_fingerprint text
+)
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $function$
+begin
+  perform private.recover_own_device_key_if_unused(p_pair_id, p_public_key, p_fingerprint);
 end;
 $function$;
 
