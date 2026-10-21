@@ -297,7 +297,7 @@
                         </div>
                         <div>
                             <h1 class="font-serif font-semibold text-base sm:text-lg tracking-wide">Nur</h1>
-                            <p class="text-[10px] uppercase tracking-widest text-brand-500 font-medium">Belum terhubung</p>
+                            <p id="chat-connection-label" class="text-[10px] uppercase tracking-widest text-brand-500 font-medium">Masuk diperlukan</p>
                         </div>
                     </div>
 
@@ -307,23 +307,62 @@
                     </div>
                 </header>
 
-                <div id="chat-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-36"><div class="h-full min-h-48 flex flex-col items-center justify-center text-center px-6"><div class="w-14 h-14 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-4"><i data-lucide="shield-check" class="w-6 h-6"></i></div><h3 class="font-serif text-lg text-surface-dark mb-2">Percakapan privat</h3><p class="text-xs text-surface-muted leading-relaxed max-w-xs">Chat terenkripsi akan aktif setelah Fase 2. Pesan contoh prototipe tidak ditampilkan sebagai percakapan nyata.</p></div><div id="chat-bottom"></div></div>
+                <div id="chat-setup" class="flex-1 overflow-y-auto p-4 sm:p-6 pb-28 md:pb-10">
+                    <div class="max-w-lg mx-auto space-y-4">
+                        <div id="chat-alert" role="alert" aria-live="polite" class="hidden text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl p-3"></div>
+                        <form id="chat-auth-form" class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm space-y-3">
+                            <div class="w-12 h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-2"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+                            <h3 class="font-serif text-lg text-surface-dark">Hubungkan akun privat</h3>
+                            <p class="text-xs text-surface-muted leading-relaxed">Masuk menggunakan akun Supabase yang sudah disiapkan untuk identitas Hamid atau Nur. Nama lokal dan PIN tidak menggantikan autentikasi server.</p>
+                            <label for="chat-email" class="block text-xs font-medium text-surface-dark pt-1">Email akun</label>
+                            <input id="chat-email" type="email" autocomplete="username" autocapitalize="none" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-bg text-sm outline-none focus:ring-2 focus:ring-brand-300" placeholder="Email akun privat">
+                            <label for="chat-password" class="block text-xs font-medium text-surface-dark pt-1">Kata sandi akun</label>
+                            <input id="chat-password" type="password" autocomplete="current-password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-surface-bg text-sm outline-none focus:ring-2 focus:ring-brand-300" placeholder="Kata sandi akun Supabase">
+                            <button id="chat-auth-submit" type="submit" class="w-full py-3 px-5 rounded-full bg-surface-dark text-white text-sm font-medium disabled:opacity-50">Masuk akun privat</button>
+                            <p class="text-[10px] text-surface-muted leading-relaxed">Kata sandi tidak disimpan. Sesi disegel memakai kunci AES di Android Keystore. Jangan masukkan kata sandi di aplikasi/web lain.</p>
+                        </form>
+                        <section id="chat-key-panel" class="hidden bg-white rounded-2xl p-5 sm:p-6 border border-gray-100 shadow-sm space-y-4">
+                            <div>
+                                <h3 class="font-serif text-lg text-surface-dark">Verifikasi fingerprint</h3>
+                                <p class="text-xs text-surface-muted leading-relaxed mt-1">Jangan langsung percaya pada kunci yang dikirim server. Bandingkan seluruh fingerprint 64 karakter secara langsung dengan pasangan melalui kanal lain yang tepercaya, sebelum membuka chat.</p>
+                            </div>
+                            <div id="chat-fingerprint-panel" class="hidden space-y-4">
+                                <div id="chat-own-key-copy-row" class="space-y-2">
+                                    <div class="flex items-center justify-between gap-2"><span class="text-xs font-semibold text-surface-dark">Fingerprint perangkat ini</span><button id="chat-copy-own-key" type="button" class="text-[10px] text-brand-600 underline">Salin</button></div>
+                                    <code id="chat-own-fingerprint" class="block select-text break-all text-[11px] leading-5 bg-surface-bg p-3 rounded-xl border border-gray-100"></code>
+                                </div>
+                                <div id="chat-partner-key-copy-row" class="hidden space-y-2">
+                                    <div class="flex items-center justify-between gap-2"><span class="text-xs font-semibold text-surface-dark">Fingerprint pasangan</span><button id="chat-copy-partner-key" type="button" class="text-[10px] text-brand-600 underline">Salin</button></div>
+                                    <code id="chat-partner-fingerprint" class="block select-text break-all text-[11px] leading-5 bg-surface-bg p-3 rounded-xl border border-gray-100"></code>
+                                </div>
+                                <p id="chat-key-version" class="text-[10px] uppercase tracking-widest text-surface-muted"></p>
+                            </div>
+                            <p id="chat-trust-explanation" class="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-xl p-3">Chat masih terkunci sampai fingerprint pasangan dicocokkan dan diverifikasi di perangkat ini.</p>
+                            <p id="chat-key-verified" class="hidden text-xs text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-xl p-3">Fingerprint pasangan sudah cocok. Chat dapat dibuka.</p>
+                            <button id="chat-confirm-key" type="button" class="w-full py-3 px-5 rounded-full bg-surface-dark text-white text-sm font-medium">Saya sudah membandingkan fingerprint langsung</button>
+                            <button id="chat-retry-setup" type="button" class="w-full py-2 text-xs text-surface-muted underline">Periksa ulang status</button>
+                        </section>
+                    </div>
+                </div>
+                <div id="chat-container" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-36"></div>
 
-                <footer class="absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
+                <footer id="chat-composer" class="hidden absolute bottom-0 left-0 w-full p-3 mac-glass border-t border-gray-100 z-20 pb-safe bg-white/90">
                     <div class="flex items-end gap-2 bg-surface-bg p-2 rounded-2xl border border-gray-200 focus-within:border-brand-300 focus-within:shadow-soft transition-all">
                         <button disabled aria-label="Lampiran aktif setelah Fase 3" class="p-2 text-surface-muted opacity-40 shrink-0">
                             <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
                         
                         <textarea 
+                            id="chat-message-input"
                             rows="1" 
-                            placeholder="Ketik pesan..." 
+                            disabled
+                            placeholder="Verifikasi fingerprint untuk mulai chat..." 
                             class="w-full bg-transparent border-none focus:ring-0 resize-none py-2 px-1 text-xs sm:text-sm max-h-24 text-surface-dark placeholder:text-surface-muted/60 custom-scrollbar outline-none font-light"
                             oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 96) + 'px'"
                         ></textarea>
 
                         <div class="flex items-center shrink-0 pr-1 pb-0.5">
-                            <button disabled aria-label="Kirim pesan aktif setelah Fase 2" class="p-2.5 bg-surface-dark/40 text-white/70 rounded-full shadow-sm ml-1 group">
+                            <button id="chat-send-btn" disabled aria-label="Kirim pesan terenkripsi" class="p-2.5 bg-surface-dark/40 text-white/70 disabled:opacity-50 rounded-full shadow-sm ml-1 group">
                                 <i data-lucide="send" class="w-3.5 h-3.5 group-hover:scale-110 transition-transform -ml-0.5"></i>
                             </button>
                         </div>
@@ -426,7 +465,7 @@
                         </button>
                     </div>
 
-                    <p class="text-center text-[10px] text-surface-muted mt-8 uppercase tracking-widest">Our Space · Fase 1<br>Designed for H & N</p>
+                    <p class="text-center text-[10px] text-surface-muted mt-8 uppercase tracking-widest">Our Space · Fase 2<br>Pesan terenkripsi end-to-end</p>
                 </div>
             </div>
             
