@@ -1,5 +1,7 @@
 # APK Android: pembaruan tanpa uninstall
 
+Jika kamu tidak bisa menjalankan `keytool` sendiri, gunakan berkas keystore yang disiapkan secara privat untuk project ini. Unduh paket keystore langsung dari percakapan tepercaya, bukan dari repository publik. Di dalamnya ada file backup JKS dan berkas teks berisi empat nilai secret. Jangan pernah mengunggah paket tersebut ke GitHub sebagai file biasa; salin nilainya hanya ke **Settings → Secrets and variables → Actions**. Paket privat ini tidak disimpan dalam repository.
+
 GitHub Actions menjalankan build pada runner sementara. Jangan memakai debug keystore default runner untuk APK yang harus dipasang sebagai update, karena kunci debug dapat berubah pada setiap run. Workflow sekarang dirancang menandatangani APK dengan keystore stabil yang disimpan sebagai GitHub Actions Secrets dan menaikkan versionCode setiap build.
 
 ## 1. Buat keystore stabil sekali
