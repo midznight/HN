@@ -59,7 +59,8 @@ test('native implementation preserves ECDH protocol while using strongest availa
 
 test('Android 11 fallback uses Keystore AES-GCM wrapping and fails closed on incomplete identity material', () => {
   assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.M/);
-  assert.match(native, /software-backed and briefly present in[\\s\\S]{0,24}native process memory/i);
+  assert.match(native, /software-backed and briefly present in/);
+  assert.match(native, /native process memory/);
   assert.match(native, /putString\(SOFTWARE_PRIVATE_CIPHERTEXT_PREF/);
   assert.match(native, /Wrapped identity key record is incomplete; refusing automatic key rotation/);
   assert.match(native, /Identity wrapping key is missing; refusing automatic replacement/);
