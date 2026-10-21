@@ -1,7 +1,7 @@
 # Fase 2 — E2EE teks dan pengikatan akun
 
 **Status:** implementasi sumber berada di branch `phase-2/e2ee-text-chat`; belum dianggap lulus sampai CI, migrasi, dan pengujian dua perangkat nyata berhasil.
-**Backend:** project Supabase Free `uhovemhaywtzyfzrmgbh`. Project telah diminta untuk dipulihkan dari status tidak aktif. Tidak ada paket berbayar yang diaktifkan.
+**Backend:** Supabase Free project `HN's` (`sajlpngmpkizwjbarxlj`, region `ap-southeast-1`). Tidak ada paket berbayar yang diaktifkan.
 **Application ID:** `com.ourspace.app`.
 
 ## Perubahan yang tersedia di branch
