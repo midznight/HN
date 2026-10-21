@@ -359,3 +359,30 @@ test('Push token refresh cannot recreate a token while opt-out or sign-out is re
   assert.match(pushClient, /async function turnOffPush\(\)[\s\S]*?revokingPush = true;[\s\S]*?revokingPush = false;/);
   assert.match(pushClient, /export async function disablePushBeforeSignOut\(\)[\s\S]*?revokingPush = true;[\s\S]*?currentContext = null;[\s\S]*?revokingPush = false;/);
 });
+
+
+test('Push opt-out persists local choice before server token deletion and retries stale token cleanup on next context', () => {
+  const optOutStart = pushClient.indexOf('async function turnOffPush()');
+  const optOutEnd = pushClient.indexOf('export async function initPushNotifications()', optOutStart);
+  const optOut = pushClient.slice(optOutStart, optOutEnd);
+  const persistOff = optOut.indexOf('await setSavedPreference(false)');
+  const deleteToken = optOut.indexOf(".from('device_push_tokens')");
+  const restoreOn = optOut.indexOf('await setSavedPreference(true).catch', deleteToken);
+  assert.ok(optOutStart >= 0 && persistOff > optOutStart && deleteToken > persistOff);
+  assert.ok(restoreOn > deleteToken);
+
+  const contextStart = pushClient.indexOf('export async function setPushContext');
+  const contextEnd = pushClient.indexOf('export async function notifyPartnerForMessage', contextStart);
+  const context = pushClient.slice(contextStart, contextEnd);
+  assert.match(context, /if \(!enabled && supabase\)/);
+  assert.match(context, /const \\{ data: staleToken, error: staleLookupError \\}/);
+  assert.match(context, /const \\{ error: staleDeleteError \\}/);
+});
+
+test('Push sign-out does not swallow local opt-out preference persistence failure', () => {
+  const start = pushClient.indexOf('export async function disablePushBeforeSignOut()');
+  const end = pushClient.length;
+  const fn = pushClient.slice(start, end);
+  assert.match(fn, /await setSavedPreference\\(false\\);/);
+  assert.doesNotMatch(fn, /await setSavedPreference\\(false\\)\\.catch\\(\\(\\) => \\{\\}\\)/);
+});
