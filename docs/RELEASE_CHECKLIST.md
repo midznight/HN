@@ -1,7 +1,7 @@
 # Our Space — Checklist Rilis
 
-Tanggal pembaruan: 21 Oktober 2026  
-Status: **belum siap rilis produksi** sampai blocker wajib ditutup. Checklist ini bukan persetujuan manual; setiap item harus punya bukti yang bisa diperiksa.
+Tanggal pembaruan: 22 Oktober 2026  
+Status: **kandidat rilis (RC), belum siap rilis produksi** sampai blocker wajib ditutup. Checklist ini bukan permintaan persetujuan bertahap; setiap item wajib punya bukti yang bisa diperiksa.
 
 ## A. Source dan review
 
@@ -10,14 +10,20 @@ Status: **belum siap rilis produksi** sampai blocker wajib ditutup. Checklist in
 - [ ] Android workflow menghasilkan APK bertanda tangan keystore stabil; periksa versionCode, versionName, package name dan APK metadata.
 - [ ] Catat commit SHA sumber APK. Artifact harus berasal dari SHA yang sama dengan hasil QA.
 
+## Hasil otomatis terbaru
+
+- CI di commit kandidat sebelumnya lulus (dependency audit, sintaks JS, unit/security-contract tests, dan build web): [run 39691048910](https://github.com/midznight/HN/actions/runs/39691048910). Commit lanjutan yang menyelaraskan token desain dan menambah tes statis akan memicu validasi HEAD baru.
+- Workflow Android telah diperluas untuk menghasilkan debug dan release APK yang ditandatangani keystore stabil dan memverifikasi metadata serta kecocokan sertifikat. Tautan artefak release hanya sah setelah workflow HEAD terakhir berstatus sukses.
+
 ## B. Supabase dan keamanan
 
 - [x] Fase 2 chat E2EE dan Fase 3 media: migrasi tersedia dan diterapkan di project sajlpngmpkizwjbarxlj.
 - [x] Fase 6 vault_items dan Realtime publication: migration diterapkan; row menyimpan ciphertext, RLS membatasi pair/verified sender.
 - [x] Fase 5 call_signals/call_records dan Realtime publication: migration diterapkan; SDP/history terenkripsi dan akses dibatasi.
 - [ ] Jalankan uji negatif RLS untuk akun di luar pair, recipient yang salah, key fingerprint berbeda, key_version tidak didukung, row/objek ID palsu, dan Storage path lintas pengguna.
-- [ ] Pastikan objek di bucket tetap private; jangan gunakan public URL/signed URL permanen untuk file.
-- [ ] Perbaiki atau secara formal terima temuan Security Advisor. Proteksi password bocor Auth saat ini dilaporkan disabled; aktifkan di dashboard sebelum rilis publik.
+- [x] Audit baca-saja mengonfirmasi bucket `our-space-encrypted-media` `public=false`; policy upload/download mengunci objek ke anggota pasangan dan path `.bin`. Jangan gunakan public URL/signed URL permanen untuk file.
+- [x] Simulasi role `authenticated` dengan subject di luar pair tidak dapat membaca row dari delapan tabel aplikasi. Ini bukan pengganti tes token/jaringan negatif penuh di dua perangkat.
+- [ ] Perbaiki temuan Security Advisor: **Auth Leaked Password Protection masih disabled**; aktifkan di dashboard sebelum rilis publik.
 - [ ] Jangan mengubah atau menghapus key binding, private key, pesan lama, atau membership demi membuat tes lulus.
 
 ## C. Uji dua perangkat Android

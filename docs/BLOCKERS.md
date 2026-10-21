@@ -1,6 +1,6 @@
 # Blockers — Our Space
 
-Pembaruan: 21 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur yang sudah diuji dan siap rilis.
+Pembaruan: 22 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur yang sudah diuji dan siap rilis.
 
 ## Blocker Fase 4 — push notification
 
@@ -31,10 +31,15 @@ Pembaruan: 21 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur y
 - Advisor info tentang public.push_dispatches RLS tanpa policy sengaja dipertahankan: tabel hanya untuk service role. Jangan menambah policy client untuk menghilangkan peringatan.
 - Tinjau semua migrasi aditif, hasil RLS negative tests, serta secret hygiene sebelum rilis.
 
+## Temuan Auth dan gerbang APK/rilis
+
+- Supabase Security Advisor masih melaporkan **Leaked Password Protection Disabled**. Koneksi alat yang tersedia hanya dapat mengaudit database dan fungsi; pengaturan Auth tersebut tidak dapat diubah dari jalur ini. Ini blocker yang harus diselesaikan di Supabase Auth dashboard sebelum rilis publik.
+- Workflow Android kini membuat debug dan release APK dengan keystore Actions yang sama, lalu memverifikasi metadata dan kecocokan digest sertifikat. Hasil Actions final pada HEAD terbaru tetap menjadi sumber kebenaran untuk status artefak.
+
 ## Gerbang APK/rilis
 
 - Keystore signing stabil harus tersedia di GitHub Actions Secrets. Jangan membuat signature sementara untuk update kepada dua HP yang sudah menyimpan key/pesan.
-- Build APK terbaru dan pemasangan update tanpa uninstall belum diverifikasi pada perangkat.
+- Build kandidat bertanda tangan tidak sama dengan bukti kompatibilitas pemasangan: APK terbaru dan update tanpa uninstall belum diverifikasi pada perangkat. Jangan meminta pengguna uninstall; bandingkan sertifikat instalasi lama jika tersedia.
 - Tidak ada uji OEM/Android aktual yang bisa dilakukan dari CI; artifact harus dipasang dan diuji sebelum rilis final.
 - Jangan reset pair, device_keys, key_verifications, private key atau pesan untuk mengatasi error.
 

@@ -4,7 +4,7 @@ Our Space adalah aplikasi privat Android untuk dua pengguna, Hamid dan Nur. Tuju
 
 ## Status proyek
 
-Status per 21 Oktober 2026: kandidat implementasi dan QA, **belum siap dinyatakan production-ready**. Baseline chat teks E2EE dan lampiran sebelumnya telah diuji/diterima pengguna; UI baru, Brankas, dan panggilan WebRTC masih memerlukan CI final dan tes dua perangkat.
+Status per 22 Oktober 2026: **kandidat rilis (RC), belum siap dinyatakan production-ready**. CI untuk tes kontrak keamanan, audit dependency produksi, dan build web lulus pada commit kandidat sebelumnya; workflow Android kini membangun varian debug dan release bertanda tangan stabil serta membandingkan sertifikat. Hasil workflow HEAD terbaru harus diperiksa sebelum artefak dibagikan, lalu APK divalidasi pada kedua HP.
 
 - [Roadmap](docs/ROADMAP.md)
 - [Daftar fitur dan batas](docs/FEATURES.md)
@@ -60,5 +60,5 @@ Jangan membuat APK dengan tanda tangan sementara untuk dipasang menimpa aplikasi
 - PIN lokal bukan login Supabase dan bukan key E2EE.
 - Kehilangan private key dapat menyebabkan riwayat lama tidak dapat dibuka. Jangan reset key secara otomatis.
 - File media dibatasi 3 MiB agar pemakaian memori WebView/native tetap terkendali.
-- Belum ada Double Ratchet/forward secrecy, incoming-call push, audit keamanan independen, atau validasi perangkat nyata untuk voice note, reaksi/balasan, Brankas dan WebRTC. Panggilan hanya memakai STUN dan bisa gagal pada jaringan tertentu.
+- Belum ada Double Ratchet/forward secrecy, incoming-call push saat aplikasi tertutup, audit keamanan independen, atau validasi perangkat nyata untuk voice note, reaksi/balasan, Brankas dan WebRTC. Panggilan hanya memakai STUN (tidak ada TURN berbayar karena batas Rp0) dan bisa gagal pada NAT/firewall tertentu. Supabase Auth Leaked Password Protection masih dinonaktifkan dan harus diaktifkan sebelum rilis publik.
 - Jangan klaim siap produksi sebelum seluruh gate di RELEASE_CHECKLIST.md terverifikasi di CI dan pada perangkat sebenarnya.

@@ -8,6 +8,8 @@ const native = readFileSync(new URL('../android-native/src/main/java/com/ourspac
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const previewHtml = readFileSync(new URL('../preview-ui/index.html', import.meta.url), 'utf8');
+const tailwind = readFileSync(new URL('../tailwind.config.cjs', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const mediaMigration = readFileSync(new URL('../supabase/migrations/20261021102710_phase3_encrypted_media.sql', import.meta.url), 'utf8');
 const pushMigration = readFileSync(new URL('../supabase/migrations/20261021123417_phase4_push_notifications.sql', import.meta.url), 'utf8');
@@ -574,5 +576,34 @@ test('replies and emoji reactions use E2EE envelopes with no plaintext relation 
   assert.match(client, /attachReply\?\.\(data\.id, replyContext\)/);
   assert.match(main, /initMessageAnnotations\(\)/);
   assert.match(html, /id="chat-annotation-status"/);
+});
+
+test('production UI and interactive preview use the approved rose-coral design tokens', () => {
+  assert.match(html, /viewport-fit=cover/);
+  assert.doesNotMatch(html, /user-scalable\\s*=\\s*no|maximum-scale\\s*=/i);
+  assert.match(html, /--os-bg:#FFF7F2/);
+  assert.match(html, /--os-ink:#372632/);
+  assert.match(html, /--os-rose:#B63F49/);
+  assert.match(tailwind, /brand:\\{50:'#FFF7F2'.*500:'#B63F49'.*700:'#793C4A'/);
+  assert.match(previewHtml, /--bg:#FFF7F2/);
+  assert.match(previewHtml, /--accent:#D65355/);
+  assert.match(previewHtml, /--bg:#171319/);
+  assert.match(previewHtml, /--accent:#F39A8E/);
+  assert.doesNotMatch(previewHtml, /#F7F4EE|#70502F|#151614/);
+});
+
+test('relationship card does not fabricate an anniversary date', () => {
+  assert.match(html, /Ruang Kita/);
+  assert.match(html, /Tanggal jadian belum dikonfirmasi/);
+  assert.doesNotMatch(html, />\\s*Anniversary\\s*</i);
+});
+
+test('Android release candidate builds signed debug and release APKs and verifies matching certificates', () => {
+  assert.match(workflow, /assembleDebug assembleRelease/);
+  assert.match(workflow, /our-space-release-apk/);
+  assert.match(workflow, /app-release\\.apk/);
+  assert.match(workflow, /apksigner.*--print-certs|apksigner.*verify/);
+  assert.match(workflow, /V2 Signer: certificate SHA-256 digest:/);
+  assert.match(workflow, /test "\\$DEBUG_CERT" = "\\$RELEASE_CERT"/);
 });
 
