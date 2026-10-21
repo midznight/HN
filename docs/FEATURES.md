@@ -1,22 +1,28 @@
 # Our Space — Daftar Fitur
 
-Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti pengguna telah menyatakan tes tersebut berhasil; status itu bukan audit keamanan independen.
+Pembaruan: 21 Oktober 2026. “Teruji pengguna” berarti pengguna mengonfirmasi alur itu berhasil; bukan audit keamanan independen.
 
 | Fitur | Status | Catatan |
 |---|---|---|
-| PIN lokal dan penguncian aplikasi | Tersedia | PIN lokal bukan kredensial Supabase dan bukan kunci E2EE. |
-| Dua akun privat Hamid dan Nur | Tersedia | Membership ditentukan di Supabase, bukan hanya pilihan nama lokal. |
-| Chat teks E2EE | Teruji pengguna | Dua arah berhasil pada kedua HP; aplikasi tetap bisa digunakan setelah ditutup/dibuka kembali. |
-| Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
-| Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
-| Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio E2EE | Diterima pengguna | Pengguna menyatakan Fase 3 aman pada 21 Oktober 2026. Batas memori WebView tetap dicatat dalam dokumentasi keamanan. |
-| Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
-| Notifikasi push FCM | Implementasi ter-deploy; masih nonaktif | PR #16 dan hardening opt-out PR #18 merged; migration/function aktif dan JWT wajib. CI #152/#153 lulus. Build #153 tidak memiliki Firebase client config dan push fail-closed sampai dua konfigurasi valid serta uji perangkat lulus. Payload hanya generik. |
-| Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |
-| Brankas file terenkripsi | Belum (Fase 6) | Tidak aktif. |
-| Audit keamanan formal | Belum (Fase 7) | Tes unit dan build CI bukan audit independen. |
+| PIN lokal dan penguncian | Baseline tersedia | PIN lokal bukan kredensial Supabase atau kunci E2EE. |
+| Dua identitas privat Hamid/Nur | Baseline tersedia | Membership diverifikasi server; pilihan nama lokal tidak memberi akses. |
+| Chat teks E2EE | Teruji pengguna | Chat dua arah dan reopen pernah berhasil pada dua HP; Android 11/API 30 ikut diuji untuk chat teks. |
+| Fingerprint perangkat | Tersedia pada baseline | Jangan mengatur ulang key binding untuk update. |
+| Lampiran gambar/video/audio E2EE | Diterima pengguna | Maksimal 3 MiB; file dienkripsi di perangkat, bucket privat menyimpan ciphertext. |
+| Pratinjau sebelum kirim | Diterapkan | Upload chat hanya berjalan setelah tombol konfirmasi; Batal tidak mengirim. CI harus tetap lulus pada commit terbaru. |
+| UI rose-coral, navigasi Obrolan/Kita/Brankas | Diterapkan di branch implementasi | Obrolan dibuka sesudah PIN; settings dari Kita. Belum merge ke branch dasar. |
+| Brankas terenkripsi | Implementasi awal | Modul klien memakai E2EE dan bucket privat; metadata filename/MIME/size/path ada dalam envelope terenkripsi. Tabel vault_items ber-RLS. Uji dua HP belum dilakukan. |
+| Panggilan suara/video WebRTC | Implementasi awal, belum terverifikasi di perangkat | Sinyal SDP dan riwayat disimpan sebagai ciphertext. Hanya mendukung sesi foreground Android dengan permission; tidak ada panggilan masuk ketika aplikasi tertutup. STUN-only bisa gagal pada NAT/firewall tertentu; TURN belum dikonfigurasi. |
+| Riwayat panggilan | Implementasi awal | Metadata mode/outcome/durasi disimpan terenkripsi dan ditampilkan sebagai kartu di timeline chat. Belum diuji dua HP. |
+| Notifikasi push FCM | Ter-deploy tetapi fail-closed | Aktivasi menunggu Google Workload Identity Federation, secrets server dan uji push dua HP. Payload dirancang generik. |
+| Rekam voice note dari aplikasi | Belum ada | Picker media saat ini mengirim file yang sudah ada. |
+| Balasan pesan dan reaksi emoji tersinkron | Belum diverifikasi/diimplementasi lengkap | Jangan menjanjikan sebelum model pesan dan rendering E2EE dilengkapi dan diuji. |
+| Audit keamanan independen | Belum | Tes kontrak bukan pengganti audit eksternal. |
 
-## Batas utama
+## Batas keamanan dan operasional
 
-Belum ada Double Ratchet/forward secrecy maupun multi-device. Kehilangan private key dapat membuat pesan lama tidak bisa didekripsi. Jangan mengirim plaintext, nama file atau kunci ke database, log, analytics, issue, atau source publik.
+- Belum ada Double Ratchet/forward secrecy maupun multi-device; hilangnya private key dapat membuat pesan lama tidak bisa didekripsi.
+- Jangan menyimpan plaintext, metadata file privat, atau materi kunci ke database/log/analytics.
+- Buffer JavaScript tidak dapat dijanjikan terhapus aman dari heap; pengosongan Uint8Array hanya best-effort.
+- Riwayat signaling dan tabel panggilan masih bisa mengungkap metadata routing (pair, peserta, waktu, ukuran envelope), meski SDP/ICE/konten panggilan dienkripsi.
+- Konektivitas WebRTC universal belum dijamin tanpa relay TURN dan uji lintas jaringan.
