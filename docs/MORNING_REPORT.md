@@ -1,6 +1,6 @@
 # Engineering Report — Our Space
 
-Pembaruan: 21 Oktober 2026, 18:45 WIB.
+Pembaruan: 21 Oktober 2026, 18:53 WIB.
 
 ## Baseline yang telah dikonfirmasi
 
@@ -15,9 +15,9 @@ Pengguna mengonfirmasi chat teks dua arah Hamid ↔ Nur dan aplikasi tetap dapat
 - Migration Fase 3 diterapkan dan diverifikasi pada project Supabase produksi. Pemeriksaan read-only terakhir mengonfirmasi bucket private, limit 4 MiB, dan MIME generik.
 - PR #8 menambahkan penjagaan terhadap dekripsi asinkron yang selesai setelah aplikasi terkunci.
 - PR #10 memperbaiki pemilih galeri agar tidak memicu PIN ulang; pengguna mengonfirmasi picker tidak lagi menghilangkan pilihan file.
-- PR #11 menambahkan pemeriksaan status lock setelah dekripsi metadata dan Storage download; PR #12 menambahkan pemeriksaan setelah Blob.arrayBuffer dan shield tampilan selama picker.
-- GitHub Actions #117 pada merge commit `5c9e79c2c21d63d1dcddac94ea38b6b24a49ded3` lulus, termasuk audit dependency, tes keamanan/protokol, web build, Capacitor sync dan APK assembly.
-- APK hasil run #117 telah dibuat dan SHA-256 sertifikatnya cocok dengan baseline: `6E48F45D9EEEFB56FD3BC3B4ADA108FDF0B73B7280E6DF6766EF699ADAE2956D`. Update rutin tidak memerlukan uninstall.
+- PR #11/#12 menambahkan guard lock pada jalur terima dan privacy shield saat picker terbuka. PR #14 menambahkan guard setelah File.arrayBuffer pada jalur kirim, melepas referensi Base64, serta menahan error lama sesudah lock.
+- GitHub Actions #124 lulus penuh pada tree yang identik dengan merge commit `44e4e5f1c9a63b35793f2d85773df354ec49afc9`, termasuk audit dependency, tes keamanan/protokol, web build, Capacitor sync dan APK assembly.
+- APK hasil run #124 SHA-256: `2893ea1d9d6a4ebad786bbf44c2f9491fa7195cf39ad41ad833230fb2199aca6`; sertifikat sama dengan baseline `6E48F45D9EEEFB56FD3BC3B4ADA108FDF0B73B7280E6DF6766EF699ADAE2956D`. Update rutin tidak memerlukan uninstall.
 
 ## Snapshot backend dan batas penerimaan
 

@@ -10,7 +10,7 @@ Status diperbarui: 21 Oktober 2026, 18:45 WIB. Status “teruji pengguna” bera
 | Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
 | Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
 | Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | PR #10–#12 merged; CI #117 lulus. Upload dua arah terbukti di backend dan picker versi awal dikonfirmasi. Privacy shield APK #117 dan penerimaan/dekripsi/render/save media di HP penerima perlu diuji nyata; skenario gagal belum lengkap. |
+| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | PR #10–#12 dan #14 merged; CI #124 lulus untuk tree yang sama dengan merge commit. Upload dua arah terbukti; picker versi sebelum shield dikonfirmasi. Privacy shield/sender guard versi terbaru dan penerimaan/dekripsi/render/save media masih perlu diuji nyata. |
 | Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
 | Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. Menunggu penerimaan Fase 3. |
 | Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |

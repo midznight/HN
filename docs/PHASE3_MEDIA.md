@@ -1,6 +1,6 @@
 # Fase 3 — Lampiran Media E2EE
 
-Status: implementasi awal digabung melalui [PR #6](https://github.com/midznight/HN/pull/6); hardening dekripsi saat lock melalui [PR #8](https://github.com/midznight/HN/pull/8); picker melalui [PR #10](https://github.com/midznight/HN/pull/10); guard metadata/buffer dan privacy shield melalui [PR #11](https://github.com/midznight/HN/pull/11) serta [PR #12](https://github.com/midznight/HN/pull/12). Migration diterapkan dan diverifikasi; GitHub Actions #117 pasca-merge lulus. Pengguna mengonfirmasi picker versi sebelumnya kembali tanpa PIN ulang dan file tetap ada. Snapshot backend read-only menunjukkan satu pesan media dan objek Storage yang cocok dari setiap akun. Retest privacy shield dan penerimaan decrypt/render/save masih wajib.
+Status: implementasi awal melalui [PR #6](https://github.com/midznight/HN/pull/6); hardening lock #8, picker #10, guard receive-side/privacy shield #11/#12, serta sender-side lock guard #14 sudah merged. Migration telah diterapkan dan diverifikasi. CI #124 lulus dengan tree identik terhadap merge commit utama. Pengguna mengonfirmasi picker pada build sebelum shield; build #124 perlu retest nyata. Snapshot backend menunjukkan satu pesan media dan objek cocok dari setiap akun. Penerimaan decrypt/render/save tetap wajib.
 
 ## Cakupan milestone ini
 
@@ -32,15 +32,17 @@ Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path me
 
 ## Urutan rollout dan status
 
-1. [x] CI pasca-merge #117: dependency audit, deterministic tests, Vite build, Capacitor sync, Gradle APK assembly dan upload artifact sukses.
+1. [x] CI #124: dependency audit, deterministic tests, Vite build, Capacitor sync, Gradle APK assembly dan upload artifact sukses; tree-nya identik dengan merge commit utama.
 2. [x] Migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql` diterapkan ke project `sajlpngmpkizwjbarxlj`.
 3. [x] Read-only check: bucket private, limit 4 MiB, MIME generik, constraint `message_type` dan policy Storage terpasang.
 4. [x] PR #8 menambahkan regression test untuk memastikan hasil decrypt tidak dirender setelah app lock.
 5. [x] APK pasca-merge dibuat; sertifikat penandatanganannya cocok dengan baseline API 30 yang diperiksa.
 6. [x] Perbaikan picker PR #10 digabung, CI lulus, dan pengguna mengonfirmasi kembali tanpa PIN ulang serta file terpilih tidak hilang pada versi sebelum shield.
-7. [x] PR #11/#12 menambahkan guard setelah dekripsi metadata, Storage download dan Blob.arrayBuffer; konten aplikasi disembunyikan selama picker sistem terbuka. CI pasca-merge #117 lulus.
-8. [x] Snapshot backend read-only: satu pesan media dari Hamid dan satu dari Nur, masing-masing memiliki objek Storage yang cocok. Ini membuktikan upload/insert dua arah saja.
-9. [ ] Uji build #117 pada kedua HP: buka picker, pilih file, pastikan konten kembali dengan benar setelah selection dan tidak ada permintaan PIN berulang.
+7. [x] PR #11/#12 menambahkan guard receive-side; konten aplikasi disembunyikan selama picker sistem terbuka.
+8. [x] PR #14 guard `File.arrayBuffer()` sebelum Base64/enkripsi dan menahan error setelah lock; referensi Base64 dilepas setelah native encryption dan di `finally`.
+9. [x] CI #124 lulus penuh untuk tree identik dengan merge commit utama; APK #124 tersedia dengan signer yang cocok.
+10. [x] Snapshot backend read-only: satu pesan media dari Hamid dan satu dari Nur, masing-masing memiliki objek Storage yang cocok. Ini membuktikan upload/insert dua arah saja.
+11. [ ] Uji APK #124 pada kedua HP: buka picker, pilih file, pastikan file tetap diproses tanpa PIN ulang meski tampilan disembunyikan di belakang picker.
 10. [ ] Uji di perangkat penerima bahwa gambar, audio, video dapat diunduh, didekripsi, dipratinjau dan disimpan di kedua arah.
 11. [ ] Uji file di atas 3 MiB/MIME unsupported, jaringan terputus, retry unduh/dekripsi, lock/background dan Simpan ke Galeri.
 12. [ ] Catat hasil pada Android 11/API 30 sebelum menyatakan fase diterima.
