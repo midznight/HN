@@ -56,4 +56,6 @@ jobs:
       - name: Build production web bundle
         run: npm run build
       - name: Verify deployable files exist
-        run: test -s dist/index.html && test -s dist/assets/*
+        run: |
+          test -s dist/index.html
+          test -n "$(find dist/assets -maxdepth 1 -type f -print -quit)"
