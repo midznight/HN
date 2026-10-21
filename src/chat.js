@@ -347,6 +347,7 @@ async function updateFingerprintPanel(localKey, peerKey) {
   if (peerNode) peerNode.textContent = peerKey?.fingerprint || 'Belum tersedia';
   if ($('chat-own-key-copy-row')) $('chat-own-key-copy-row').classList.remove('hidden');
   if ($('chat-partner-key-copy-row')) $('chat-partner-key-copy-row').classList.toggle('hidden', !peerKey);
+  if ($('chat-confirm-key')) $('chat-confirm-key').classList.toggle('hidden', !peerKey || partnerVerified);
   if ($('chat-fingerprint-panel')) $('chat-fingerprint-panel').classList.remove('hidden');
   if ($('chat-key-version')) $('chat-key-version').textContent = 'ECDH P-256 · kunci v' + EXPECTED_KEY_VERSION;
 }
@@ -395,7 +396,7 @@ async function copyFingerprint(elementId) {
       document.execCommand('copy');
       temporary.remove();
     }
-    messageError('');
+    clearMessageError();
   } catch {
     messageError('Salin otomatis gagal. Tekan lama fingerprint lalu salin secara manual.');
   }
@@ -410,7 +411,7 @@ async function loadMessages() {
   const { data, error } = await supabase.from('messages')
     .select('id,pair_id,sender_id,recipient_id,ciphertext,nonce,key_version,message_type,created_at')
     .eq('pair_id', pair.id)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(100);
   if (error) throw error;
 
@@ -428,7 +429,7 @@ async function loadMessages() {
     return;
   }
 
-  for (const row of data) {
+  for (const row of [...data].reverse()) {
     if (!appUnlocked || !partnerVerified) return;
     await decryptAndRender(row);
   }
@@ -437,9 +438,7 @@ async function loadMessages() {
 async function decryptAndRender(row) {
   try {
     validateCiphertextMessage(row);
-    const peerKey = row.sender_id === sessionUser.id
-      ? partnerDeviceKey
-      : partnerDeviceKey;
+    const peerKey = partnerDeviceKey;
     if (!peerKey || peerKey.key_version !== row.key_version) return;
     const opened = await KeyStore.decryptMessage({
       peerPublicKey: peerKey.public_key,
