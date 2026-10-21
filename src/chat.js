@@ -28,7 +28,123 @@ let attachmentPickerBackgrounded = false;
 let attachmentPickerResumeTimeout = null;
 let attachmentPickerPreviousVisibility = null;
 const ATTACHMENT_PICKER_RESUME_GRACE_MS = 12000;
+
 const mediaObjectUrls = new Set();
+let pendingMediaFile = null;
+let pendingMediaPreviewUrl = null;
+
+function closeMediaPreview() {
+  const frame = $('media-preview-frame');
+  if (frame) {
+    frame.querySelectorAll('video,audio').forEach((media) => {
+      try { media.pause(); media.removeAttribute('src'); media.load(); } catch { /* release local preview best-effort */ }
+    });
+    frame.replaceChildren();
+  }
+  if (pendingMediaPreviewUrl) URL.revokeObjectURL(pendingMediaPreviewUrl);
+  pendingMediaPreviewUrl = null;
+  pendingMediaFile = null;
+  const modal = $('media-preview-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  const name = $('media-preview-name');
+  const meta = $('media-preview-meta');
+  const issue = $('media-preview-error');
+  if (name) name.textContent = '';
+  if (meta) meta.textContent = '';
+  if (issue) { issue.textContent = ''; issue.classList.add('hidden'); }
+  const send = $('media-preview-send');
+  if (send) { send.disabled = false; send.textContent = 'Kirim media'; }
+}
+
+function formatMediaSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KiB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MiB';
+}
+
+function openMediaPreview(file) {
+  if (!file || !appUnlocked || !partnerVerified || !sessionUser || !pair) return;
+  if (!isSupportedMediaMimeType(file.type)) {
+    messageError('Pilih gambar, video, atau audio dengan format yang didukung.');
+    return;
+  }
+  if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > MAX_MEDIA_BYTES) {
+    messageError('Ukuran lampiran maksimal 3 MiB.');
+    return;
+  }
+  closeMediaPreview();
+  pendingMediaFile = file;
+  pendingMediaPreviewUrl = URL.createObjectURL(file);
+  const frame = $('media-preview-frame');
+  const name = $('media-preview-name');
+  const meta = $('media-preview-meta');
+  const modal = $('media-preview-modal');
+  const send = $('media-preview-send');
+  if (!frame || !name || !meta || !modal || !send) {
+    closeMediaPreview();
+    messageError('Pratinjau belum dapat dibuka. File tidak dikirim.');
+    return;
+  }
+  let preview;
+  if (file.type.toLowerCase().startsWith('image/')) {
+    preview = document.createElement('img');
+    preview.alt = 'Pratinjau gambar yang akan dikirim';
+  } else if (file.type.toLowerCase().startsWith('video/')) {
+    preview = document.createElement('video');
+    preview.controls = true;
+    preview.playsInline = true;
+    preview.preload = 'metadata';
+    preview.setAttribute('aria-label', 'Pratinjau video yang akan dikirim');
+  } else {
+    preview = document.createElement('audio');
+    preview.controls = true;
+    preview.preload = 'metadata';
+    preview.setAttribute('aria-label', 'Pratinjau audio yang akan dikirim');
+  }
+  preview.src = pendingMediaPreviewUrl;
+  frame.replaceChildren(preview);
+  name.textContent = safeMediaFilename(file.name) || 'Lampiran';
+  meta.textContent = (file.type || 'Tipe media tidak diketahui') + ' · ' + formatMediaSize(file.size);
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  send.disabled = false;
+  send.textContent = 'Kirim media';
+  send.focus();
+}
+
+function initializeMediaPreviewControls() {
+  const modal = $('media-preview-modal');
+  const cancel = $('media-preview-cancel');
+  const send = $('media-preview-send');
+  if (!modal || !cancel || !send || modal.dataset.bound === 'true') return;
+  modal.dataset.bound = 'true';
+  cancel.addEventListener('click', closeMediaPreview);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeMediaPreview();
+  });
+  send.addEventListener('click', async () => {
+    const file = pendingMediaFile;
+    if (!file || send.disabled) return;
+    if (!appUnlocked || !partnerVerified || !sessionUser || !pair) {
+      closeMediaPreview();
+      return;
+    }
+    send.disabled = true;
+    send.textContent = 'Menyiapkan…';
+    closeMediaPreview();
+    await sendMediaFile(file);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('media-preview-modal')?.classList.contains('hidden')) {
+      closeMediaPreview();
+    }
+  });
+}
+
 
 function messageError(message) {
   const node = $('chat-alert');
@@ -77,6 +193,7 @@ function uuidLooksValid(value) {
 }
 
 export async function initChat() {
+  initializeMediaPreviewControls();
   if (initialized) return;
   initialized = true;
 
@@ -99,7 +216,7 @@ export async function initChat() {
     const file = picker?.files?.[0] || null;
     if (picker) picker.value = '';
     finishAttachmentPicker(Boolean(file));
-    if (file) await sendMediaFile(file);
+    if (file) openMediaPreview(file);
   });
   // Some Android WebViews emit "cancel" without a corresponding empty change event.
   $('chat-attachment-input')?.addEventListener('cancel', () => finishAttachmentPicker(false));
@@ -229,6 +346,7 @@ function clearMediaObjectUrls() {
 }
 
 export function onChatLocked() {
+  closeMediaPreview();
   clearAttachmentPickerState();
   clearMediaObjectUrls();
   appUnlocked = false;
