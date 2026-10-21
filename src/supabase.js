@@ -3,8 +3,8 @@ import { keystoreSessionStorage } from './secure-keys.js';
 
 // Supabase publishable keys are designed for client apps; RLS, not key secrecy,
 // must enforce data access. Override these defaults with Vite env vars for other projects.
-const DEFAULT_SUPABASE_URL = 'https://uhovemhaywtzyfzrmgbh.supabase.co';
-const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_3uiGqB8sstoEzLF_k0NshA_u7FLV6F4';
+const DEFAULT_SUPABASE_URL = 'https://sajlpngmpkizwjbarxlj.supabase.co';
+const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_4pnbmFBZ9G4mQapJOxK2Jw_cTjfOa9M';
 
 export const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim();
 export const supabasePublishableKey = (
