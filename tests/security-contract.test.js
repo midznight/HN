@@ -19,6 +19,8 @@ const vaultClient = readFileSync(new URL('../src/vault.js', import.meta.url), 'u
 const callsMigration = readFileSync(new URL('../supabase/migrations/20261021161355_encrypted_webrtc_calls_and_history.sql', import.meta.url), 'utf8');
 const callsIndexMigration = readFileSync(new URL('../supabase/migrations/20261021161432_index_call_signal_member_foreign_keys.sql', import.meta.url), 'utf8');
 const callsClient = readFileSync(new URL('../src/calls.js', import.meta.url), 'utf8');
+const annotationsMigration = readFileSync(new URL('../supabase/migrations/20261021164500_create_encrypted_message_annotations.sql', import.meta.url), 'utf8');
+const annotationsClient = readFileSync(new URL('../src/message-annotations.js', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
 const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
 const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
@@ -542,5 +544,31 @@ test('voice notes are recorded locally, size-bounded, and sent only through medi
   const voiceEnd = client.indexOf('function toggleVoiceRecording()', voiceStart);
   assert.ok(voiceStart >= 0 && voiceEnd > voiceStart, 'voice recording function is bounded');
   assert.doesNotMatch(client.slice(voiceStart, voiceEnd), /supabase\.storage\.from\(MEDIA_BUCKET\)\.upload/);
+});
+
+
+test('replies and emoji reactions use E2EE envelopes with no plaintext relation columns', () => {
+  assert.match(annotationsMigration, /create table if not exists public\.message_annotations/i);
+  assert.match(annotationsMigration, /alter table public\.message_annotations enable row level security/i);
+  assert.match(annotationsMigration, /verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(annotationsMigration, /grant select, insert on table public\.message_annotations to authenticated/i);
+  assert.doesNotMatch(annotationsMigration, /grant\s+(update|delete)[^;]*message_annotations/i);
+  assert.match(annotationsMigration, /alter publication supabase_realtime add table public\.message_annotations/i);
+  const body = annotationsMigration.match(/create table if not exists public\.message_annotations\s*\(([\s\S]*?)\n\);/i)?.[1] || '';
+  assert.ok(body, 'message annotation table declaration is present');
+  for (const forbidden of ['target_message_id', 'reply_message_id', 'emoji', 'active', 'plaintext', 'body', 'message_text']) {
+    assert.ok(!new RegExp('^\\s*' + forbidden + '\\s+', 'im').test(body),
+      'annotation metadata must not be stored in plaintext column: ' + forbidden);
+  }
+  assert.match(annotationsClient, /KeyStore\.encryptMessage\(/);
+  assert.match(annotationsClient, /KeyStore\.decryptMessage\(/);
+  assert.match(annotationsClient, /kind: 'reaction'/);
+  assert.match(annotationsClient, /kind: 'reply'/);
+  assert.match(annotationsClient, /REACTION_EMOJIS/);
+  assert.match(annotationsClient, /window\.ourSpaceAnnotations = \{/);
+  assert.match(client, /ourSpaceAnnotations\?\.registerMessage\(row, line/);
+  assert.match(client, /attachReply\?\.\(data\.id, replyContext\)/);
+  assert.match(main, /initMessageAnnotations\(\)/);
+  assert.match(html, /id="chat-annotation-status"/);
 });
 
