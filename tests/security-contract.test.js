@@ -538,6 +538,9 @@ test('voice notes are recorded locally, size-bounded, and sent only through medi
   assert.match(client, /if \(shouldDiscard\) return/);
   assert.match(client, /openMediaPreview\(file\)/);
   assert.match(client, /cancelVoiceRecording\(true\)/);
-  assert.doesNotMatch(client, /function startVoiceRecording[\s\S]*?supabase\.storage\.from\(MEDIA_BUCKET\)\.upload/);
+  const voiceStart = client.indexOf('async function startVoiceRecording()');
+  const voiceEnd = client.indexOf('function toggleVoiceRecording()', voiceStart);
+  assert.ok(voiceStart >= 0 && voiceEnd > voiceStart, 'voice recording function is bounded');
+  assert.doesNotMatch(client.slice(voiceStart, voiceEnd), /supabase\.storage\.from\(MEDIA_BUCKET\)\.upload/);
 });
 
