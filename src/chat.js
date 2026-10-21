@@ -808,6 +808,7 @@ function renderMediaMessage(row, blob, metadata) {
   if (!container) return;
   const outgoing = row.sender_id === sessionUser.id;
   const line = document.createElement('div');
+  line.dataset.createdAt = row.created_at || '';
   line.className = outgoing ? 'flex justify-end' : 'flex justify-start';
   const bubble = document.createElement('div');
   bubble.className = outgoing
