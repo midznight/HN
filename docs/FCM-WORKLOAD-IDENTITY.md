@@ -115,4 +115,4 @@ Tidak ada nilai yang memakai private key atau JSON service account. Hapus secret
 4. Tes pengiriman Hamid → Nur dan Nur → Hamid, serta akun bukan anggota, fingerprint belum diverifikasi, pesan lama, token invalid, dan kegagalan jaringan.
 5. Pastikan push selalu generik (judul `Our Space`, teks `Ada pesan baru menunggu.`) dan tidak memuat plaintext, ciphertext, message ID, nama file, atau metadata chat.
 
-Status `ready` hanya memastikan konfigurasi ada dan project cocok; itu bukan bukti bahwa Google menerima pertukaran token. Pengujian pengiriman nyata pada kedua perangkat masih wajib.
+Status `ready` mencoba pertukaran token federasi dan impersonasi access token sementara, tetapi tidak mengirim notifikasi FCM. Pengujian pengiriman nyata pada kedua perangkat masih wajib.

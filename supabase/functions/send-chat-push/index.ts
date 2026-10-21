@@ -204,7 +204,16 @@ Deno.serve(async (request: Request) => {
   const ready = Boolean(wifConfig && serviceKey && expectedProjectId &&
     wifConfig.projectId === expectedProjectId);
 
-  if (body.action === "status") return jsonResponse({ ready });
+  if (body.action === "status") {
+    if (!ready || !wifConfig) return jsonResponse({ ready: false });
+    try {
+      // Confirm Google accepts the federated identity and permits short-lived FCM token issuance.
+      await getAccessToken(wifConfig, jwt);
+      return jsonResponse({ ready: true });
+    } catch {
+      return jsonResponse({ ready: false });
+    }
+  }
   if (!isUuidV4(body.message_id)) return jsonResponse({ error: "invalid_request" }, 400);
   if (!serviceKey || !ready || !wifConfig) {
     return jsonResponse({ error: "push_not_configured" }, 503);

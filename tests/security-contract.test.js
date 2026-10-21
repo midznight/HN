@@ -412,4 +412,6 @@ test('FCM server auth uses short-lived Workload Identity Federation and no servi
   assert.ok(!pushFunction.includes('private_key'));
   assert.ok(!pushFunction.includes('google-auth-library'));
   assert.ok(pushFunction.includes('if (!serviceKey || !ready || !wifConfig)'));
+  assert.ok(pushFunction.includes('await getAccessToken(wifConfig, jwt)'));
+  assert.ok(pushFunction.includes('return jsonResponse({ ready: false })'));
 });
