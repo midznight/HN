@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const schema = readFileSync(new URL('../supabase/migrations/20261021000000_phase2_e2ee_text_chat.sql', import.meta.url), 'utf8');
-const hardening = readFileSync(new URL('../supabase/migrations/20261021000001_phase2_key_fingerprint_integrity.sql', import.meta.url), 'utf8');
+const schema = readFileSync(new URL('../supabase/migrations/20261021010159_phase2_e2ee_text_chat.sql', import.meta.url), 'utf8');
+const hardening = readFileSync(new URL('../supabase/migrations/20261021010335_phase2_key_fingerprint_integrity.sql', import.meta.url), 'utf8');
 const native = readFileSync(new URL('../android-native/src/main/java/com/ourspace/app/OurSpaceKeyStorePlugin.java', import.meta.url), 'utf8');
 const client = readFileSync(new URL('../src/chat.js', import.meta.url), 'utf8');
 const session = readFileSync(new URL('../src/secure-keys.js', import.meta.url), 'utf8');
