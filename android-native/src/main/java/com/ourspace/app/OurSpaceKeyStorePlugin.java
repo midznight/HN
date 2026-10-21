@@ -118,6 +118,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
     public void encryptMessage(PluginCall call) {
         byte[] sharedSecret = null;
         byte[] messageKey = null;
+        byte[] plainBytes = null;
         try {
             requireEcdhSupport();
             String peerKey = requiredString(call, "peerPublicKey");
@@ -128,7 +129,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             String recipientId = requiredUuid(call, "recipientId");
             int version = readKeyVersion(call);
             requireValidContext(pairId, messageId, senderId, recipientId, version);
-            byte[] plainBytes = plaintext.getBytes(StandardCharsets.UTF_8);
+            plainBytes = plaintext.getBytes(StandardCharsets.UTF_8);
             if (plainBytes.length == 0 || plainBytes.length > MAX_PLAINTEXT_BYTES) {
                 Arrays.fill(plainBytes, (byte) 0);
                 call.reject("Pesan kosong atau terlalu panjang.");
@@ -138,7 +139,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             KeyPair local = loadIdentityKeyPair();
             PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
             sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
-            messageKey = deriveMessageKey(sharedSecret, pairId, version);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version);
             byte[] nonce = new byte[GCM_NONCE_BYTES];
             new SecureRandom().nextBytes(nonce);
 
@@ -161,6 +162,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         } finally {
             clear(sharedSecret);
             clear(messageKey);
+            clear(plainBytes);
         }
     }
 
@@ -191,7 +193,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             KeyPair local = loadIdentityKeyPair();
             PublicKey peerPublicKey = decodeAndValidatePeerKey(peerKey);
             sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
-            messageKey = deriveMessageKey(sharedSecret, pairId, version);
+            messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(messageKey, "AES"), new GCMParameterSpec(GCM_TAG_BITS, nonce));
             cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version));
@@ -347,11 +349,12 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         return agreement.generateSecret();
     }
 
-    private static byte[] deriveMessageKey(byte[] sharedSecret, String pairId, int keyVersion) throws GeneralSecurityException {
+    private static byte[] deriveMessageKey(byte[] sharedSecret, String pairId, String senderId, String recipientId, int keyVersion) throws GeneralSecurityException {
         byte[] salt = MessageDigest.getInstance("SHA-256").digest(
             ("our-space/e2ee/salt/v1/" + pairId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8)
         );
-        byte[] info = ("our-space/e2ee/text/aes-256-gcm/v1/" + pairId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8);
+        // Directional key separation avoids using the same AES key for both sides of the conversation.
+        byte[] info = ("our-space/e2ee/text/aes-256-gcm/v1/" + pairId + "/" + senderId + "/" + recipientId + "/" + keyVersion).getBytes(StandardCharsets.UTF_8);
         byte[] prk = hmacSha256(salt, sharedSecret);
         byte[] blockInput = Arrays.copyOf(info, info.length + 1);
         blockInput[blockInput.length - 1] = 1;
@@ -360,7 +363,9 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         clear(info);
         clear(prk);
         clear(blockInput);
-        return Arrays.copyOf(output, 32);
+        byte[] derived = Arrays.copyOf(output, 32);
+        clear(output);
+        return derived;
     }
 
     private static byte[] hmacSha256(byte[] key, byte[] data) throws GeneralSecurityException {
