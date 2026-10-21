@@ -4,6 +4,8 @@
 **Backend:** Supabase Free project `HN's` (`sajlpngmpkizwjbarxlj`, region `ap-southeast-1`). Tidak ada paket berbayar yang diaktifkan.
 **Application ID:** `com.ourspace.app`.
 
+**Pembaruan APK:** workflow menandatangani semua build baru dengan keystore stabil dari GitHub Actions Secrets dan menaikkan `versionCode`. Siapkan secret sesuai [`docs/ANDROID_APK_UPDATES.md`](./ANDROID_APK_UPDATES.md) sebelum menjalankan build; workflow akan berhenti tanpa menghasilkan APK bila secret belum dikonfigurasi. APK lama yang ditandatangani kunci runner sementara perlu migrasi satu kali melalui uninstall/install, setelah itu update normal menggunakan tanda tangan yang sama.
+
 ## Perubahan yang tersedia di branch
 
 - Plugin native Capacitor `OurSpaceKeyStore` menggunakan Android Keystore untuk private key ECDH P-256 dan kunci pembungkus sesi AES-256-GCM.
