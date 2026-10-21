@@ -14,14 +14,17 @@ Pembaruan: 21 Oktober 2026 (Asia/Jakarta).
 - Fase 3: lampiran gambar/video/audio terenkripsi pada branch `phase-3/encrypted-media`.
 - Native plugin memiliki `encryptMedia`/`decryptMedia`; key derivation dan AAD dipisah dari chat teks.
 - Client menambahkan file picker, enkripsi sebelum upload, private Storage, metadata terenkripsi, preview/save sesudah dekripsi, batas 3 MiB dan penanganan gagal/retry.
-- Migration Storage bersifat aditif dan belum boleh dianggap aktif di produksi sampai dijalankan serta diverifikasi.
-- Workflow telah diubah agar menjalankan CI untuk branch `phase-3/**`.
+- Migration aditif sudah diterapkan ke Supabase produksi (migration `guarded_device_key_recovery` tetap ada; `phase3_encrypted_media` tercatat).
+- Verifikasi post-migration: bucket private, 4 MiB maksimum per object, MIME bucket hanya `application/octet-stream`, constraint `messages.message_type` mengizinkan text/media, dan policy Storage sudah tercatat.
+- Data sebelum/sesudah migration tidak berubah: 2 pesan teks, 0 media, 2 device keys, 2 fingerprint verifications.
+- CI build untuk kode media berhasil pada commit #75/#76/#79. Run #80 berisi dokumentasi dan masih harus dikonfirmasi.
 
-## Verifikasi yang harus selesai sebelum merge
+## Verifikasi yang masih harus selesai
 
-- [ ] CI final pada commit terbaru hijau.
-- [ ] Review final SQL policy insert/select/delete, bucket private dan limit ukuran.
-- [ ] Migration diterapkan lalu verifikasi bucket/RLS/constraint di Supabase.
-- [ ] Build APK stabil pasca-merge tersedia.
+- [ ] Run CI final pada commit terbaru hijau.
+- [x] Review policy Storage insert/select/delete, bucket private dan limit ukuran.
+- [x] Migration diterapkan lalu verifikasi bucket/RLS/constraint di Supabase.
+- [ ] APK stabil pasca-merge tersedia.
 - [ ] Tes lampiran pada kedua HP, termasuk Android 11/API 30.
-- [ ] Update checklist dan blocker berdasarkan hasil nyata.
+- [ ] Coba kegagalan jaringan, file di atas 3 MiB, MIME unsupported, retry dan save lokal.
+- [ ] Update checklist berdasarkan hasil nyata.

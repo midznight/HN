@@ -4,9 +4,9 @@ Pembaruan: 21 Oktober 2026.
 
 ## Blocker untuk penerimaan Fase 3
 
-- **CI final:** run pada branch `phase-3/encrypted-media` harus hijau sampai APK assembly dengan stable signing.
-- **Migration Storage produksi:** migration ada di branch dan belum dianggap aktif. Jangan aplikasikan sampai CI/tests final lulus. Setelah diterapkan, verifikasi RLS/bucket dan row pesan lama.
-- **Tes dua perangkat:** belum ada bukti dari pengguna untuk upload/decrypt lampiran nyata di kedua HP; chat teks yang berhasil tidak membuktikan jalur media.
+- **CI pada commit final:** build/test kode media telah lulus pada run #75/#76/#79, tetapi run #80 yang memasukkan dokumentasi masih perlu status akhir sebelum PR merge.
+- **Tes dua perangkat:** belum ada bukti pengguna untuk upload/decrypt lampiran nyata di kedua HP; chat teks yang berhasil tidak membuktikan jalur media.
+- **Siklus update APK:** artefak setelah merge harus diuji terpasang sebagai pembaruan tanpa uninstall dan dengan signing stabil yang sama.
 - **Voice note/video note recording:** belum masuk implementasi milestone ini; memilih file audio/video yang sudah ada saja yang sedang dibuat.
 - **Batas API 23–30:** native media path harus dicoba di Android 11 karena JCA/provider/OEM dapat berbeda. CI build di runner bukan tes runtime OEM.
 

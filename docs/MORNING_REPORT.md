@@ -13,7 +13,10 @@ Pengguna mengonfirmasi chat teks dua arah dan kestabilan setelah menutup/membuka
 - Ditambahkan UI pemilih file gambar/video/audio, status operasi, preview setelah dekripsi, save lokal dan retry untuk lampiran yang gagal dibuka.
 - Batas ukuran awal 3 MiB; file disimpan server hanya dalam ciphertext.
 - Dokumentasi fitur, roadmap, keputusan, progress dan blocker diperbarui.
+- Migration Fase 3 diterapkan ke Supabase produksi dan diverifikasi: bucket private, ukuran maksimum 4 MiB, MIME generic, constraint media aktif, dan policy Storage sudah ada.
+- Verifikasi data setelah migration: 2 pesan teks lama tetap ada, 0 pesan media, 2 device keys, 2 verifikasi. Tidak ada row key/pesan diubah.
+- CI build/test untuk kode media sudah lulus pada run #75, #76 dan #79; run #80 setelah dokumentasi masih perlu konfirmasi.
 
 ## Status penerimaan
 
-Fase 3 **belum dinyatakan selesai**. Perlu CI final pada commit terbaru, penerapan/verifikasi migration, APK stabil pasca-merge dan tes media nyata pada kedua HP. Tidak ada perubahan yang bertujuan menghapus pesan lama atau memutar kunci produksi.
+Fase 3 **belum dinyatakan selesai**. Yang tersisa: konfirmasi CI commit terbaru, merge PR, build APK stabil pasca-merge, dan tes media nyata pada kedua HP termasuk Android 11/API 30. Tidak ada perubahan yang bertujuan menghapus pesan lama atau merotasi kunci produksi.

@@ -1,6 +1,6 @@
 # Fase 3 — Lampiran Media E2EE
 
-Status: implementasi awal pada branch `phase-3/encrypted-media`. Belum diterima sampai CI, migration produksi dan tes langsung antarperangkat selesai.
+Status: implementasi awal pada branch `phase-3/encrypted-media`. Migration sudah diterapkan dan diverifikasi di produksi; CI build kode media telah lulus pada run #75/#76/#79. Fase belum diterima sampai run terbaru terkonfirmasi dan tes langsung antarperangkat selesai.
 
 ## Cakupan milestone ini
 
@@ -29,15 +29,15 @@ Bucket harus tetap **private**. RLS storage membatasi SELECT untuk anggota pair,
 
 Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path merupakan metadata routing yang terbatas; nama asli, MIME asli dan nonce media berada dalam metadata yang dienkripsi dalam row pesan. Ukuran ciphertext tetap dapat terlihat oleh penyedia storage.
 
-## Urutan rollout
+## Urutan rollout dan status
 
-1. Luluskan `npm test`, dependency audit, Vite build, dan Gradle `assembleDebug` pada GitHub Actions.
-2. Tinjau migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql`.
-3. Terapkan migration aditif ke project `sajlpngmpkizwjbarxlj`; jangan menyentuh row pesan/key atau merotasi fingerprint.
-4. Verifikasi bucket private, limit 4 MiB untuk ciphertext, constraints dan RLS storage. Pastikan jumlah pesan lama tetap sama.
-5. Build APK bertanda tangan stabil, pasang sebagai update tanpa uninstall pada kedua HP.
-6. Tes gambar, audio, video; uji file tidak didukung/lebih dari 3 MiB, jaringan terputus, upload berhasil tapi insert row gagal, dekripsi rusak, lock/background, retry dan save lokal.
-7. Tes akses Storage dengan akun di luar pair. Akun ketiga harus ditolak.
+1. [x] `npm test`, dependency audit, Vite build, dan Gradle `assembleDebug` lulus pada commit kode media yang diuji CI.
+2. [x] Tinjau migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql`.
+3. [x] Migration aditif diterapkan ke project `sajlpngmpkizwjbarxlj`; tidak ada row pesan/key yang diubah dan fingerprint tidak dirotasi.
+4. [x] Verifikasi bucket private, limit 4 MiB untuk ciphertext, allowed MIME generic, constraint pesan dan policy RLS Storage. Jumlah row lama tetap sama.
+5. [ ] Setelah PR merge, ambil APK stabil baru dan pasang sebagai update tanpa uninstall pada kedua HP.
+6. [ ] Tes gambar, audio, video; uji file tidak didukung/lebih dari 3 MiB, jaringan terputus, upload berhasil tapi insert row gagal, dekripsi rusak, lock/background, retry dan save lokal.
+7. [ ] Tes akses Storage dengan akun di luar pair. Akun ketiga harus ditolak.
 
 ## Keamanan dan batas
 
