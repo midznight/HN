@@ -415,3 +415,31 @@ test('FCM server auth uses short-lived Workload Identity Federation and no servi
   assert.ok(pushFunction.includes('await getAccessToken(wifConfig, jwt)'));
   assert.ok(pushFunction.includes('return jsonResponse({ ready: false })'));
 });
+
+test('media picker only opens a local preview; upload requires explicit confirmation', () => {
+  assert.match(html, /id="media-preview-modal"[^>]*role="dialog"/);
+  assert.match(html, /id="media-preview-cancel"/);
+  assert.match(html, /id="media-preview-send"/);
+  const pickerStart = client.indexOf("$('chat-attachment-input')?.addEventListener('change'");
+  assert.ok(pickerStart >= 0, 'attachment picker listener exists');
+  const pickerBlock = client.slice(pickerStart, pickerStart + 900);
+  assert.match(pickerBlock, /openMediaPreview\(file\)/);
+  assert.doesNotMatch(pickerBlock, /sendMediaFile\(file\)/);
+  assert.match(client, /send\.addEventListener\('click', async \(\) => \{[\s\S]*?await sendMediaFile\(file\);/);
+  assert.match(client, /export function onChatLocked\(\) \{\s*closeMediaPreview\(\);/);
+});
+
+test('navigation uses three core tabs and defaults to Obrolan after the PIN gate', () => {
+  const navStart = html.indexOf('<nav class="mac-glass');
+  const navEnd = html.indexOf('</nav>', navStart);
+  assert.ok(navStart >= 0 && navEnd > navStart, 'primary navigation exists');
+  const nav = html.slice(navStart, navEnd);
+  assert.equal((nav.match(/class="nav-item/g) || []).length, 3);
+  assert.match(nav, /switchView\('chat'\)[\s\S]*?Obrolan/);
+  assert.match(nav, /switchView\('home'\)[\s\S]*?Kita/);
+  assert.match(nav, /switchView\('storage'\)[\s\S]*?Brankas/);
+  assert.match(html, /id="kita-settings-btn"[^>]*switchView\('profile'\)/);
+  assert.match(main, /currentView='chat'/);
+  assert.match(main, /preview&&!preview\.classList\.contains\('hidden'\)/);
+});
+
