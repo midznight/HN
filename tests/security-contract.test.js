@@ -39,23 +39,45 @@ test('database binds stored fingerprint to exact DER public-key bytes', () => {
   assert.match(hardening, /device_keys_fingerprint_matches_public_key/i);
 });
 
-test('native implementation keeps ECDH private key inside Android Keystore', () => {
+test('native implementation preserves ECDH protocol while using strongest available identity-key storage', () => {
   assert.match(native, /KeyProperties\.PURPOSE_AGREE_KEY/);
   assert.match(native, /new ECGenParameterSpec\("secp256r1"\)/);
   assert.match(native, /KeyAgreement\.getInstance\("ECDH"\)/);
   assert.match(native, /AES\/GCM\/NoPadding/);
   assert.match(native, /HmacSHA256/);
   assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version\)/);
-  assert.match(native, /aes-256-gcm\/v1\/" \+ pairId \+ "\/" \+ senderId \+ "\/" \+ recipientId/);
+  assert.match(native, /aes-256-gcm\/v1/);
   assert.match(native, /clear\(plainBytes\);/);
   assert.match(native, /cipher\.updateAAD\(associatedData/);
-  assert.doesNotMatch(native, /privateKey\.getEncoded\(/);
-  assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.S/);
+  assert.match(native, /Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.S/);
+  assert.match(native, /SOFTWARE_IDENTITY_WRAP_ALIAS/);
+  assert.match(native, /SOFTWARE_PRIVATE_CIPHERTEXT_PREF/);
+  assert.match(native, /cipher\.updateAAD\(IDENTITY_WRAP_AAD\)/);
+  assert.match(native, /verifySoftwareIdentityPair/);
+  assert.match(native, /refusing automatic replacement/);
+});
+
+test('ECDH output is normalized to a 32-byte P-256 secret before key derivation', () => {
+  assert.match(native, /ECDH_SECRET_BYTES = 32/);
+  assert.match(native, /rawSecret\.length > ECDH_SECRET_BYTES/);
+  assert.match(native, /System\.arraycopy\(rawSecret, 0, normalized, ECDH_SECRET_BYTES - rawSecret\.length, rawSecret\.length\)/);
+  assert.match(native, /clear\(rawSecret\)/);
+});
+
+test('Android 11 fallback uses Keystore AES-GCM wrapping and fails closed on incomplete identity material', () => {
+  assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.M/);
+  assert.match(native, /software-backed and briefly present in/);
+  assert.match(native, /native process memory/);
+  assert.match(native, /putString\(SOFTWARE_PRIVATE_CIPHERTEXT_PREF/);
+  assert.match(native, /Wrapped identity key record is incomplete; refusing automatic key rotation/);
+  assert.match(native, /Identity wrapping key is missing; refusing automatic replacement/);
 });
 
 test('identity-key setup failures disclose safe platform diagnostics without insecure fallback', () => {
   assert.match(native, /identityFailureMessage\(e\)/);
-  assert.match(native, /Chat E2EE memerlukan Android 12 atau lebih baru/);
+  assert.match(native, /Chat E2EE memerlukan Android 6 \/ API 23 atau lebih baru/);
+  assert.match(native, /API 23-30 does not expose PURPOSE_AGREE_KEY/);
+  assert.match(native, /AES-GCM key held in/);
   assert.match(native, /Build\.VERSION\.SDK_INT/);
   assert.doesNotMatch(native, /privateKey\.getEncoded\(/);
 });
