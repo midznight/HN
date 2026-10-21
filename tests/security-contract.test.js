@@ -137,6 +137,12 @@ test('Phase 3 stores only encrypted media in a private bucket with membership an
   assert.match(native, /public void encryptMedia\(PluginCall call\)/);
   assert.match(native, /public void decryptMedia\(PluginCall call\)/);
   assert.match(native, /MAX_MEDIA_BYTES = 3 \* 1024 \* 1024/);
+  const mediaEncryptIndex = native.indexOf('public void encryptMedia(PluginCall call)');
+  const explicitNonceIndex = native.indexOf('nonce = new byte[GCM_NONCE_BYTES]', mediaEncryptIndex);
+  const randomNonceIndex = native.indexOf('new SecureRandom().nextBytes(nonce)', explicitNonceIndex);
+  const gcmInitIndex = native.indexOf('new GCMParameterSpec(GCM_TAG_BITS, nonce)', randomNonceIndex);
+  assert.ok(mediaEncryptIndex >= 0 && explicitNonceIndex > mediaEncryptIndex);
+  assert.ok(randomNonceIndex > explicitNonceIndex && gcmInitIndex > randomNonceIndex);
   assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version, "media\/blob"\)/);
   assert.match(native, /associatedData\(pairId, messageId, senderId, recipientId, version, "media\/blob"\)/);
   assert.match(client, /supabase\.storage\.from\(MEDIA_BUCKET\)\.upload\(objectPath, encryptedBlob/);

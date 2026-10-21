@@ -317,8 +317,10 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             sharedSecret = deriveSharedSecret(local.getPrivate(), peerPublicKey);
             messageKey = deriveMessageKey(sharedSecret, pairId, senderId, recipientId, version, "media/blob");
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(messageKey, "AES"));
-            nonce = cipher.getIV();
+            nonce = new byte[GCM_NONCE_BYTES];
+            new SecureRandom().nextBytes(nonce);
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(messageKey, "AES"),
+                new GCMParameterSpec(GCM_TAG_BITS, nonce));
             cipher.updateAAD(associatedData(pairId, messageId, senderId, recipientId, version, "media/blob"));
             ciphertext = cipher.doFinal(packedPlaintext);
 
