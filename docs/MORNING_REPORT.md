@@ -30,7 +30,7 @@ Fase 3 kemudian diterima oleh pengguna pada 21 Oktober 2026; status terkini meng
 
 Pengguna menyatakan Fase 3 sudah aman dan memberi izin melanjutkan. Fase 4 sekarang sedang diimplementasikan dengan notifikasi FCM generik, tabel token ber-RLS owner-only, ledger dispatch service-role-only, dan Edge Function yang memverifikasi JWT pengguna, membership pair, serta verifikasi fingerprint.
 
-Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SERVICE_ACCOUNT_JSON pada Supabase Edge Function Secrets masih membutuhkan setup. Build tanpa konfigurasi sengaja menonaktifkan push dan tidak meminta izin OS. Tidak ada plaintext atau metadata chat di payload FCM.
+Push belum aktif. Firebase Android config di GitHub Actions belum dikonfirmasi, dan autentikasi server dialihkan ke Workload Identity Federation tanpa kunci service account JSON. Build tanpa konfigurasi sengaja menonaktifkan push dan tidak meminta izin OS. Payload FCM tetap generik.
 
 
 ## Fase 4 — status deployment
@@ -39,7 +39,7 @@ Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SER
 - GitHub Actions #145 pada PR dan #146 pasca-merge lulus; audit dependency, security-contract tests, web build, Capacitor sync, serta APK bertanda tangan sukses.
 - Migration Fase 4 diterapkan pada Supabase project sajlpngmpkizwjbarxlj. Pemeriksaan hanya-baca mengonfirmasi RLS aktif untuk device_push_tokens dan push_dispatches; belum ada token terdaftar dan belum ada dispatch.
 - Edge Function send-chat-push berstatus ACTIVE, verify_jwt=true. Kode menerima current Supabase key environment format maupun nama legacy.
-- Build #146 mencatat FIREBASE_ANDROID_CONFIG_BASE64 tidak tersedia dan karena itu sengaja membangun APK dengan push nonaktif. FCM_SERVICE_ACCOUNT_JSON perlu disetel di Supabase Edge Function Secrets.
+- Build #146 mencatat FIREBASE_ANDROID_CONFIG_BASE64 tidak tersedia dan karena itu sengaja membangun APK dengan push nonaktif. Jalur JSON-key lama belum digunakan; PR #22 menyediakan implementasi WIF.
 - Tidak ada service berbayar atau secret yang dimasukkan ke repository/chat. Push belum dinyatakan aktif sampai kedua secret valid, build baru menghasilkan konfigurasi Firebase, dan uji push generik berhasil pada kedua HP.
 
 
@@ -48,4 +48,10 @@ Push belum aktif: FIREBASE_ANDROID_CONFIG_BASE64 pada GitHub Actions dan FCM_SER
 - PR #18 merged pada commit 2c67e9ad939097fa5be79869de65a3af7f93dc57. CI #152 untuk source dan CI #153 pasca-merge lulus penuh, termasuk tes kontrak keamanan, build web, Capacitor sync, dan APK bertanda tangan stabil.
 - Perbaikan mengurutkan preferensi opt-out sebelum penghapusan token server, menahan logout jika preferensi tidak dapat disimpan, dan mencoba membersihkan token sisa saat login terverifikasi berikutnya.
 - Migration Fase 4 sudah diterapkan; Edge Function send-chat-push ACTIVE dengan verify_jwt=true. Belum ada token terdaftar atau dispatch.
-- Build #153 mencatat Firebase client config tidak tersedia; push tetap nonaktif hingga secret FIREBASE_ANDROID_CONFIG_BASE64 di GitHub dan FCM_SERVICE_ACCOUNT_JSON di Supabase valid. Setelah itu masih wajib uji dua HP.
+- Build #153 mencatat Firebase client config tidak tersedia; push tetap nonaktif. PR #22 mengganti secret JSON-key dengan GOOGLE_WIF_AUDIENCE, GOOGLE_SERVICE_ACCOUNT_EMAIL, dan FCM_PROJECT_ID pada Supabase setelah WIF disiapkan. Uji dua HP tetap wajib.
+
+## Pembaruan keyless FCM — 21 Oktober 2026
+
+- PR draft #22 menambahkan WIF, token FCM berumur pendek 10 menit, status probe yang menguji pertukaran token, dan panduan konfigurasi. Tidak ada service-account key dibuat.
+- Run CI #168 sukses untuk versi awal branch; commit terbaru memperketat status probe dan sedang diverifikasi CI secara terpisah.
+- Belum deploy perubahan function ke Supabase production. Push masih fail-closed sampai PR direview/di-merge, provider Google dibuat dengan condition hanya dua subject, secrets diisi, dan Firebase Android config tersedia.
