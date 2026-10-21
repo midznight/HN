@@ -1,6 +1,6 @@
 # Our Space — Setup dan Prosedur Operasional
 
-**Status:** panduan awal Fase 0. Tidak ada layanan, akun atau secret yang dibuat/diubah saat dokumen ini ditulis.  
+**Status:** panduan operasional diperbarui untuk Fase 2. Implementasi dan migration ada di branch khusus; penerimaan akhir menunggu CI, status database aktif, seeding pasangan, dan uji dua HP.  
 **Verifikasi dokumen/harga:** 20 Oktober 2026.  
 **Repositori:** [midznight/HN](https://github.com/midznight/HN) saat ini **public**. Source dan dokumentasi dapat dibaca siapa pun. Jangan commit password, service account, Supabase service-role key, token, keystore, atau data pribadi.
 
@@ -99,9 +99,9 @@ Belum ada fitur yang dinyatakan lulus pada Fase 0. Checklist harus dilaporkan se
 | 7. Audit | Akun ketiga ditolak di DB, Realtime dan bucket; tidak ada plaintext/private key di server/log/push; simpan hasil tes nyata. |
 | 8. Widget | Nonaktif dan berlabel sampai diminta; tidak termasuk Fase 0–7. |
 
-## 8. Aksi dashboard yang belum dilakukan
+## 8. Aksi dashboard dan layanan
 
-Fase 0 hanya membaca repo dan menulis dokumentasi. Belum ada Firebase project, Supabase project/user/bucket/table, GitHub Secret, package Android, APK atau migration yang dibuat/diubah oleh pekerjaan ini.
+Supabase project yang sudah ada pada organisasi Free dipulihkan dari status tidak aktif; status terakhir yang terlihat saat pemulihan adalah `COMING_UP`, sehingga koneksi database sempat timeout. Tidak ada project baru atau paket berbayar yang dibuat/diaktifkan. Pengguna/Auth, pasangan, dan membership harus dipastikan melalui dashboard sebelum chat dapat berjalan. FCM, bucket media, dan kredensial TURN tetap ditunda ke fase masing-masing.
 
 
 ## 9. Fase 1 — kerangka Android dan uji PIN lokal
@@ -129,3 +129,20 @@ Branch implementasi: `phase-1/capacitor-offline-shell`. Perubahan fase ini mempe
 - PIN hash + salt disimpan menggunakan Capacitor Preferences dan diverifikasi dengan PBKDF2-HMAC-SHA-256. Ini adalah pengunci lokal, bukan kunci E2EE atau autentikasi server. Fase 1 belum membuat akun Supabase atau kunci ECDH.
 - Paket langsung di `package.json` memakai versi eksplisit. Workflow menggunakan `npm install` karena lockfile belum dikomit; setelah build pertama sukses, lockfile hasil resolusi perlu ditinjau dan dikomit sebelum menyebut dependency tree sepenuhnya reproducible.
 - Fase 1 belum dianggap lulus sebelum workflow menghasilkan APK dan tes instalasi nyata di HP berhasil. Build CI tidak menggantikan uji perangkat.
+
+
+## 10. Fase 2 — chat teks E2EE
+
+Implementasi berada di branch `phase-2/e2ee-text-chat`. Lihat [docs/PHASE2_E2EE.md](docs/PHASE2_E2EE.md) untuk ancaman keamanan, langkah menyiapkan pasangan, serta checklist penerimaan.
+
+- Gunakan APK Android dan Android 12/API 31 atau lebih baru. ECDH harus berjalan lewat Android Keystore; jangan mencoba mengganti private key dengan nilai yang disimpan di Preferences.
+- Pastikan kedua user Auth sudah dibuat di project Supabase yang sama. Nonaktifkan pendaftaran publik dan seed persis satu baris pasangan beserta dua membership admin-only sesuai UUID dari Auth Users.
+- Jalankan migration `supabase/migrations/20261021000000_phase2_e2ee_text_chat.sql` setelah project berstatus ACTIVE. Jangan menjalankan script seed dengan placeholder.
+- Login dari HP masing-masing menggunakan akun miliknya sendiri. Jangan menempelkan password/token/private key pada repo, log CI, issue, atau chat.
+- Bandingkan seluruh fingerprint 64 karakter melalui kanal independen. Tombol konfirmasi bukan bukti cryptographic dengan sendirinya; jika tidak sama, berhenti dan jangan kirim pesan.
+- Sebelum menulis E2EE “lulus”, uji pengiriman dua arah, manipulasi ciphertext/metadata, akun ketiga/RLS, lock saat background, dan reopen setelah relock.
+- Fase 2 belum mempunyai forward secrecy atau multi-device; kehilangan/rotasi key memerlukan prosedur manual yang belum dikerjakan.
+
+### Dependency reproducibility
+
+Node.js 22 diperlukan oleh versi Supabase JS yang dipin. Semua dependency langsung dipatok, tetapi `package-lock.json` harus tersedia dan diperiksa sebelum release dianggap reproducible. Jangan rilis APK bila CI tidak hijau.
