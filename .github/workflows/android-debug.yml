@@ -17,6 +17,13 @@ jobs:
         with: {distribution: temurin, java-version: '17'}
       - name: Install pinned dependencies
         run: npm install --no-audit --no-fund
+      - name: Export resolved dependency lockfile (temporary bootstrap)
+        uses: actions/upload-artifact@v4
+        with:
+          name: our-space-npm-lock-bootstrap
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
       - name: Run deterministic protocol tests
         run: npm test
       - name: Build bundled web assets
