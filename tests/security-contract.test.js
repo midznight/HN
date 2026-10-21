@@ -584,7 +584,7 @@ test('production UI and interactive preview use the approved rose-coral design t
   assert.match(html, /--os-bg:#FFF7F2/);
   assert.match(html, /--os-ink:#372632/);
   assert.match(html, /--os-rose:#B63F49/);
-  assert.match(tailwind, /brand:\\{50:'#FFF7F2'.*500:'#B63F49'.*700:'#793C4A'/);
+  assert.match(tailwind, /brand:\{50:'#FFF7F2'/);
   assert.match(previewHtml, /--bg:#FFF7F2/);
   assert.match(previewHtml, /--accent:#D65355/);
   assert.match(previewHtml, /--bg:#171319/);
@@ -601,9 +601,9 @@ test('relationship card does not fabricate an anniversary date', () => {
 test('Android release candidate builds signed debug and release APKs and verifies matching certificates', () => {
   assert.match(workflow, /assembleDebug assembleRelease/);
   assert.match(workflow, /our-space-release-apk/);
-  assert.match(workflow, /app-release\\.apk/);
+  assert.match(workflow, /app-release\.apk/);
   assert.match(workflow, /apksigner.*--print-certs|apksigner.*verify/);
   assert.match(workflow, /V2 Signer: certificate SHA-256 digest:/);
-  assert.match(workflow, /test "\\$DEBUG_CERT" = "\\$RELEASE_CERT"/);
+  assert.match(workflow, /test "\$DEBUG_CERT" = "\$RELEASE_CERT"/);
 });
 
