@@ -73,3 +73,13 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - Workflow CI mengeksekusi npm ci, audit dependency produksi, syntax JS, unit/security-contract tests dan build web. Workflow Android debug dibuat memicu branch Fase 0.5 dan memasukkan permission mic/kamera. Hasil CI harus dinilai pada SHA terbaru, bukan run lama.
 - Masih release-blocking: WIF + secrets untuk FCM push, warning Auth leaked-password protection dinonaktifkan, signed APK terbaru, uji perangkat dua HP dan hasil negative RLS tests. Jangan klaim siap produksi sebelum semua gate ini lulus.
 
+## Tambahan implementasi setelah mandat otonom (21 Oktober 2026)
+
+- Pengguna mengizinkan kelanjutan semua fase tanpa persetujuan bertahap. Mandat ini tidak menghapus gerbang keamanan/CI/device release.
+- Voice note lokal memakai MediaRecorder, batas durasi 90 detik, batas ukuran konservatif, dan hanya dikirim melalui dialog pratinjau yang sama. Rekaman dihentikan saat app terkunci; permintaan izin mic berstatus single-flight agar double-tap tidak membuka dua recorder.
+- Reply link dan reaksi emoji telah ditambahkan pada pesan teks/media melalui module terpisah. Relasi target, ID pesan yang dibalas, nilai emoji dan status aktif ada di envelope E2EE; database message_annotations hanya menyimpan ciphertext + routing IDs/timestamp.
+- Migrasi message_annotations diterapkan ke Supabase sebagai versi 20261021163650 dan file migration repo diselaraskan ke versi tersebut. Tabel memakai RLS, fingerprint-verified insert, append-only (tanpa update/delete grant), serta Realtime publication.
+- Call client kini memeriksa sinyal terenkripsi terbaru ketika Obrolan kembali foreground agar offer yang baru saja terlewat tidak semata bergantung pada realtime subscription. Timeout panggilan masuk dibatasi 40 detik.
+- Import font dikurangi menjadi tiga weight eksplisit (Inter 400/600 dan Playfair Display 400) untuk mengurangi bundle.
+- CI sempat lulus pada beberapa commit sebelum penambahan/pengubahan paling baru; release acceptance tetap bergantung pada CI HEAD dan Android workflow HEAD. Uji dua perangkat belum tersedia dari runtime ini.
+
