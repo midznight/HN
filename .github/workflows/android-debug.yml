@@ -59,50 +59,47 @@ jobs:
           if not version_code.isdigit() or int(version_code) < 1:
               raise SystemExit("APP_VERSION_CODE must be a positive integer.")
 
-          version_matches = list(re.finditer(r"(?m)^(\\s*versionCode\\s+)\\d+\\s*$", text))
+          version_matches = list(re.finditer(r"(?m)^(\s*versionCode\s+)\d+\s*$", text))
           if len(version_matches) != 1:
               raise SystemExit(f"Expected one versionCode declaration, found {len(version_matches)}.")
           text = re.sub(
-              r"(?m)^(\\s*versionCode\\s+)\\d+\\s*$",
+              r"(?m)^(\s*versionCode\s+)\d+\s*$",
               lambda match: match.group(1) + version_code,
               text,
               count=1,
           )
+          name_matches = list(re.finditer(r"(?m)^(\s*versionName\s+).*$", text))
+          if len(name_matches) != 1:
+              raise SystemExit(f"Expected one versionName declaration, found {len(name_matches)}.")
           text = re.sub(
-              r'(?m)^(\\s*versionName\\s+)["\\'][^"\\']+["\\']\\s*
-        with:
-          name: our-space-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-,
+              r"(?m)^(\s*versionName\s+).*$",
               lambda match: match.group(1) + f'"0.1.{version_code}"',
               text,
               count=1,
           )
 
-          if "our-space-signing.jks" in text or "OUR_SPACE_STABLE_SIGNING" in text:
+          if "our-space-signing.jks" in text:
               raise SystemExit("Stable signing appears already configured; refusing to inject it twice.")
-          match = re.search(r"(?m)^(\\s*)buildTypes\\s*\\{", text)
+          match = re.search(r"(?m)^(\s*)buildTypes\s*\{", text)
           if not match:
               raise SystemExit("Could not find the generated buildTypes block.")
 
           indent = match.group(1)
           signing = (
-              f"{indent}signingConfigs {{\\n"
-              f"{indent}    stable {{\\n"
-              f"{indent}        storeFile file(\\\"our-space-signing.jks\\\")\\n"
-              f"{indent}        storePassword System.getenv(\\\"ANDROID_KEYSTORE_PASSWORD\\\")\\n"
-              f"{indent}        keyAlias System.getenv(\\\"ANDROID_KEY_ALIAS\\\")\\n"
-              f"{indent}        keyPassword System.getenv(\\\"ANDROID_KEY_PASSWORD\\\")\\n"
-              f"{indent}    }}\\n"
-              f"{indent}}}\\n\\n"
+              f'{indent}signingConfigs {{\n'
+              f'{indent}    stable {{\n'
+              f'{indent}        storeFile file("our-space-signing.jks")\n'
+              f'{indent}        storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")\n'
+              f'{indent}        keyAlias System.getenv("ANDROID_KEY_ALIAS")\n'
+              f'{indent}        keyPassword System.getenv("ANDROID_KEY_PASSWORD")\n'
+              f'{indent}    }}\n'
+              f'{indent}}}\n\n'
           )
           debug = (
-              f"{indent}buildTypes {{\\n"
-              f"{indent}    debug {{\\n"
-              f"{indent}        signingConfig signingConfigs.stable\\n"
-              f"{indent}    }}\\n"
+              f'{indent}buildTypes {{\n'
+              f'{indent}    debug {{\n'
+              f'{indent}        signingConfig signingConfigs.stable\n'
+              f'{indent}    }}\n'
           )
           text = text[:match.start()] + signing + debug + text[match.end():]
           path.write_text(text)
