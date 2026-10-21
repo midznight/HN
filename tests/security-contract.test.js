@@ -213,7 +213,7 @@ test('Android gallery picking defers only the expected app background lock and s
   assert.match(client, /window\.ourSpaceAttachmentPicker = \{/);
   assert.match(client, /if \(!attachmentPickerPending \|\| !attachmentPickerBackgrounded\) return/);
   assert.match(client, /if \(attachmentPickerPending \&\& attachmentPickerBackgrounded\) finishAttachmentPicker\(false\)/);
-  assert.match(client, /export function onChatLocked\\(\\) \\{[\\s\\S]{0,100}clearAttachmentPickerState\\(\\)/);
+  assert.match(client, /export function onChatLocked\(\) \{[\s\S]{0,100}clearAttachmentPickerState\(\)/);
   assert.match(main, /ourspace:attachment-picker-cancelled/);
   assert.match(main, /if\(picker\?\.isPending\(\)\)\{picker\.onBackground\(\);return\}/);
   assert.match(main, /if\(isActive\)\{[\s\S]*?window\.ourSpaceAttachmentPicker\?\.onForeground\(\)[\s\S]*?window\.ourSpaceVault\?\.onPickerForeground\?\.\(\)/);
