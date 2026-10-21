@@ -6,10 +6,12 @@ import { App } from '@capacitor/app';
 import { Keyboard } from '@capacitor/keyboard';
 import { Preferences } from '@capacitor/preferences';
 import { initChat, onChatLocked, onChatUnlocked } from './chat.js';
+import { initPushNotifications } from './push-notifications.js';
 
 const K={identity:'os.identity.v1',salt:'os.pin.salt.v1',hash:'os.pin.hash.v1',failures:'os.pin.failures.v1',lockUntil:'os.pin.lockUntil.v1'};
 const ITERATIONS=210000, $=id=>document.getElementById(id);
 let identity=null, firstRun=true, currentView='home', previousFrame=performance.now(), slowFrames=0, frameSamples=0;
+let pendingPushOpenChat = false;
 const read=async key=>(await Preferences.get({key})).value;
 const write=async(key,value)=>Preferences.set({key,value:String(value)});
 const encode=bytes=>btoa(String.fromCharCode(...bytes));
@@ -20,7 +22,7 @@ async function pinHash(pin,salt){const key=await crypto.subtle.importKey('raw',n
 function gateMode(isFirst,hasIdentity){firstRun=isFirst;$('identity-picker').classList.toggle('hidden',hasIdentity);$('pin-confirm').classList.toggle('hidden',!isFirst);$('pin-label').textContent=isFirst?'Buat PIN baru (minimal 6 angka)':'Masukkan PIN';$('pin-input').placeholder=isFirst?'Buat PIN pribadi':'PIN pribadi';$('gate-subtitle').textContent=isFirst?'Siapkan akses lokal untuk perangkat ini':'Ruang privat Hamid & Nur';$('login-btn-label').textContent=isFirst?'Simpan PIN':'Buka ruang';$('gate-hint').textContent=isFirst?'PIN tidak dikirim ke server. Jangan gunakan tanggal jadian.':'PIN diverifikasi di perangkat ini.';$('pin-input').value='';$('pin-confirm').value='';clearError()}
 async function initGate(){const [salt,savedIdentity]=await Promise.all([read(K.salt),read(K.identity)]);identity=savedIdentity;gateMode(!salt,Boolean(savedIdentity));createIcons({icons})}
 function updateIdentity(){const own=identity==='nur'?'Nur':'Hamid',partner=identity==='nur'?'Hamid':'Nur';if($('profile-identity'))$('profile-identity').textContent=own+' & '+partner;const chatTitle=document.querySelector('#view-chat header h1');if(chatTitle)chatTitle.textContent=partner;const avatar=document.querySelector('#view-chat header img');if(avatar){avatar.src=partner==='Nur'?'/assets/avatar-nur.svg':'/assets/avatar-hamid.svg';avatar.alt=partner}document.querySelectorAll('#view-profile img').forEach((img,i)=>img.src=i===0?(own==='Nur'?'/assets/avatar-nur.svg':'/assets/avatar-hamid.svg'):(partner==='Nur'?'/assets/avatar-nur.svg':'/assets/avatar-hamid.svg'))}
-function unlock(){ $('login-screen').classList.add('hidden');$('app-layout').classList.remove('hidden','opacity-0');$('app-layout').classList.add('flex','fade-in');updateIdentity();switchView(currentView);onChatUnlocked().catch(()=>{})}
+function unlock(){ $('login-screen').classList.add('hidden');$('app-layout').classList.remove('hidden','opacity-0');$('app-layout').classList.add('flex','fade-in');updateIdentity();switchView(currentView);if(pendingPushOpenChat){pendingPushOpenChat=false;window.switchView('chat')}onChatUnlocked().catch(()=>{})}
 function lock(){onChatLocked();$('app-layout').classList.add('hidden','opacity-0');$('app-layout').classList.remove('flex');$('login-screen').classList.remove('hidden');$('pin-input').value='';$('pin-confirm').value='';initGate().catch(e=>{console.error('PIN gate reload failed',e);error('Pengaturan PIN gagal dimuat. Tutup dan buka aplikasi kembali.')})}
 async function login(e){e.preventDefault();clearError();const pin=$('pin-input').value;if(!identity){error('Pilih identitas terlebih dahulu.');return}if(!/^\d{6,12}$/.test(pin)){error('PIN harus terdiri dari 6–12 angka.');return}const button=$('login-btn');button.disabled=true;try{if(firstRun){if(pin!==$('pin-confirm').value){error('Konfirmasi PIN tidak sama.');return}const salt=crypto.getRandomValues(new Uint8Array(16)),hash=await pinHash(pin,salt);await write(K.identity,identity);await write(K.salt,encode(salt));await write(K.hash,encode(hash));await write(K.failures,'0');await write(K.lockUntil,'0');unlock();return}
 const until=Number(await read(K.lockUntil)||0);if(Date.now()<until){error('Terlalu banyak percobaan. Coba lagi dalam '+Math.ceil((until-Date.now())/1000)+' detik.');return}
@@ -34,6 +36,7 @@ window.togglePlay=button=>{const wave=button.nextElementSibling;if(wave)wave.cla
 window.spawnHeart=event=>{const el=document.createElement('div'),rect=event.currentTarget.getBoundingClientRect();el.textContent='❤';el.className='heart-particle';el.style.left=(event.clientX-rect.left)+'px';el.style.top=(event.clientY-rect.top)+'px';event.currentTarget.appendChild(el);if(navigator.vibrate)navigator.vibrate(50);setTimeout(()=>el.remove(),1000)};
 document.querySelectorAll('[data-identity]').forEach(button=>button.addEventListener('click',async()=>{if(await read(K.identity))return;identity=button.dataset.identity;document.querySelectorAll('[data-identity]').forEach(item=>{item.classList.toggle('ring-2',item===button);item.classList.toggle('ring-brand-400',item===button)});clearError()}));
 $('login-form').addEventListener('submit',login);
+window.addEventListener('ourspace:push-open-chat',()=>{if($('login-screen').classList.contains('hidden'))window.switchView('chat');else pendingPushOpenChat=true});
 if(window.Capacitor?.isNativePlatform()){
 window.addEventListener('ourspace:attachment-picker-cancelled',()=>{if(!$('app-layout').classList.contains('hidden'))lock()});
 App.addListener('appStateChange',({isActive})=>{
@@ -53,4 +56,5 @@ App.addListener('backButton',()=>{
 function frameMonitor(){const now=performance.now();if(now-previousFrame>40)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);previousFrame=now;if(++frameSamples>=90){document.documentElement.classList.toggle('no-blur',slowFrames>25);frameSamples=0;slowFrames=0}requestAnimationFrame(frameMonitor)}
 requestAnimationFrame(frameMonitor);
 initChat().catch(()=>{});
+initPushNotifications().catch(()=>{});
 initGate().catch(e=>{console.error('PIN gate initialization failed',e);error('Tidak dapat menyiapkan kunci lokal. Mulai ulang aplikasi.')});
