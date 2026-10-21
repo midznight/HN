@@ -270,8 +270,8 @@ jobs:
             grep -F "android.permission.RECORD_AUDIO" <<< "$PERMISSIONS" || { echo "::error::Microphone permission missing in $APK."; exit 1; }
             grep -F "android.permission.CAMERA" <<< "$PERMISSIONS" || { echo "::error::Camera permission missing in $APK."; exit 1; }
           done
-          DEBUG_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$DEBUG_APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2}')"
-          RELEASE_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$RELEASE_APK" | awk -F': ' '/Signer #1 certificate SHA-256 digest:/ {print $2}')"
+          DEBUG_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$DEBUG_APK" | awk -F': ' '/V2 Signer: certificate SHA-256 digest:/ {print $NF; exit}')"
+          RELEASE_CERT="$("$BUILDTOOLS/apksigner" verify --print-certs "$RELEASE_APK" | awk -F': ' '/V2 Signer: certificate SHA-256 digest:/ {print $NF; exit}')"
           test -n "$DEBUG_CERT" -a -n "$RELEASE_CERT" || { echo "::error::Could not extract signing certificate digest."; exit 1; }
           test "$DEBUG_CERT" = "$RELEASE_CERT" || { echo "::error::Debug and release APK signatures differ."; exit 1; }
           echo "Stable signer SHA-256: $RELEASE_CERT"
