@@ -77,7 +77,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             }
             resolveIdentity(call, keyStore);
         } catch (Exception e) {
-            call.reject("Kunci identitas tidak dapat disiapkan. Tidak ada fallback penyimpanan kunci yang tidak aman.", e);
+            call.reject(identityFailureMessage(e), e);
         }
     }
 
@@ -110,7 +110,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             }
             resolveIdentity(call, keyStore);
         } catch (Exception e) {
-            call.reject("Kunci identitas tidak dapat dibaca dari Android Keystore.", e);
+            call.reject(identityFailureMessage(e), e);
         }
     }
 
@@ -268,7 +268,11 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
     }
 
     private void resolveIdentity(PluginCall call, KeyStore keyStore) throws Exception {
-        PublicKey publicKey = keyStore.getCertificate(ECDH_ALIAS).getPublicKey();
+        java.security.cert.Certificate certificate = keyStore.getCertificate(ECDH_ALIAS);
+        if (certificate == null || certificate.getPublicKey() == null) {
+            throw new GeneralSecurityException("Android Keystore contains an incomplete identity entry.");
+        }
+        PublicKey publicKey = certificate.getPublicKey();
         byte[] encoded = publicKey.getEncoded();
         JSObject result = new JSObject();
         result.put("publicKey", Base64.encodeToString(encoded, Base64.NO_WRAP));
@@ -419,6 +423,24 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             throw new GeneralSecurityException("E2EE memerlukan Android 12 / API 31 atau lebih baru.");
         }
+    }
+
+    private static String identityFailureMessage(Exception error) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return "Chat E2EE memerlukan Android 12 atau lebih baru. Perangkat ini menjalankan Android "
+                + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + "). "
+                + "Kunci privat tidak dibuat di penyimpanan alternatif yang tidak aman.";
+        }
+
+        String type = error == null ? "UnknownError" : error.getClass().getSimpleName();
+        String detail = error == null ? "" : error.getMessage();
+        if (detail != null) {
+            detail = detail.replaceAll("[\\r\\n\\p{Cntrl}]", " ").trim();
+            if (detail.length() > 120) detail = detail.substring(0, 120);
+        }
+        String message = "Kunci identitas gagal dibuat pada Android API " + Build.VERSION.SDK_INT + " (" + type;
+        if (detail != null && !detail.isEmpty()) message += ": " + detail;
+        return message + "). Coba perbarui sistem, lalu tekan Periksa ulang status. Kunci tidak disimpan secara tidak aman.";
     }
 
     private static String hex(byte[] bytes) {
