@@ -346,8 +346,8 @@ function clearMediaObjectUrls() {
 }
 
 export function onChatLocked() {
-  closeMediaPreview();
   clearAttachmentPickerState();
+  closeMediaPreview();
   clearMediaObjectUrls();
   appUnlocked = false;
   if (realtimeChannel && supabase) {
