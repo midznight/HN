@@ -540,6 +540,10 @@ test('voice notes are recorded locally, size-bounded, and sent only through medi
   assert.match(client, /if \(shouldDiscard\) return/);
   assert.match(client, /openMediaPreview\(file\)/);
   assert.match(client, /cancelVoiceRecording\(true\)/);
+  assert.match(client, /let voiceRecordingEpoch = 0/);
+  assert.match(client, /const requestEpoch = voiceRecordingEpoch/);
+  assert.match(client, /requestEpoch !== voiceRecordingEpoch \|\| !appUnlocked/);
+  assert.match(client, /export function onChatLocked\(\) \{\s*voiceRecordingEpoch\+\+/);
   const voiceStart = client.indexOf('async function startVoiceRecording()');
   const voiceEnd = client.indexOf('function toggleVoiceRecording()', voiceStart);
   assert.ok(voiceStart >= 0 && voiceEnd > voiceStart, 'voice recording function is bounded');
