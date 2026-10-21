@@ -11,7 +11,7 @@
 - Plugin native Capacitor `OurSpaceKeyStore` menggunakan Android Keystore untuk private key ECDH P-256 dan kunci pembungkus sesi AES-256-GCM.
 - ECDH shared secret tidak dikembalikan ke JavaScript. Native plugin menurunkan kunci AES melalui HKDF-HMAC-SHA-256 dan mengenkripsi/dekripsi pesan menggunakan AES-256-GCM.
 - AAD mengikat `pair_id`, `message_id`, `sender_id`, `recipient_id`, `key_version`, dan tipe pesan. Perubahan metadata menyebabkan tag GCM gagal diverifikasi.
-- Public key DER dan fingerprint SHA-256 saja yang disimpan di database. Private key tidak diekspor.
+- Database hanya menyimpan public key DER dan fingerprint SHA-256. Pada API 31+, private key ECDH tidak dapat diekspor dari Android Keystore. Pada API 23–30, private key software dibuat di native code, segera dibungkus dengan AES-256-GCM menggunakan kunci AES non-exportable Android Keystore, lalu hanya ciphertext-nya yang dipersistenkan; private key tidak pernah dikirim ke JavaScript atau server.
 - Token/sesi Supabase disegel memakai kunci AES Android Keystore; Capacitor Preferences hanya menampung nonce dan ciphertext sesi.
 - UI login akun backend, daftar fingerprint, konfirmasi verifikasi terpisah, pesan kosong, kirim teks, dan pembaruan Realtime ditambahkan.
 - SQL memberi RLS untuk keanggotaan, public key, verifikasi fingerprint, dan pesan ciphertext. `messages` tidak memiliki kolom plaintext dan tidak diberi policy UPDATE/DELETE.
@@ -19,9 +19,12 @@
 
 ## Persyaratan perangkat dan batas keamanan
 
-**Android 12 / API 31 atau lebih baru** diwajibkan untuk ECDH melalui Android Keystore (`PURPOSE_AGREE_KEY`). Tidak ada fallback ke private key yang bisa diekspor. Perangkat lebih lama harus gagal tertutup.
+**Persyaratan sekarang Android 6 / API 23 atau lebih baru**, dengan dua mode kunci identitas:
 
-Jika kunci gagal disiapkan, versi Android/API dan jenis kegagalan aman akan ditampilkan agar dapat didiagnosis. Pada perangkat di bawah API 31, upgrade Android/perangkat diperlukan untuk menjalankan implementasi ini; jangan mengganti dengan penyimpanan private key biasa. Tombol konfirmasi fingerprint hanya boleh tampil setelah kunci publik pasangan berhasil dimuat.
+- **API 31+ (Android 12+):** private key ECDH P-256 dibuat dan digunakan langsung di Android Keystore, sehingga material kunci privat tidak diekspor.
+- **API 23–30 (termasuk Android 11):** karena `PURPOSE_AGREE_KEY` baru tersedia mulai API 31, aplikasi menghasilkan pasangan ECDH P-256 melalui provider kriptografi Android. Byte private key PKCS#8 segera dienkripsi dengan AES-256-GCM oleh kunci pembungkus non-exportable yang berada di Android Keystore; hanya nonce dan ciphertext tersimpan di penyimpanan privat aplikasi. Saat operasi ECDH, private key sementara dibuka ke memori proses native. Mode ini tetap memakai ECDH P-256, HKDF/HMAC-SHA-256, dan AES-256-GCM yang sama, tetapi memiliki perlindungan lebih lemah daripada private key non-exportable di API 31+ jika proses aplikasi/perangkat telah dikuasai penyerang.
+
+Jalur API 23–30 tidak pernah menulis private key plaintext ke file atau Preferences, tidak mengirimkannya ke JavaScript/server, dan tidak membuat kunci pengganti otomatis saat catatan atau kunci pembungkus hilang. Jika data identitas tidak lengkap atau autentikasi AES-GCM gagal, aplikasi gagal tertutup dan meminta pemulihan yang eksplisit. Penyimpanan identitas dibungkus oleh Android Keystore dan tidak boleh dipulihkan dari backup yang tidak memiliki kunci pembungkus. Tombol konfirmasi fingerprint hanya boleh tampil setelah kunci publik pasangan berhasil dimuat.
 
 Setiap pengguna hanya didukung dengan satu perangkat/kunci pada Fase 2. Rotasi kunci, multi-device, recovery riwayat, ratchet, dan forward secrecy belum diimplementasikan. Ini berarti pencurian private key statis dapat membahayakan ciphertext lama yang masih tersedia; aplikasi belum boleh diklaim setara dengan messenger yang memiliki ratchet dan audit independen.
 
