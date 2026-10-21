@@ -193,21 +193,28 @@ async function turnOffPush() {
   const checkbox = control();
   if (checkbox) checkbox.disabled = true;
   revokingPush = true;
+  let preferenceDisabled = false;
   try {
+    // Persist the opt-out first. If local storage is unavailable, leave the
+    // server token untouched rather than creating an ambiguous half-opt-out.
+    await setSavedPreference(false);
+    preferenceDisabled = true;
     if (currentContext && supabase) {
       const { error } = await supabase.from('device_push_tokens')
         .delete().eq('user_id', currentContext.userId);
       if (error) throw new Error('push_token_delete_failed');
     }
-    await setSavedPreference(false);
     if (FCM_ANDROID_CONFIGURED && ANDROID_NATIVE) {
       try { await PushNotifications.unregister(); } catch { /* server token is already removed */ }
     }
     if (checkbox) checkbox.checked = false;
     status('Notifikasi push nonaktif pada akun dan perangkat ini.');
   } catch {
+    // Restore the explicit-on preference if server revocation failed. If the
+    // restore itself fails, setPushContext performs a stale-token cleanup on next login.
+    if (preferenceDisabled) await setSavedPreference(true).catch(() => {});
     if (checkbox) checkbox.checked = true;
-    status('Token push belum bisa dicabut. Sambungkan internet lalu coba lagi.');
+    status('Push belum dapat dipastikan nonaktif. Sambungkan internet lalu coba lagi.');
   } finally {
     revokingPush = false;
     if (checkbox) checkbox.disabled = !(await serverReady());
@@ -278,6 +285,25 @@ export async function setPushContext(nextContext) {
   }
 
   const enabled = await savedPreference();
+  if (!enabled && supabase) {
+    // Reconcile a stale registration if a prior opt-out could not persist locally.
+    const { data: staleToken, error: staleLookupError } = await supabase.from('device_push_tokens')
+      .select('user_id').eq('user_id', currentContext.userId).maybeSingle();
+    if (staleLookupError) {
+      if (checkbox) { checkbox.checked = false; checkbox.disabled = false; }
+      status('Preferensi push lokal nonaktif; status token server belum bisa diperiksa. Sambungkan internet untuk memastikan pencabutan.');
+      return;
+    }
+    if (staleToken) {
+      const { error: staleDeleteError } = await supabase.from('device_push_tokens')
+        .delete().eq('user_id', currentContext.userId);
+      if (staleDeleteError) {
+        if (checkbox) { checkbox.checked = false; checkbox.disabled = false; }
+        status('Preferensi push lokal nonaktif; token server belum berhasil dicabut. Sambungkan internet untuk mencoba lagi.');
+        return;
+      }
+    }
+  }
   if (checkbox) { checkbox.checked = enabled; checkbox.disabled = false; }
   status(enabled
     ? 'Memulihkan pendaftaran push untuk perangkat ini…'
@@ -306,7 +332,9 @@ export async function disablePushBeforeSignOut() {
         .delete().eq('user_id', snapshot.userId);
       if (error) throw new Error('push_token_not_revoked');
     }
-    await setSavedPreference(false).catch(() => {});
+    // Do not sign out if the opted-in state cannot be made durable locally.
+    // Remote token is already removed; retry sign-out after storage is healthy.
+    await setSavedPreference(false);
     if (FCM_ANDROID_CONFIGURED && ANDROID_NATIVE) {
       try { await PushNotifications.unregister(); } catch { /* no server token remains */ }
     }
