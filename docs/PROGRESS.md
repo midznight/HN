@@ -60,3 +60,16 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - Tidak ada service-account JSON/private key dibuat atau disimpan. PR #22 digabung ke `phase-2/e2ee-text-chat`; Edge Function produksi `send-chat-push` versi 2 ACTIVE dengan `verify_jwt=true`. CI #171 memvalidasi Firebase client config `chatmidnur` untuk `com.ourspace.app` dan merakit APK. Backend tetap fail-closed karena pool/provider WIF dan secret server belum tersedia.
 
 - Percobaan konfigurasi Google Cloud melalui browser automation tidak mulai karena saldo TinyFish wallet berada pada -US$0,264. Tidak dilakukan top-up atau pembelanjaan. Tidak ada perubahan resource Google Cloud yang dilakukan oleh percobaan itu.
+
+## Fase 0.5 + Fase 5/6 — implementasi mandiri (21 Oktober 2026)
+
+- Branch kerja: phase-0.5/app-ui-implementation; PR draft #24 menargetkan phase-2/e2ee-text-chat dan belum merge.
+- UI: navigasi tiga tab Obrolan/Kita/Brankas, Obrolan menjadi halaman awal sesudah PIN, settings dari Kita, palet rose-coral/sage, zoom aksesibilitas tetap aktif, reduce-motion dan safe-area dipertahankan.
+- Media chat: alur lampiran diubah menjadi pilih → pratinjau lokal → Kirim atau Batal. Pemilihan tidak langsung mengunggah. Dialog dan object URL dibersihkan saat aplikasi terkunci.
+- Fase 6: tabel vault_items menerapkan RLS; metadata private (nama, MIME, ukuran, object path, nonce) disimpan dalam envelope E2EE; isi file disimpan sebagai ciphertext di bucket privat yang telah ada. Upload, buka/dekripsi di perangkat, daftar item, penghapusan row dan cleanup objek sudah diimplementasikan.
+- Migrasi vault_items dan publikasi Realtime diterapkan ke project Supabase produksi sajlpngmpkizwjbarxlj. Indeks foreign-key untuk push_dispatches dan call_signals juga diterapkan. Tidak ada penghapusan/reset row pair, key binding atau pesan lama.
+- Fase 5: tabel call_signals dan call_records memakai ciphertext untuk sinyal/riwayat; RLS membatasi pasangan dan mensyaratkan verifikasi fingerprint ketika menulis; baris sinyal lama dipangkas pada insert baru. Panggilan suara/video WebRTC, UI incoming/active, mute/camera, timeout, teardown pada lock dan kartu riwayat di timeline chat sudah diimplementasikan sebagai tahap awal.
+- Panggilan baru memakai STUN, belum TURN. Koneksi pada semua NAT/firewall belum terjamin, panggilan masuk saat app tertutup belum didukung, dan belum ada uji dua perangkat pada branch ini.
+- Workflow CI mengeksekusi npm ci, audit dependency produksi, syntax JS, unit/security-contract tests dan build web. Workflow Android debug dibuat memicu branch Fase 0.5 dan memasukkan permission mic/kamera. Hasil CI harus dinilai pada SHA terbaru, bukan run lama.
+- Masih release-blocking: WIF + secrets untuk FCM push, warning Auth leaked-password protection dinonaktifkan, signed APK terbaru, uji perangkat dua HP dan hasil negative RLS tests. Jangan klaim siap produksi sebelum semua gate ini lulus.
+
