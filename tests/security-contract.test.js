@@ -205,3 +205,17 @@ test('Android gallery picking defers only the expected app background lock and s
   assert.match(main, /if\(isActive\)window\.ourSpaceAttachmentPicker\?\.onForeground\(\)/);
   assert.match(main, /backButton[\s\S]*?ourSpaceAttachmentPicker\?\.isPending\(\)\)return/);
 });
+
+
+test('media metadata is not parsed and Storage download is not started after lock during decryption', () => {
+  const start = client.indexOf('async function decryptAndRenderMedia(row, peerKey)');
+  const decryptIndex = client.indexOf('const opened = await KeyStore.decryptMessage({', start);
+  const parseIndex = client.indexOf('validateMediaMetadata(JSON.parse(opened.plaintext), row)', decryptIndex);
+  const downloadIndex = client.indexOf('supabase.storage.from(MEDIA_BUCKET).download(metadata.objectPath)', decryptIndex);
+  const afterDecryptGuard = client.indexOf('if (!appUnlocked || !partnerVerified || !sessionUser) return;', decryptIndex);
+  const afterDownloadGuard = client.indexOf('if (!appUnlocked || !partnerVerified || !sessionUser) return;', afterDecryptGuard + 1);
+  assert.ok(start >= 0 && decryptIndex > start);
+  assert.ok(afterDecryptGuard > decryptIndex && afterDecryptGuard < parseIndex);
+  assert.ok(parseIndex > afterDecryptGuard && downloadIndex > parseIndex);
+  assert.ok(afterDownloadGuard > downloadIndex);
+});
