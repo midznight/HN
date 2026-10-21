@@ -265,3 +265,15 @@ test('media sender checks app lock after File.arrayBuffer before Base64 conversi
   assert.ok(clearAfterEncrypt > nativeEncrypt);
   assert.match(client.slice(start, client.indexOf('function updateComposerState', start)), /finally \{\s+mediaBase64 = null;/);
 });
+
+
+test('media sender suppresses stale failures when the app locks before async send work rejects', () => {
+  const start = client.indexOf('async function sendMediaFile(file)');
+  const end = client.indexOf('function updateComposerState', start);
+  const send = client.slice(start, end);
+  const catchIndex = send.indexOf('} catch (error) {');
+  const guard = send.indexOf('if (!appUnlocked || !partnerVerified || !sessionUser) return;', catchIndex);
+  const visibleError = send.indexOf('messageError(visibleMessage)', catchIndex);
+  assert.ok(catchIndex >= 0 && guard > catchIndex);
+  assert.ok(visibleError > guard);
+});
