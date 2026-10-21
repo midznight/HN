@@ -13,7 +13,8 @@ Pembaruan: 21 Oktober 2026 (Asia/Jakarta).
 
 - Fase 3: lampiran gambar/video/audio terenkripsi pada branch `phase-3/encrypted-media`.
 - Native plugin memiliki `encryptMedia`/`decryptMedia`; key derivation dan AAD dipisah dari chat teks.
-- Client menambahkan file picker, enkripsi sebelum upload, private Storage, metadata terenkripsi, preview/save sesudah dekripsi, batas 3 MiB dan penanganan gagal/retry.
+- Client menambahkan file picker, enkripsi sebelum upload, private Storage, metadata terenkripsi, preview setelah dekripsi, batas 3 MiB dan penanganan gagal/retry.
+- Tombol Simpan ke Galeri menggunakan native MediaStore di API 29+; API 23–28 menyimpan ke folder Documents/Our Space dalam penyimpanan privat aplikasi.
 - Migration aditif sudah diterapkan ke Supabase produksi (migration `guarded_device_key_recovery` tetap ada; `phase3_encrypted_media` tercatat).
 - Verifikasi post-migration: bucket private, 4 MiB maksimum per object, MIME bucket hanya `application/octet-stream`, constraint `messages.message_type` mengizinkan text/media, dan policy Storage sudah tercatat.
 - Data sebelum/sesudah migration tidak berubah: 2 pesan teks, 0 media, 2 device keys, 2 fingerprint verifications.

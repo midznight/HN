@@ -10,7 +10,7 @@ Pengguna mengonfirmasi chat teks dua arah dan kestabilan setelah menutup/membuka
 
 - Ditambahkan jalur native encrypt/decrypt media dengan AES-256-GCM, AAD dan konteks derivasi kunci terpisah dari teks.
 - Ditambahkan metadata lampiran terenkripsi di row pesan, Storage bucket private dan policy akses berbasis pair/verifikasi.
-- Ditambahkan UI pemilih file gambar/video/audio, status operasi, preview setelah dekripsi, save lokal dan retry untuk lampiran yang gagal dibuka.
+- Ditambahkan UI pemilih file gambar/video/audio, status operasi, preview setelah dekripsi, save melalui native Android Storage API, dan retry untuk lampiran yang gagal dibuka. API 29+ memakai MediaStore; API 23–28 menyimpan ke ruang file privat aplikasi.
 - Batas ukuran awal 3 MiB; file disimpan server hanya dalam ciphertext.
 - Dokumentasi fitur, roadmap, keputusan, progress dan blocker diperbarui.
 - Migration Fase 3 diterapkan ke Supabase produksi dan diverifikasi: bucket private, ukuran maksimum 4 MiB, MIME generic, constraint media aktif, dan policy Storage sudah ada.

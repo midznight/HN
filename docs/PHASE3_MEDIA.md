@@ -10,7 +10,8 @@ Status: implementasi awal pada branch `phase-3/encrypted-media`. Migration sudah
 - File disimpan di bucket privat `our-space-encrypted-media` sebagai byte ciphertext dengan content type generik `application/octet-stream`.
 - Metadata (nama file, MIME type, ukuran, path dan nonce media) diserialisasi lalu dienkripsi ke kolom `messages.ciphertext`; tabel hanya menyatakan jenis umum `media`.
 - Penerima mengunduh ciphertext melalui sesi Supabase terautentikasi, lalu native melakukan verifikasi AES-GCM/dekripsi sebelum pratinjau atau simpan lokal.
-- UI menampilkan tahap proses, kesalahan upload, preview media, tombol Simpan ke perangkat, dan Coba lagi saat unduh/dekripsi gagal.
+- UI menampilkan tahap proses upload, kesalahan upload, preview media, dan Coba lagi saat unduh/dekripsi gagal.
+- Tombol **Simpan ke Galeri** memanggil penyimpanan native. Android 10/API 29+ menulis lewat MediaStore ke Pictures/Movies/Music/Our Space tanpa meminta izin penyimpanan bersama; API 23–28 memakai folder Documents/Our Space dalam ruang file aplikasi.
 
 Belum termasuk perekaman voice note/video note, thumbnail, kompresi, progress persentase per byte, multi-file per pesan atau galeri native khusus.
 
@@ -36,7 +37,7 @@ Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path me
 3. [x] Migration aditif diterapkan ke project `sajlpngmpkizwjbarxlj`; tidak ada row pesan/key yang diubah dan fingerprint tidak dirotasi.
 4. [x] Verifikasi bucket private, limit 4 MiB untuk ciphertext, allowed MIME generic, constraint pesan dan policy RLS Storage. Jumlah row lama tetap sama.
 5. [ ] Setelah PR merge, ambil APK stabil baru dan pasang sebagai update tanpa uninstall pada kedua HP.
-6. [ ] Tes gambar, audio, video; uji file tidak didukung/lebih dari 3 MiB, jaringan terputus, upload berhasil tapi insert row gagal, dekripsi rusak, lock/background, retry dan save lokal.
+6. [ ] Tes gambar, audio, video; uji file tidak didukung/lebih dari 3 MiB, jaringan terputus, upload berhasil tapi insert row gagal, dekripsi rusak, lock/background, retry dan Simpan ke Galeri. Di API 29+, verifikasi file muncul pada koleksi Galeri yang sesuai; API 23–28 pastikan jalur app-private ditampilkan.
 7. [ ] Tes akses Storage dengan akun di luar pair. Akun ketiga harus ditolak.
 
 ## Keamanan dan batas

@@ -144,6 +144,13 @@ test('Phase 3 stores only encrypted media in a private bucket with membership an
   assert.match(client, /messageType: 'media'/);
   assert.match(html, /id="chat-attach-btn"/);
   assert.match(html, /id="chat-attachment-input"/);
+  assert.match(native, /public void saveMediaToGallery\(PluginCall call\)/);
+  assert.match(native, /MediaStore\.MediaColumns\.RELATIVE_PATH/);
+  assert.match(native, /Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.Q/);
+  assert.match(native, /getExternalFilesDir\(Environment\.DIRECTORY_DOCUMENTS\)/);
+  assert.match(client, /KeyStore\.saveMediaToGallery\(/);
+  assert.match(client, /Simpan ke Galeri/);
+  assert.match(client, /saved\.destination === 'gallery'/);
 });
 
 test('media display and download happen only after native authenticated decryption', () => {
