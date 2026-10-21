@@ -35,9 +35,16 @@ export const keystoreSessionStorage = {
     const storageKey = STORAGE_PREFIX + key;
     const { value } = await Preferences.get({ key: storageKey });
     if (!value) return null;
-    const envelope = JSON.parse(value);
-    const opened = await OurSpaceKeyStore.openSessionValue(envelope);
-    return opened.value;
+    try {
+      const envelope = JSON.parse(value);
+      const opened = await OurSpaceKeyStore.openSessionValue(envelope);
+      return opened.value;
+    } catch {
+      // Android backup/restore or a reset Keystore can leave an unusable sealed session.
+      // Discard only the invalid session blob; never discard E2EE identity keys automatically.
+      await Preferences.remove({ key: storageKey });
+      return null;
+    }
   },
 
   async setItem(key, value) {
