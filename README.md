@@ -17,6 +17,8 @@ Status per 21 Oktober 2026: kandidat implementasi dan QA, **belum siap dinyataka
 - Tiga tab utama: Obrolan, Kita, Brankas. Sesudah PIN, aplikasi diarahkan ke Obrolan.
 - Chat teks E2EE memakai native Android Keystore dan fingerprint pair yang diverifikasi.
 - Foto/video/audio yang sudah ada dapat dikirim dengan alur pilih → pratinjau → konfirmasi.
+- Voice note dapat direkam lokal pada tahap awal (maksimal 90 detik dan ukuran tetap dibatasi) lalu masuk ke pratinjau.
+- Balasan dan reaksi emoji tersinkron memakai anotasi E2EE terpisah; masih perlu uji dua perangkat pada branch baru.
 - Brankas mengenkripsi file dan metadata pada perangkat; bucket Storage tetap privat.
 - Panggilan suara/video adalah implementasi awal. Memerlukan foreground, izin mikrofon/kamera, dan jaringan P2P; tidak ada incoming call saat aplikasi tertutup. Tanpa TURN, panggilan tidak dijamin di seluruh jaringan.
 - Push FCM tetap fail-closed sampai Workload Identity Federation dan secrets server dikonfigurasi dan uji dua HP lulus.
@@ -58,5 +60,5 @@ Jangan membuat APK dengan tanda tangan sementara untuk dipasang menimpa aplikasi
 - PIN lokal bukan login Supabase dan bukan key E2EE.
 - Kehilangan private key dapat menyebabkan riwayat lama tidak dapat dibuka. Jangan reset key secara otomatis.
 - File media dibatasi 3 MiB agar pemakaian memori WebView/native tetap terkendali.
-- Belum ada Double Ratchet/forward secrecy, perekaman voice note dari aplikasi, sinkronisasi reaksi/balasan yang lengkap, incoming-call push, atau audit keamanan independen.
+- Belum ada Double Ratchet/forward secrecy, incoming-call push, audit keamanan independen, atau validasi perangkat nyata untuk voice note, reaksi/balasan, Brankas dan WebRTC. Panggilan hanya memakai STUN dan bisa gagal pada jaringan tertentu.
 - Jangan klaim siap produksi sebelum seluruh gate di RELEASE_CHECKLIST.md terverifikasi di CI dan pada perangkat sebenarnya.
