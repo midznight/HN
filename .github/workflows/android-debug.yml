@@ -237,6 +237,25 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew --no-daemon assembleDebug
+      - name: Verify stable APK signature and package metadata
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          test -s "$APK" || { echo "::error::APK artifact is missing."; exit 1; }
+          test -n "$SDK_ROOT" || { echo "::error::Android SDK root is unavailable."; exit 1; }
+          BUILDTOOLS="$(find "$SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+          test -x "$BUILDTOOLS/apksigner" || { echo "::error::apksigner is unavailable."; exit 1; }
+          test -x "$BUILDTOOLS/aapt" || { echo "::error::aapt is unavailable."; exit 1; }
+          "$BUILDTOOLS/apksigner" verify --verbose --print-certs "$APK"
+          BADGING="$("$BUILDTOOLS/aapt" dump badging "$APK")"
+          EXPECTED="package: name='com.ourspace.app' versionCode='$GITHUB_RUN_NUMBER' versionName='0.1.$GITHUB_RUN_NUMBER'"
+          grep -F "$EXPECTED" <<< "$BADGING" || { echo "::error::Unexpected package or version metadata."; exit 1; }
+          PERMISSIONS="$("$BUILDTOOLS/aapt" dump permissions "$APK")"
+          grep -F "android.permission.RECORD_AUDIO" <<< "$PERMISSIONS" || { echo "::error::Microphone permission missing."; exit 1; }
+          grep -F "android.permission.CAMERA" <<< "$PERMISSIONS" || { echo "::error::Camera permission missing."; exit 1; }
+          echo "APK SHA-256:"
+          sha256sum "$APK"
       - name: Remove signing keystore from workspace
         if: always()
         run: rm -f android/app/our-space-signing.jks
