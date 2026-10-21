@@ -8,6 +8,7 @@ import { Preferences } from '@capacitor/preferences';
 import { initChat, onChatLocked, onChatUnlocked } from './chat.js';
 import { initPushNotifications } from './push-notifications.js';
 import { initVault } from './vault.js';
+import { initCalls } from './calls.js';
 
 const K={identity:'os.identity.v1',salt:'os.pin.salt.v1',hash:'os.pin.hash.v1',failures:'os.pin.failures.v1',lockUntil:'os.pin.lockUntil.v1'};
 const ITERATIONS=210000, $=id=>document.getElementById(id);
@@ -64,5 +65,6 @@ function frameMonitor(){const now=performance.now();if(now-previousFrame>40)slow
 requestAnimationFrame(frameMonitor);
 initChat().catch(()=>{});
 initVault();
+initCalls();
 initPushNotifications().catch(()=>{});
 initGate().catch(e=>{console.error('PIN gate initialization failed',e);error('Tidak dapat menyiapkan kunci lokal. Mulai ulang aplikasi.')});
