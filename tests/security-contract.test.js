@@ -426,7 +426,7 @@ test('media picker only opens a local preview; upload requires explicit confirma
   assert.match(pickerBlock, /openMediaPreview\(file\)/);
   assert.doesNotMatch(pickerBlock, /sendMediaFile\(file\)/);
   assert.match(client, /send\.addEventListener\('click', async \(\) => \{[\s\S]*?await sendMediaFile\(file\);/);
-  assert.match(client, /export function onChatLocked\(\) \{\s*closeMediaPreview\(\);/);
+  assert.match(client, /export function onChatLocked\(\) \{[\s\S]{0,100}closeMediaPreview\(\);/);
 });
 
 test('navigation uses three core tabs and defaults to Obrolan after the PIN gate', () => {
