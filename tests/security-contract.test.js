@@ -77,6 +77,8 @@ test('local fingerprint panel is rendered before server-key mismatch can abort s
 
 test('guarded device-key recovery requires an authenticated own member, valid fingerprint, and empty pair history', () => {
   const recovery = readFileSync(new URL('../supabase/migrations/20261021152500_guarded_device_key_recovery.sql', import.meta.url), 'utf8');
+  assert.match(recovery, /create or replace function private\.recover_own_device_key_if_unused/i);
+  assert.match(recovery, /create or replace function public\.recover_own_device_key_if_unused[\s\S]*?security invoker/i);
   assert.match(recovery, /security definer/i);
   assert.match(recovery, /set search_path = ''/i);
   assert.match(recovery, /auth\.uid\(\)/i);
