@@ -37,3 +37,8 @@ Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4 opt-out hardening.
 19. **Anggaran Rp0 tetap berlaku.** Implementasi call tidak menambahkan TURN berbayar. STUN-only tidak menjamin koneksi di semua jaringan; jangan menyamarkan batas teknis itu.
 20. **Status “siap rilis” berdasar bukti.** CI hijau tidak menggantikan uji dua HP, stable-signature APK update, konfigurasi WIF untuk FCM, atau audit release security.
 
+21. **Mandat otonom (21 Oktober 2026).** Pengguna meminta semua fase diteruskan tanpa persetujuan bertahap. Keputusan ini mengizinkan tindakan engineering yang aman, tetapi tidak menghalalkan bypass CI, reset kunci atau klaim rilis tanpa bukti.
+22. **Voice note** direkam lokal di WebView, durasi maksimal 90 detik, ukuran dibatasi di bawah 3 MiB; rekaman hanya masuk ke pratinjau. Batal tidak mengirim.
+23. **Balasan dan reaksi emoji** dipisahkan dari payload pesan teks lama untuk kompatibilitas. Target, emoji, reply linkage, dan active state disimpan dalam envelope ciphertext; server tidak mendapat kolom plaintext.
+24. **Tidak ada service relay berbayar** untuk WebRTC. Pengalaman call tetap ditandai sebagai keterbatasan dan tidak diklaim bekerja di semua NAT/firewall.
+
