@@ -399,15 +399,15 @@ test('Push registration failure attempts server token rollback and never shows o
 
 
 test('FCM server auth uses short-lived Workload Identity Federation and no service-account JSON key', () => {
-  assert.match(pushFunction, /GOOGLE_WIF_AUDIENCE/);
-  assert.match(pushFunction, /GOOGLE_SERVICE_ACCOUNT_EMAIL/);
-  assert.match(pushFunction, /FCM_PROJECT_ID/);
-  assert.match(pushFunction, /https:\\/\\/sts\\.googleapis\\.com\\/v1\\/token/);
-  assert.match(pushFunction, /iamcredentials\\.googleapis\\.com/);
-  assert.match(pushFunction, /requested_token_type: "urn:ietf:params:oauth:token-type:access_token"/);
-  assert.match(pushFunction, /subject_token: subjectToken/);
-  assert.match(pushFunction, /lifetime: "600s"/);
-  assert.match(pushFunction, /https:\\/\\/www\\.googleapis\\.com\\/auth\\/firebase\\.messaging/);
+  assert.ok(pushFunction.includes('GOOGLE_WIF_AUDIENCE'));
+  assert.ok(pushFunction.includes('GOOGLE_SERVICE_ACCOUNT_EMAIL'));
+  assert.ok(pushFunction.includes('FCM_PROJECT_ID'));
+  assert.ok(pushFunction.includes('https://sts.googleapis.com/v1/token'));
+  assert.ok(pushFunction.includes('iamcredentials.googleapis.com'));
+  assert.ok(pushFunction.includes('requested_token_type: "urn:ietf:params:oauth:token-type:access_token"'));
+  assert.ok(pushFunction.includes('subject_token: subjectToken'));
+  assert.ok(pushFunction.includes('lifetime: "600s"'));
+  assert.ok(pushFunction.includes('https://www.googleapis.com/auth/firebase.messaging'));
   assert.doesNotMatch(pushFunction, /FCM_SERVICE_ACCOUNT_JSON|private_key|google-auth-library|new JWT\\(/);
   assert.match(pushFunction, /if \\(!serviceKey \\|\\| !ready \\|\\| !wifConfig\\)/);
 });

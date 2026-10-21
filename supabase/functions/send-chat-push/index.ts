@@ -46,10 +46,14 @@ function readWifConfig(): FcmWifConfig | null {
   const projectId = Deno.env.get("FCM_PROJECT_ID")?.trim() || "";
 
   // Accept only a Google workload identity provider resource name, not an arbitrary URL.
-  if (!/^\\/\\/iam\\.googleapis\\.com\\/projects\\/\\d+\\/locations\\/global\\/workloadIdentityPools\\/[a-z0-9-]+\\/providers\\/[a-z0-9-]+$/.test(audience)) {
+  if (!audience.startsWith("//iam.googleapis.com/projects/") ||
+      !audience.includes("/locations/global/workloadIdentityPools/") ||
+      !audience.includes("/providers/") || /\s/.test(audience)) {
     return null;
   }
-  if (!/^[a-z0-9-]+@[a-z0-9-]+\\.iam\\.gserviceaccount\\.com$/.test(serviceAccountEmail)) {
+  if (!serviceAccountEmail.includes("@") ||
+      !serviceAccountEmail.endsWith(".iam.gserviceaccount.com") ||
+      /[\s/]/.test(serviceAccountEmail)) {
     return null;
   }
   if (!/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(projectId)) return null;
