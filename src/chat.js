@@ -632,13 +632,41 @@ function renderMediaMessage(row, blob, metadata) {
   details.textContent = formatMediaSize(metadata.size);
   bubble.appendChild(details);
 
-  const save = document.createElement('a');
-  save.href = objectUrl;
-  save.download = metadata.filename;
-  save.rel = 'noopener';
-  save.className = outgoing ? 'inline-block mt-2 text-[10px] underline text-white/80' : 'inline-block mt-2 text-[10px] underline text-brand-600';
-  save.textContent = 'Simpan ke perangkat';
-  bubble.appendChild(save);
+  const save = document.createElement('button');
+  save.type = 'button';
+  save.className = outgoing ? 'inline-block mt-2 text-[10px] underline text-white/80 disabled:opacity-50' : 'inline-block mt-2 text-[10px] underline text-brand-600 disabled:opacity-50';
+  save.textContent = 'Simpan ke Galeri';
+  const saveStatus = document.createElement('p');
+  saveStatus.className = outgoing ? 'mt-1 text-[10px] text-white/70' : 'mt-1 text-[10px] text-surface-muted';
+  save.addEventListener('click', async () => {
+    if (!appUnlocked || !partnerVerified || !sessionUser) {
+      saveStatus.textContent = 'Buka kunci aplikasi dan verifikasi pasangan sebelum menyimpan.';
+      return;
+    }
+    save.disabled = true;
+    saveStatus.textContent = 'Menyimpan media terdekripsi…';
+    try {
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const mediaBase64 = bytesToBase64(bytes);
+      bytes.fill(0);
+      const saved = await KeyStore.saveMediaToGallery({
+        filename: metadata.filename,
+        mimeType: metadata.mimeType,
+        mediaBase64,
+      });
+      if (saved.destination === 'gallery') {
+        saveStatus.textContent = 'Tersimpan ke Galeri: ' + saved.filename;
+      } else {
+        saveStatus.textContent = 'Tersimpan di folder file aplikasi: ' + saved.filename;
+      }
+      save.textContent = 'Tersimpan ✓';
+    } catch {
+      saveStatus.textContent = 'Gagal menyimpan. Coba lagi setelah ruang penyimpanan tersedia.';
+    } finally {
+      save.disabled = false;
+    }
+  });
+  bubble.append(save, saveStatus);
 
   const time = document.createElement('p');
   time.className = outgoing ? 'mt-1 text-[9px] text-white/60 text-right' : 'mt-1 text-[9px] text-surface-muted text-right';
