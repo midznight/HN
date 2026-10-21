@@ -1081,7 +1081,7 @@ async function signOut() {
   try {
     await disablePushBeforeSignOut();
   } catch {
-    messageError('Token notifikasi belum bisa dicabut karena jaringan belum siap. Sesi akun dipertahankan demi privasi; sambungkan internet lalu coba Keluar lagi.');
+    messageError('Status push belum dapat dipastikan nonaktif. Sesi akun dipertahankan demi privasi; sambungkan internet lalu coba Keluar lagi.');
     return;
   }
   try {
