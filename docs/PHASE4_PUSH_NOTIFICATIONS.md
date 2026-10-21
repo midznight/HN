@@ -40,8 +40,8 @@ Ikuti [docs/FCM-WORKLOAD-IDENTITY.md](FCM-WORKLOAD-IDENTITY.md) untuk membuat se
 
 ## Batasan
 
-Firebase client config dan WIF setup memerlukan tindakan manual di dashboard. Implementasi belum dinyatakan aktif sampai status probe Google berhasil, build baru menggunakan Firebase config, dan uji dua arah di kedua HP lulus.
+Firebase client config dan konfigurasi Google Cloud WIF masih merupakan blocker eksternal. Edge Function v2 sudah dideploy namun push tetap fail-closed. Implementasi belum dinyatakan aktif sampai status probe Google berhasil, build baru menggunakan Firebase config, dan uji dua arah di kedua HP lulus.
 
 ## Pembaruan keyless
 
-Perubahan implementasi terdapat pada PR #22. Jalur JSON-key lama diganti WIF melalui Supabase JWT dengan condition dua subject dan role FCM minimum. Periksa batas keamanan, prasyarat JWT asimetris, dan langkah aktivasi pada `docs/FCM-WORKLOAD-IDENTITY.md`. Konfigurasi Google serta pengiriman dua perangkat belum teruji.
+Implementasi WIF pada PR #22 telah digabung ke `phase-2/e2ee-text-chat` dan Edge Function v2 sudah ACTIVE. Jalur JSON-key lama dihapus. Konfigurasi Google serta pengiriman dua perangkat belum teruji; ikuti `docs/FCM-WORKLOAD-IDENTITY.md` untuk pool/provider, subject restrictions, secrets, dan pengujian.

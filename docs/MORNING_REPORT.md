@@ -52,6 +52,6 @@ Push belum aktif. Firebase Android config di GitHub Actions belum dikonfirmasi, 
 
 ## Pembaruan keyless FCM — 21 Oktober 2026
 
-- PR draft #22 menambahkan WIF, token FCM berumur pendek 10 menit, status probe yang menguji pertukaran token, dan panduan konfigurasi. Tidak ada service-account key dibuat.
-- Run CI #168 sukses untuk versi awal branch; commit terbaru memperketat status probe dan sedang diverifikasi CI secara terpisah.
-- Belum deploy perubahan function ke Supabase production. Push masih fail-closed sampai PR direview/di-merge, provider Google dibuat dengan condition hanya dua subject, secrets diisi, dan Firebase Android config tersedia.
+- PR #22 sudah digabung ke branch `phase-2/e2ee-text-chat`; Run CI #171 sukses pada head final. Implementasi memakai WIF dan token FCM berumur 10 menit. Tidak ada service-account key dibuat.
+- Edge Function `send-chat-push` berhasil dideploy sebagai versi 2, ACTIVE, `verify_jwt=true`; tidak ada token/dispatch yang terdaftar karena Firebase client config belum tersedia. Kode fail-closed sampai provider Google, dua subject binding, tiga secret Supabase dan GitHub Android config valid.
+- Deployment function bukan bukti Google token exchange berhasil. Uji nyata masih tertunda hingga konfigurasi WIF selesai.

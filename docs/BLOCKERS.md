@@ -7,7 +7,7 @@ Pembaruan: 21 Oktober 2026.
 - Firebase Android config belum tersedia pada repository/build secret. Push client fail-closed sampai GitHub Actions Secret FIREBASE_ANDROID_CONFIG_BASE64 berisi google-services.json valid untuk package com.ourspace.app.
 - Penghambat autentikasi berganti: PR #22 menghapus kebutuhan FCM_SERVICE_ACCOUNT_JSON dan menambahkan WIF. Provider OIDC, dua subject binding, tiga Edge Function secrets, dan konfigurasi Firebase client belum selesai; fungsi aktif masih versi sebelumnya.
 - Migration Fase 4 sudah diterapkan pada project Supabase sajlpngmpkizwjbarxlj; Edge Function send-chat-push aktif dengan verifikasi JWT wajib. PR #18, CI #152, dan CI pasca-merge #153 sukses.
-- CI #168 pada commit sebelum probe status diperketat lulus penuh; commit probe terbaru perlu hasil CI sendiri. Setelah PR #22 lulus dan masuk ke branch fase, konfigurasi WIF serta FIREBASE_ANDROID_CONFIG_BASE64 masih perlu dilengkapi sebelum deploy/test dua HP.
+- CI #171 pada head PR #22 lulus penuh. PR #22 sudah digabung ke `phase-2/e2ee-text-chat` dan Edge Function `send-chat-push` versi 2 sudah dideploy dengan `verify_jwt=true`. Probe akan tetap `ready=false` sampai konfigurasi WIF dan Firebase Android client tersedia.
 - Pengujian negatif wajib: izin Android ditolak, token expired, salah project ID, function tidak tersedia, jaringan gagal, notifikasi ganda, tap saat PIN gate aktif, dan token dicabut saat logout.
 
 ## Fase 3
@@ -28,4 +28,6 @@ Fase 3 diterima pengguna pada 21 Oktober 2026. Blocker aktif adalah konfigurasi 
 - Panduan: `docs/FCM-WORKLOAD-IDENTITY.md`.
 - Google service account tetap perlu dibuat dengan hak FCM minimum, tetapi tidak ada JSON key yang dibuat.
 - Jangan melonggarkan provider condition; hanya UUID dua akun privat yang boleh lolos.
-- Konfigurasi dan tes runtime belum dilakukan. Jangan menyatakan push aktif sebelum status-token exchange dan uji pada kedua HP berhasil.
+- Kode runtime dideploy tetapi pertukaran token Google belum diuji karena pool/provider, IAM bindings dan secrets belum dikonfigurasi. Jangan menyatakan push aktif sebelum probe token dan uji kedua HP berhasil.
+
+- Pemeriksaan Supabase sesudah deploy: `send-chat-push` berstatus ACTIVE, versi 2, `verify_jwt=true`. Kode tidak lagi membaca `FCM_SERVICE_ACCOUNT_JSON`; konfigurasi kosong akan membuat push tetap nonaktif.
