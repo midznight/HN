@@ -38,8 +38,9 @@ Pastikan hasilnya tepat dua akun tepercaya. **Jangan memasukkan UUID nyata ke re
 Di Google Cloud Console:
 1. **IAM & Admin → Service Accounts → Create service account**.
 2. Gunakan nama `our-space-fcm-sender`.
-3. Berikan peran **Firebase Cloud Messaging API Admin** (`roles/firebasecloudmessaging.admin`) pada project Firebase agar akun itu hanya berwenang mengirim pesan FCM.
-4. Jangan membuka tab Keys untuk membuat key. Kita tidak memerlukan JSON.
+3. Untuk least privilege, buka **IAM & Admin → Roles → Create custom role** pada project Firebase dan buat role `Our Space FCM Sender` yang hanya memiliki permission `cloudmessaging.messages.create`. Google mencatat permission ini didukung untuk custom roles ([daftar permission](https://cloud.google.com/iam/docs/custom-roles-permissions-support)); hak tersebut cukup untuk memanggil endpoint FCM send yang digunakan fungsi. Lalu berikan custom role tersebut kepada service account. Jangan berikan Owner, Editor, Firebase Admin atau akses database.
+4. Jika pembuatan custom role diblokir oleh organisasi atau permission tidak diterima, jangan menaikkan role ke Owner/Editor. Gunakan role bawaan paling sempit yang disetujui administrator, pahami bahwa `roles/firebasecloudmessaging.admin` juga memberi hak pengelolaan topic subscription.
+5. Jangan membuka tab Keys untuk membuat key. Kita tidak memerlukan JSON.
 
 Di **APIs & Services → Library**, pastikan API berikut aktif:
 - Firebase Cloud Messaging API (`fcm.googleapis.com`)
