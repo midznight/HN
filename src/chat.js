@@ -892,6 +892,7 @@ async function sendMediaFile(file) {
   let objectUploaded = false;
   let objectPath = '';
   let uploadedBytes = null;
+  let mediaBase64 = null;
   try {
     if (!file || !isSupportedMediaMimeType(file.type)) {
       throw new Error('Pilih gambar, video, atau audio dengan format yang didukung.');
@@ -912,8 +913,15 @@ async function sendMediaFile(file) {
       status.classList.remove('hidden');
     }
 
-    const inputBytes = new Uint8Array(await file.arrayBuffer());
-    const mediaBase64 = bytesToBase64(inputBytes);
+    const inputBuffer = await file.arrayBuffer();
+    // The app can lock while File.arrayBuffer() is pending. Stop before creating
+    // a Base64 plaintext copy or calling native crypto when the session is no longer active.
+    if (!appUnlocked || !partnerVerified || !sessionUser) {
+      new Uint8Array(inputBuffer).fill(0);
+      return;
+    }
+    const inputBytes = new Uint8Array(inputBuffer);
+    mediaBase64 = bytesToBase64(inputBytes);
     inputBytes.fill(0);
     const encrypted = await KeyStore.encryptMedia({
       peerPublicKey: partnerDeviceKey.public_key,
@@ -926,7 +934,8 @@ async function sendMediaFile(file) {
       mimeType,
       mediaBase64,
     });
-    if (!appUnlocked || !partnerVerified) return;
+    mediaBase64 = null;
+    if (!appUnlocked || !partnerVerified || !sessionUser) return;
 
     if (status) status.textContent = 'Mengunggah ciphertext terenkripsi…';
     uploadedBytes = base64ToBytes(encrypted.ciphertext);
@@ -983,11 +992,14 @@ async function sendMediaFile(file) {
     const bottom = $('chat-container');
     if (bottom) bottom.scrollTop = bottom.scrollHeight;
   } catch (error) {
+    // Do not surface stale upload/encryption errors into a locked chat view.
+    if (!appUnlocked || !partnerVerified || !sessionUser) return;
     const visibleMessage = error?.message && !/jwt|token|authorization|secret/i.test(error.message)
       ? error.message
       : humanError(error, 'Lampiran tidak terkirim. File asli tidak disimpan di server.');
     messageError(visibleMessage);
   } finally {
+    mediaBase64 = null;
     if (objectUploaded && objectPath) {
       try { await supabase.storage.from(MEDIA_BUCKET).remove([objectPath]); } catch { /* an orphan contains ciphertext only */ }
     }
