@@ -1,6 +1,6 @@
 # Decisions — Our Space
 
-Catatan keputusan diperbarui 21 Oktober 2026, 18:45 WIB.
+Catatan keputusan diperbarui 21 Oktober 2026 — Fase 4.
 
 1. **Pertahankan chat teks yang sudah berjalan.** Tidak mereset pair, fingerprint, private key, pesan atau membership untuk mengaktifkan media. Migration Fase 3 hanya memperluas constraint tipe pesan dan menambah private Storage/policies.
 2. **Tidak membuat bucket public.** Media asli dienkripsi di perangkat; Storage hanya berisi ciphertext dengan content type generik.
@@ -15,3 +15,8 @@ Catatan keputusan diperbarui 21 Oktober 2026, 18:45 WIB.
 11. **Privasi selama system picker.** Saat picker lampiran terbuka, WebView tetap hidup untuk mempertahankan objek File, tetapi konten `app-layout` disembunyikan. Saat selection selesai, tampilan dipulihkan; saat picker dibatalkan setelah app backgrounded atau timeout, state direset dan aplikasi kembali ke lock gate.
 12. **Guard setiap batas await dalam receive media.** Setelah dekripsi metadata, Storage download dan `Blob.arrayBuffer()`, periksa kembali status lock/verifikasi sebelum memulai tahap berikutnya. Buffer ciphertext yang ditinggalkan saat lock dibersihkan best-effort; ini bukan jaminan secure deletion atas heap JavaScript.
 13. **Guard sebelum enkripsi media pengirim.** Setelah `File.arrayBuffer()` selesai, periksa status lock/verifikasi sebelum membuat Base64 atau memanggil native crypto. Lepas referensi string Base64 setelah native selesai dan pada `finally`; ini mengurangi umur referensi, bukan jaminan secure deletion.
+
+14. **Push selalu generik.** FCM tidak menerima plaintext, ciphertext, pengirim, pair ID, message ID, nama file, atau media metadata. Payload hanya berisi judul aplikasi, kalimat ada pesan baru, dan type=new_message.
+15. **Push opt-in dan fail-closed.** Izin OS tidak diminta saat startup. Client harus dibangun dengan Google Services config dan Edge Function harus memvalidasi service account serta project ID sebelum toggle aktif.
+16. **Token hanya milik pemilik.** RLS membatasi CRUD device_push_tokens untuk auth.uid() sendiri; push_dispatches tidak punya grant user dan hanya service_role boleh mengaksesnya.
+17. **Logout mencabut token dahulu.** Jika token belum berhasil dicabut karena network error, tahan proses logout agar perangkat tidak terus menerima notifikasi akun yang ditinggalkan tanpa konfirmasi.
