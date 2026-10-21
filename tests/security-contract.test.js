@@ -219,3 +219,18 @@ test('media metadata is not parsed and Storage download is not started after loc
   assert.ok(parseIndex > afterDecryptGuard && downloadIndex > parseIndex);
   assert.ok(afterDownloadGuard > downloadIndex);
 });
+
+
+test('media pipeline rechecks lock after Blob.arrayBuffer before starting native media decryption', () => {
+  const start = client.indexOf('async function decryptAndRenderMedia(row, peerKey)');
+  const bufferAwait = client.indexOf('const encryptedBuffer = await result.data.arrayBuffer()', start);
+  const lockGuard = client.indexOf('if (!appUnlocked || !partnerVerified || !sessionUser) {', bufferAwait);
+  const zeroBuffer = client.indexOf('new Uint8Array(encryptedBuffer).fill(0)', lockGuard);
+  const bytesWrap = client.indexOf('const encryptedBytes = new Uint8Array(encryptedBuffer)', lockGuard);
+  const toBase64 = client.indexOf('const encryptedBase64 = bytesToBase64(encryptedBytes)', bytesWrap);
+  const nativeDecrypt = client.indexOf('KeyStore.decryptMedia({', toBase64);
+  assert.ok(start >= 0 && bufferAwait > start);
+  assert.ok(lockGuard > bufferAwait && lockGuard < bytesWrap);
+  assert.ok(zeroBuffer > lockGuard && zeroBuffer < bytesWrap);
+  assert.ok(bytesWrap > lockGuard && toBase64 > bytesWrap && nativeDecrypt > toBase64);
+});
