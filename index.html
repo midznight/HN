@@ -457,17 +457,38 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
 <!-- STORAGE VIEW -->
             <div id="view-storage" class="app-view flex-col h-full bg-surface-bg">
-                <header class="mac-glass sticky top-0 z-20 px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white/90">
+                <header class="mac-glass sticky top-0 z-20 px-5 sm:px-7 py-4 border-b border-gray-100 flex justify-between items-center bg-white/90">
                     <div>
+                        <p class="text-[10px] uppercase tracking-[.2em] text-[#9e3e54] font-semibold mb-1">Ruang privat</p>
                         <h2 class="text-xl sm:text-2xl font-serif font-semibold text-surface-dark tracking-wide">Brankas Berdua</h2>
-                        <p class="text-[10px] sm:text-[11px] uppercase tracking-widest text-surface-muted mt-0.5">Kuota tampil setelah backend tersedia</p>
+                        <p class="text-[11px] sm:text-xs text-surface-muted mt-1">File dienkripsi sebelum diunggah.</p>
                     </div>
-                    <button class="p-2.5 sm:p-3 bg-surface-dark text-white rounded-full hover:bg-black shadow-soft transition-transform active:scale-95">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
+                    <button id="vault-add-button" type="button" aria-label="Tambah file ke Brankas" title="Tambah file" class="min-w-12 min-h-12 px-3 bg-[#c65e70] text-white rounded-2xl hover:bg-[#a64e63] shadow-sm transition-transform active:scale-95">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
                     </button>
+                    <input id="vault-file-input" type="file" accept="image/*,video/*,audio/*" class="hidden" aria-label="Pilih file untuk Brankas">
                 </header>
-
-                <div class="p-4 sm:p-6 flex-1 flex items-center justify-center pb-28 md:pb-10"><div class="text-center max-w-xs"><div class="w-14 h-14 mx-auto rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-4"><i data-lucide="lock-keyhole" class="w-6 h-6"></i></div><h3 class="font-serif text-lg mb-2">Brankas masih terkunci</h3><p class="text-xs text-surface-muted leading-relaxed">File dan kapasitas nyata akan tampil setelah backend terenkripsi diaktifkan.</p></div></div></div>
+                <div class="p-4 sm:p-6 flex-1 overflow-y-auto pb-28 md:pb-10">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="rounded-2xl border border-[#ead8d7] bg-[#fff4f0] p-4 mb-4 flex gap-3 items-start">
+                            <div class="w-10 h-10 shrink-0 rounded-xl bg-white text-[#9e3e54] flex items-center justify-center"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+                            <div>
+                                <p class="text-sm font-semibold text-[#613641]">Hanya untuk kalian berdua</p>
+                                <p class="text-xs leading-relaxed text-[#76656a] mt-1">Nama file dan isi file dienkripsi di perangkat. File asli tidak diunggah ke server.</p>
+                            </div>
+                        </div>
+                        <p id="vault-status" class="hidden text-sm text-[#76656a] rounded-xl p-3 mb-3 bg-white border border-[#eedbd8]" role="status" aria-live="polite"></p>
+                        <div id="vault-empty" class="hidden text-center rounded-[26px] border border-dashed border-[#e8cdd0] bg-white/70 p-8 sm:p-12">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-[22px] bg-[#fcece8] text-[#9e3e54] flex items-center justify-center"><i data-lucide="folder-lock" class="w-7 h-7"></i></div>
+                            <h3 class="font-serif text-xl text-[#34292b]">Ruang ini masih kosong</h3>
+                            <p class="text-sm text-[#76656a] leading-relaxed mt-2 max-w-sm mx-auto">Simpan foto, video, atau audio setelah memeriksa pratinjaunya. File baru akan muncul setelah berhasil dienkripsi dan disimpan.</p>
+                            <button type="button" onclick="document.getElementById('vault-add-button')?.click()" class="mt-5 min-h-12 px-5 py-3 rounded-2xl bg-[#c65e70] text-white font-semibold">Tambah file pertama</button>
+                        </div>
+                        <div id="vault-items" class="space-y-3"></div>
+                        <p class="text-[11px] text-[#76656a] leading-relaxed mt-5">Batas file saat ini 3 MiB. Brankas memerlukan koneksi dan fingerprint pasangan yang sudah diverifikasi.</p>
+                    </div>
+                </div>
+            </div>
 
 <!-- PROFILE VIEW -->
             <div id="view-profile" class="app-view flex-col h-full bg-surface-bg">
@@ -573,6 +594,36 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
           <button id="media-preview-cancel" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl border border-[#e8cdd0] bg-white font-medium text-[#9e3e54]">Batal</button>
           <button id="media-preview-send" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-[#c65e70] font-semibold text-white disabled:opacity-50">Kirim media</button>
         </div>
+      </section>
+    </div>
+
+    <div id="vault-preview-modal" class="hidden fixed inset-0 z-[121] flex items-end sm:items-center justify-center bg-[#34292b]/55 p-3 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vault-preview-title">
+      <section class="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] border border-[#eedbd8] bg-[#fffdfb] shadow-2xl">
+        <div class="p-5 sm:p-6 border-b border-[#eedbd8]">
+          <p class="text-[10px] font-semibold tracking-[.2em] uppercase text-[#9e3e54] mb-1">Pratinjau privat</p>
+          <h2 id="vault-preview-title" class="font-serif text-xl sm:text-2xl text-[#34292b]">Simpan ke Brankas?</h2>
+          <p class="text-sm text-[#76656a] mt-1">Belum ada file yang diunggah. Periksa dulu, lalu konfirmasi.</p>
+        </div>
+        <div id="vault-preview-frame" class="m-4 sm:m-5 min-h-40 rounded-2xl bg-[#f8efeb] overflow-hidden flex items-center justify-center"></div>
+        <div class="px-5 sm:px-6 pb-4">
+          <p id="vault-preview-name" class="font-medium text-sm text-[#34292b] break-words"></p>
+          <p id="vault-preview-meta" class="text-xs text-[#76656a] mt-1"></p>
+          <p class="text-xs text-[#76656a] leading-relaxed mt-3">Setelah kamu memilih Simpan, file dienkripsi di perangkat dan ciphertext disimpan dalam bucket privat.</p>
+        </div>
+        <div class="flex gap-3 p-5 sm:px-6 border-t border-[#eedbd8]">
+          <button id="vault-preview-cancel" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl border border-[#e8cdd0] bg-white font-medium text-[#9e3e54]">Batal</button>
+          <button id="vault-preview-send" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-[#c65e70] font-semibold text-white disabled:opacity-50">Simpan ke Brankas</button>
+        </div>
+      </section>
+    </div>
+    <div id="vault-viewer-modal" class="hidden fixed inset-0 z-[122] flex items-center justify-center bg-[#34292b]/85 p-3 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="vault-viewer-title">
+      <section class="w-full max-w-3xl max-h-[94dvh] overflow-y-auto rounded-[26px] border border-white/20 bg-[#fffdfb] shadow-2xl">
+        <header class="sticky top-0 z-10 flex items-center justify-between gap-3 p-4 border-b border-[#eedbd8] bg-[#fffdfb]">
+          <h2 id="vault-viewer-title" class="font-serif text-lg text-[#34292b] break-words">File Brankas</h2>
+          <button id="vault-viewer-close" type="button" aria-label="Tutup file" class="min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] font-semibold">Tutup</button>
+        </header>
+        <div id="vault-viewer-frame" class="p-3 sm:p-5 min-h-40 flex items-center justify-center"></div>
+        <p class="px-5 pb-5 text-xs leading-relaxed text-[#76656a]">File didekripsi hanya di perangkat ini. Tutup atau kunci aplikasi untuk membersihkan pratinjau sementara.</p>
       </section>
     </div>
     <script type="module" src="/src/main.js"></script>
