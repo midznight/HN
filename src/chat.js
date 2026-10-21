@@ -151,7 +151,16 @@ export async function onChatUnlocked() {
   }
 }
 
+function clearMediaObjectUrls() {
+  document.querySelectorAll('#chat-container video, #chat-container audio').forEach((media) => {
+    try { media.pause(); media.removeAttribute('src'); media.load(); } catch { /* best-effort local media release */ }
+  });
+  for (const url of mediaObjectUrls) URL.revokeObjectURL(url);
+  mediaObjectUrls.clear();
+}
+
 export function onChatLocked() {
+  clearMediaObjectUrls();
   appUnlocked = false;
   if (realtimeChannel && supabase) {
     supabase.removeChannel(realtimeChannel).catch(() => {});
@@ -545,6 +554,7 @@ async function decryptAndRenderMedia(row, peerKey) {
   const metadata = validateMediaMetadata(JSON.parse(opened.plaintext), row);
   const result = await supabase.storage.from(MEDIA_BUCKET).download(metadata.objectPath);
   if (result.error || !result.data) throw result.error || new Error('Lampiran tidak tersedia.');
+  if (result.data.size > MAX_MEDIA_BYTES + 1024) throw new Error('Ukuran ciphertext lampiran tidak valid.');
   if (!appUnlocked || !partnerVerified) return;
 
   const encryptedBytes = new Uint8Array(await result.data.arrayBuffer());
@@ -948,8 +958,7 @@ async function signOut() {
 }
 
 function clearPrivateState() {
-  for (const url of mediaObjectUrls) URL.revokeObjectURL(url);
-  mediaObjectUrls.clear();
+  clearMediaObjectUrls();
   sessionUser = null;
   pair = null;
   ownMember = null;
