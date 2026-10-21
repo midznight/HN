@@ -44,4 +44,8 @@ Pengguna mengonfirmasi pada 21 Oktober 2026 bahwa Fase 3 sudah aman dan mengizin
 - Tabel device_push_tokens memakai RLS owner-only. Ledger push_dispatches adalah service-role-only.
 - Edge Function memvalidasi JWT pengguna, sender id, pair dua anggota, verifikasi fingerprint penerima, umur pesan, dan deduplikasi dispatch.
 - Build tanpa FIREBASE_ANDROID_CONFIG_BASE64 tetap hijau tetapi fitur push nonaktif. Tanpa FCM_SERVICE_ACCOUNT_JSON di Supabase, server status ready=false dan aplikasi tidak meminta izin OS.
-- Gate berikutnya: CI, migration dan function deployment, konfigurasi manual Firebase/Supabase, lalu uji dua HP.
+- PR #16 merged ke integration branch pada commit 16441c87c14b454ab74409a72cfbd53e71446c70; post-merge CI #146 sukses dengan dependency audit, security-contract tests, web build, Capacitor sync, dan signed APK.
+- Migration Fase 4 sudah diterapkan di project Supabase sajlpngmpkizwjbarxlj; device_push_tokens dan push_dispatches terverifikasi ber-RLS. Belum ada token/dispatch yang tersimpan.
+- Edge Function send-chat-push sudah ACTIVE dengan verify_jwt=true.
+- CI #146 mengonfirmasi FIREBASE_ANDROID_CONFIG_BASE64 belum tersedia; APK build ini secara sengaja menonaktifkan push. Secret server FCM_SERVICE_ACCOUNT_JSON harus ditambahkan di Supabase sebelum status ready.
+- Berikutnya: masukkan dua secret melalui dashboard masing-masing (jangan di chat/repo), jalankan build baru, lalu uji push dua arah di kedua HP.
