@@ -13,6 +13,9 @@ const mediaMigration = readFileSync(new URL('../supabase/migrations/202610211027
 const pushMigration = readFileSync(new URL('../supabase/migrations/20261021123417_phase4_push_notifications.sql', import.meta.url), 'utf8');
 const pushClient = readFileSync(new URL('../src/push-notifications.js', import.meta.url), 'utf8');
 const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/index.ts', import.meta.url), 'utf8');
+const vaultMigration = readFileSync(new URL('../supabase/migrations/20261021160156_create_encrypted_shared_vault.sql', import.meta.url), 'utf8');
+const vaultRealtimeMigration = readFileSync(new URL('../supabase/migrations/20261021160737_publish_vault_items_realtime.sql', import.meta.url), 'utf8');
+const vaultClient = readFileSync(new URL('../src/vault.js', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
 const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
 const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
@@ -441,5 +444,38 @@ test('navigation uses three core tabs and defaults to Obrolan after the PIN gate
   assert.match(html, /id="kita-settings-btn"[^>]*switchView\('profile'\)/);
   assert.match(main, /currentView='chat'/);
   assert.match(main, /preview&&!preview\.classList\.contains\('hidden'\)/);
+});
+
+test('Phase 6 vault stores only encrypted metadata and enforces two-member verified E2EE access', () => {
+  assert.match(vaultMigration, /create table if not exists public\.vault_items/i);
+  assert.match(vaultMigration, /alter table public\.vault_items enable row level security/i);
+  assert.match(vaultMigration, /private\.is_pair_member\(pair_id\)/i);
+  assert.match(vaultMigration, /sender_id = \(select auth\.uid\(\)\)/i);
+  assert.match(vaultMigration, /key_verifications[\s\S]*?verified_fingerprint = peer_key\.fingerprint/i);
+  assert.match(vaultMigration, /grant select, insert, delete on table public\.vault_items to authenticated/i);
+  assert.doesNotMatch(vaultMigration, /grant\s+update[^;]*vault_items/i);
+  const match = vaultMigration.match(/create table if not exists public\.vault_items\s*\(([\s\S]*?)\n\);/i);
+  assert.ok(match, 'vault table declaration must be present');
+  const columns = match[1].split('\n')
+    .map((line) => line.trim().match(/^([a-z_]+)\s+/i)?.[1])
+    .filter(Boolean);
+  assert.ok(columns.includes('ciphertext'));
+  assert.ok(columns.includes('nonce'));
+  for (const forbidden of ['plaintext', 'body', 'content', 'filename', 'mime_type', 'object_path', 'file_url']) {
+    assert.ok(!columns.includes(forbidden), 'vault plaintext metadata column found: ' + forbidden);
+  }
+  assert.match(vaultRealtimeMigration, /alter publication supabase_realtime add table public\.vault_items/i);
+  assert.match(vaultClient, /KeyStore\.encryptMedia\(/);
+  assert.match(vaultClient, /KeyStore\.encryptMessage\([\s\S]*?messageType: 'media'/);
+  assert.match(vaultClient, /KeyStore\.decryptMessage\(/);
+  assert.match(vaultClient, /KeyStore\.decryptMedia\(/);
+  assert.match(vaultClient, /from\('vault_items'\)/);
+  assert.match(vaultClient, /from\(BUCKET\)\.upload\(/);
+  assert.match(vaultClient, /from\(BUCKET\)\.download\(/);
+  assert.match(vaultClient, /currentContext\(context\)/);
+  assert.match(vaultClient, /function validateMetadata\(/);
+  assert.match(vaultClient, /function openPreview\(/);
+  assert.match(vaultClient, /$('vault-preview-send')\?\.addEventListener\('click'/);
+  assert.doesNotMatch(vaultClient, /\.createSignedUrl\(/);
 });
 
