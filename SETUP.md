@@ -36,9 +36,9 @@ Belum diperlukan/dibuat pada Fase 0. Saat Fase 4:
 1. Buka [Firebase Console](https://console.firebase.google.com/) dan buat project dengan plan **Spark**. Firebase mencantumkan Cloud Messaging sebagai produk gratis dan Spark tidak meminta info pembayaran untuk produk gratis: [Firebase pricing](https://firebase.google.com/docs/projects/billing/firebase-pricing-plans).
 2. Daftarkan aplikasi Android memakai application ID yang sudah dipatok pada Fase 1.
 3. Unduh `google-services.json`. Jangan commit file; simpan sebagai GitHub Actions Secret dan buat file saat workflow build berjalan.
-4. Untuk push dari server, buat service account dengan izin FCM minimum. Simpan JSON sebagai secret environment Supabase Edge Function/server saja—bukan di JS, asset Android atau repo.
-5. Minta izin notifikasi Android 13+ dan tangani penolakan. Tes foreground, background, app tertutup normal, layar terkunci dan reboot.
-6. Payload push generik: tanpa isi pesan, caption, nama file, preview, private key atau media.
+4. Jangan buat kunci JSON service account. Organisasi Google Cloud dapat memblokirnya; konfigurasi alternatif tanpa kunci mengikuti [panduan FCM Workload Identity](docs/FCM-WORKLOAD-IDENTITY.md).
+5. Backend push tetap nonaktif sampai Workload Identity Federation, izin service account, dan secret Edge Function terverifikasi.
+6. Minta izin notifikasi Android 13+ dan uji foreground, background, app tertutup normal, layar terkunci, dan reboot. Payload push tetap generik tanpa isi pesan, caption, nama file, preview, atau media.
 
 FCM gratis bukan jaminan delivery mutlak. Google Play Services, jaringan, izin, optimasi baterai OEM, Android full-screen intent dan status force-stop berpengaruh.
 
@@ -53,7 +53,7 @@ Buka repo `midznight/HN` → **Settings → Secrets and variables → Actions**.
 | `SUPABASE_PROJECT_REF` | Target project migrations/functions | Gunakan nilai aktual. |
 | `SUPABASE_ACCESS_TOKEN` | Deploy migration/function dari CI bila dipakai | Token berkuasa tinggi; batasi akses dan rotasi bila bocor. |
 | `SUPABASE_DB_PASSWORD` | Migrasi schema via pipeline jika diperlukan | Secret; jangan echo ke log. |
-| `GOOGLE_SERVICES_JSON_BASE64` | Membentuk Firebase config saat build | Baru dibutuhkan Fase 4; jangan cetak secret/file ke log/artifact. |
+| `FIREBASE_ANDROID_CONFIG_BASE64` | Membentuk Firebase config saat build | Baru dibutuhkan Fase 4; jangan cetak secret/file ke log/artifact. |
 | `ANDROID_KEYSTORE_BASE64` | Keystore signing APK release | Belum diperlukan APK debug. Backup offline aman; kehilangan key mencegah update dengan identitas signature yang sama. |
 | `ANDROID_KEYSTORE_PASSWORD` | Password keystore release | Secret. |
 | `ANDROID_KEY_ALIAS` | Alias kunci release | Konfigurasi CI sesuai workflow. |

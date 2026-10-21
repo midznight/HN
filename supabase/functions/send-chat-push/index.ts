@@ -1,5 +1,4 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { JWT } from "npm:google-auth-library@^10";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -8,10 +7,10 @@ const CORS_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
 };
 
-type ServiceAccount = {
-  project_id: string;
-  client_email: string;
-  private_key: string;
+type FcmWifConfig = {
+  audience: string;
+  serviceAccountEmail: string;
+  projectId: string;
 };
 
 type MessageRow = {
@@ -41,40 +40,67 @@ function readNamedKey(environmentName: string, legacyName: string): string | nul
   }
 }
 
-function readServiceAccount(): ServiceAccount | null {
-  const raw = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
-  if (!raw) return null;
-  try {
-    const value = JSON.parse(raw);
-    if (typeof value?.project_id !== "string" ||
-        typeof value?.client_email !== "string" ||
-        typeof value?.private_key !== "string" ||
-        !value.private_key.includes("PRIVATE KEY")) return null;
-    return {
-      project_id: value.project_id,
-      client_email: value.client_email,
-      private_key: value.private_key,
-    };
-  } catch {
+function readWifConfig(): FcmWifConfig | null {
+  const audience = Deno.env.get("GOOGLE_WIF_AUDIENCE")?.trim() || "";
+  const serviceAccountEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL")?.trim() || "";
+  const projectId = Deno.env.get("FCM_PROJECT_ID")?.trim() || "";
+
+  // Accept only a Google workload identity provider resource name, not an arbitrary URL.
+  if (!/^\\/\\/iam\\.googleapis\\.com\\/projects\\/\\d+\\/locations\\/global\\/workloadIdentityPools\\/[a-z0-9-]+\\/providers\\/[a-z0-9-]+$/.test(audience)) {
     return null;
   }
+  if (!/^[a-z0-9-]+@[a-z0-9-]+\\.iam\\.gserviceaccount\\.com$/.test(serviceAccountEmail)) {
+    return null;
+  }
+  if (!/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(projectId)) return null;
+
+  return { audience, serviceAccountEmail, projectId };
 }
 
-function getAccessToken(account: ServiceAccount): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const jwtClient = new JWT({
-      email: account.client_email,
-      key: account.private_key,
-      scopes: ["https://www.googleapis.com/auth/firebase.messaging"],
-    });
-    jwtClient.authorize((error, tokens) => {
-      if (error || !tokens?.access_token) {
-        reject(new Error("oauth_failed"));
-        return;
-      }
-      resolve(tokens.access_token);
-    });
+// Exchange the caller's short-lived Supabase JWT for a federated token, then impersonate
+// the FCM-only service account. No long-lived Google private key is stored in Supabase.
+async function getAccessToken(config: FcmWifConfig, subjectToken: string): Promise<string> {
+  const exchangeBody = new URLSearchParams({
+    grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+    audience: config.audience,
+    requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
+    subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+    subject_token: subjectToken,
+    scope: "https://www.googleapis.com/auth/cloud-platform",
   });
+
+  const exchangeResponse = await fetch("https://sts.googleapis.com/v1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: exchangeBody,
+    signal: AbortSignal.timeout(12000),
+  });
+  const exchanged = await exchangeResponse.json().catch(() => null) as
+    { access_token?: string } | null;
+  if (!exchangeResponse.ok || typeof exchanged?.access_token !== "string") {
+    throw new Error("wif_exchange_failed");
+  }
+
+  const impersonationUrl = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/" +
+    encodeURIComponent(config.serviceAccountEmail) + ":generateAccessToken";
+  const impersonationResponse = await fetch(impersonationUrl, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + exchanged.access_token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      scope: ["https://www.googleapis.com/auth/firebase.messaging"],
+      lifetime: "600s",
+    }),
+    signal: AbortSignal.timeout(12000),
+  });
+  const impersonated = await impersonationResponse.json().catch(() => null) as
+    { accessToken?: string } | null;
+  if (!impersonationResponse.ok || typeof impersonated?.accessToken !== "string") {
+    throw new Error("service_account_impersonation_failed");
+  }
+  return impersonated.accessToken;
 }
 
 function isUuidV4(value: unknown): value is string {
@@ -166,16 +192,16 @@ Deno.serve(async (request: Request) => {
     return jsonResponse({ error: "invalid_request" }, 400);
   }
 
-  const account = readServiceAccount();
+  const wifConfig = readWifConfig();
   const expectedProjectId = typeof body.firebase_project_id === "string"
     ? body.firebase_project_id
     : "";
-  const ready = Boolean(account && serviceKey && expectedProjectId &&
-    account.project_id === expectedProjectId);
+  const ready = Boolean(wifConfig && serviceKey && expectedProjectId &&
+    wifConfig.projectId === expectedProjectId);
 
   if (body.action === "status") return jsonResponse({ ready });
   if (!isUuidV4(body.message_id)) return jsonResponse({ error: "invalid_request" }, 400);
-  if (!serviceKey || !ready || !account) {
+  if (!serviceKey || !ready || !wifConfig) {
     return jsonResponse({ error: "push_not_configured" }, 503);
   }
 
@@ -261,9 +287,9 @@ Deno.serve(async (request: Request) => {
     };
 
     try {
-      const accessToken = await getAccessToken(account);
+      const accessToken = await getAccessToken(wifConfig, jwt);
       const fcmResponse = await fetch(
-        "https://fcm.googleapis.com/v1/projects/" + account.project_id + "/messages:send",
+        "https://fcm.googleapis.com/v1/projects/" + wifConfig.projectId + "/messages:send",
         {
           method: "POST",
           headers: {
