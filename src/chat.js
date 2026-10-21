@@ -482,6 +482,7 @@ async function loadMessages() {
   if (!partnerVerified || !appUnlocked || !pair || !sessionUser || !partnerDeviceKey) return;
   const container = $('chat-container');
   if (!container) return;
+  clearMediaObjectUrls();
   container.replaceChildren();
   renderedIds.clear();
   const { data, error } = await supabase.from('messages')
@@ -570,6 +571,7 @@ async function decryptAndRenderMedia(row, peerKey) {
     nonce: metadata.nonce,
     ciphertext: encryptedBase64,
   });
+  if (!appUnlocked || !partnerVerified) return;
   if (openedMedia.filename !== metadata.filename ||
       openedMedia.mimeType !== metadata.mimeType ||
       openedMedia.size !== metadata.size) {
@@ -635,7 +637,7 @@ function renderMediaMessage(row, blob, metadata) {
   const save = document.createElement('button');
   save.type = 'button';
   save.className = outgoing ? 'inline-block mt-2 text-[10px] underline text-white/80 disabled:opacity-50' : 'inline-block mt-2 text-[10px] underline text-brand-600 disabled:opacity-50';
-  save.textContent = 'Simpan ke Galeri';
+  save.textContent = 'Simpan ke perangkat';
   const saveStatus = document.createElement('p');
   saveStatus.className = outgoing ? 'mt-1 text-[10px] text-white/70' : 'mt-1 text-[10px] text-surface-muted';
   save.addEventListener('click', async () => {
@@ -645,10 +647,15 @@ function renderMediaMessage(row, blob, metadata) {
     }
     save.disabled = true;
     saveStatus.textContent = 'Menyimpan media terdekripsi…';
+    let bytes = null;
     try {
-      const bytes = new Uint8Array(await blob.arrayBuffer());
+      bytes = new Uint8Array(await blob.arrayBuffer());
+      if (!appUnlocked || !partnerVerified || !sessionUser) {
+        throw new Error('Simpan dibatalkan karena aplikasi dikunci.');
+      }
       const mediaBase64 = bytesToBase64(bytes);
       bytes.fill(0);
+      bytes = null;
       const saved = await KeyStore.saveMediaToGallery({
         filename: metadata.filename,
         mimeType: metadata.mimeType,
@@ -663,6 +670,7 @@ function renderMediaMessage(row, blob, metadata) {
     } catch {
       saveStatus.textContent = 'Gagal menyimpan. Coba lagi setelah ruang penyimpanan tersedia.';
     } finally {
+      if (bytes) bytes.fill(0);
       save.disabled = false;
     }
   });

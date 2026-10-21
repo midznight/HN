@@ -149,8 +149,11 @@ test('Phase 3 stores only encrypted media in a private bucket with membership an
   assert.match(native, /Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.Q/);
   assert.match(native, /getExternalFilesDir\(Environment\.DIRECTORY_DOCUMENTS\)/);
   assert.match(client, /KeyStore\.saveMediaToGallery\(/);
-  assert.match(client, /Simpan ke Galeri/);
+  assert.match(client, /Simpan ke perangkat/);
   assert.match(client, /saved\.destination === 'gallery'/);
+  assert.match(client, /if \(!appUnlocked \|\| !partnerVerified\) return;\s+if \(openedMedia\.filename/);
+  assert.match(client, /clearMediaObjectUrls\(\);\s+container\.replaceChildren\(\)/);
+  assert.match(client, /if \(!appUnlocked \|\| !partnerVerified \|\| !sessionUser\)/);
 });
 
 test('media display and download happen only after native authenticated decryption', () => {
