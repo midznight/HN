@@ -172,3 +172,17 @@ test('media display and download happen only after native authenticated decrypti
   assert.match(client, /URL\.revokeObjectURL/);
   assert.match(client, /file\.size > MAX_MEDIA_BYTES/);
 });
+
+test('async message decryption never renders plaintext or crypto errors after the app locks', () => {
+  const start = client.indexOf('async function decryptAndRender(row)');
+  const decryptIndex = client.indexOf('const opened = await KeyStore.decryptMessage({', start);
+  const renderIndex = client.indexOf('renderMessage(row, opened.plaintext)', decryptIndex);
+  const successGuardIndex = client.indexOf('if (!appUnlocked || !partnerVerified) return;', decryptIndex);
+  const catchIndex = client.indexOf('} catch {', renderIndex);
+  const catchGuardIndex = client.indexOf('if (!appUnlocked || !partnerVerified) return;', catchIndex);
+  assert.ok(start >= 0 && decryptIndex > start);
+  assert.ok(successGuardIndex > decryptIndex && successGuardIndex < renderIndex);
+  assert.ok(catchIndex > renderIndex);
+  assert.ok(catchGuardIndex > catchIndex && catchGuardIndex < client.indexOf('renderUndecryptableMessage()', catchGuardIndex));
+  assert.match(client, /if \(!appUnlocked \|\| !partnerVerified\) return;\s+if \(error\) throw error;/);
+});

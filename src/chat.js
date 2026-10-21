@@ -490,6 +490,7 @@ async function loadMessages() {
     .eq('pair_id', pair.id)
     .order('created_at', { ascending: false })
     .limit(100);
+  if (!appUnlocked || !partnerVerified) return;
   if (error) throw error;
 
   if (!data?.length) {
@@ -513,6 +514,7 @@ async function loadMessages() {
 }
 
 async function decryptAndRender(row) {
+  if (!appUnlocked || !partnerVerified) return;
   try {
     validateCiphertextMessage(row);
     const peerKey = partnerDeviceKey;
@@ -532,8 +534,10 @@ async function decryptAndRender(row) {
       nonce: row.nonce,
       ciphertext: row.ciphertext,
     });
+    if (!appUnlocked || !partnerVerified) return;
     renderMessage(row, opened.plaintext);
   } catch {
+    if (!appUnlocked || !partnerVerified) return;
     if (row?.message_type === 'media') renderMediaFailure(row);
     else renderUndecryptableMessage();
   }
