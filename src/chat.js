@@ -20,6 +20,7 @@ let partnerVerified = false;
 let realtimeChannel = null;
 let renderedIds = new Set();
 let isSending = false;
+let pendingLocalRecoveryKey = null;
 
 function messageError(message) {
   const node = $('chat-alert');
@@ -73,6 +74,7 @@ export async function initChat() {
 
   $('chat-auth-form')?.addEventListener('submit', signIn);
   $('chat-confirm-key')?.addEventListener('click', confirmPartnerFingerprint);
+  $('chat-recover-own-key')?.addEventListener('click', recoverOwnDeviceKey);
   $('chat-copy-own-key')?.addEventListener('click', () => copyFingerprint('chat-own-fingerprint'));
   $('chat-copy-partner-key')?.addEventListener('click', () => copyFingerprint('chat-partner-fingerprint'));
   $('chat-retry-setup')?.addEventListener('click', () => onChatUnlocked());
@@ -272,9 +274,23 @@ async function bootstrapPrivateChat() {
       ownDeviceKey = existingKey;
     }
 
+    const ownKeyMismatch = Boolean(
+      ownDeviceKey &&
+      ownDeviceKey.key_version === EXPECTED_KEY_VERSION &&
+      ownDeviceKey.algorithm === 'ECDH-P256' &&
+      (ownDeviceKey.fingerprint !== localKey.fingerprint || ownDeviceKey.public_key !== localKey.publicKey)
+    );
+    if (ownKeyMismatch) {
+      // Offer an explicit, server-guarded recovery only for an unused pair.
+      // The chat remains locked until the server accepts a separately guarded rebind.
+      pendingLocalRecoveryKey = localKey;
+      $('chat-key-recovery-note')?.classList.remove('hidden');
+      $('chat-recover-own-key')?.classList.remove('hidden');
+    }
     if (!ownDeviceKey || ownDeviceKey.fingerprint !== localKey.fingerprint ||
         ownDeviceKey.public_key !== localKey.publicKey ||
-        ownDeviceKey.key_version !== EXPECTED_KEY_VERSION) {
+        ownDeviceKey.key_version !== EXPECTED_KEY_VERSION ||
+        ownDeviceKey.algorithm !== 'ECDH-P256') {
       throw new Error('Fingerprint kunci lokal berbeda dari kunci yang tercatat di server. Pengiriman dihentikan; jangan hapus kunci atau mengganti fingerprint secara otomatis.');
     }
 
@@ -354,6 +370,44 @@ async function updateFingerprintPanel(localKey, peerKey) {
   if ($('chat-confirm-key')) $('chat-confirm-key').classList.toggle('hidden', !peerKey || partnerVerified);
   if ($('chat-fingerprint-panel')) $('chat-fingerprint-panel').classList.remove('hidden');
   if ($('chat-key-version')) $('chat-key-version').textContent = 'ECDH P-256 · kunci v' + EXPECTED_KEY_VERSION;
+}
+
+async function recoverOwnDeviceKey() {
+  const localKey = pendingLocalRecoveryKey;
+  const button = $('chat-recover-own-key');
+  if (!appUnlocked || !sessionUser || !pair || !ownDeviceKey || !localKey || !supabase) {
+    messageError('Pemulihan kunci belum siap. Periksa sesi akun dan muat ulang status.');
+    return;
+  }
+
+  const accepted = window.confirm(
+    'PEMULIHAN KUNCI IDENTITAS\n\n' +
+    'Tindakan ini akan mengganti public key akunmu di server dengan kunci yang sedang ada di HP ini. ' +
+    'Server akan menolak pemulihan jika sudah ada pesan atau catatan verifikasi.\n\n' +
+    'Fingerprint lokal baru:\n' + localKey.fingerprint +
+    '\n\nLanjutkan hanya jika kamu memang baru mengganti/membuat ulang kunci dan memahami bahwa fingerprint akan berubah.'
+  );
+  if (!accepted) return;
+
+  if (button) button.disabled = true;
+  try {
+    const { error } = await supabase.rpc('recover_own_device_key_if_unused', {
+      p_pair_id: pair.id,
+      p_public_key: localKey.publicKey,
+      p_fingerprint: localKey.fingerprint,
+    });
+    if (error) throw error;
+
+    pendingLocalRecoveryKey = null;
+    button?.classList.add('hidden');
+    $('chat-key-recovery-note')?.classList.add('hidden');
+    messageError('Catatan kunci server telah diperbarui. Chat tetap terkunci sampai kunci pasangan tersedia dan fingerprint pasangan diverifikasi.');
+    await bootstrapPrivateChat();
+  } catch (error) {
+    messageError('Pemulihan kunci ditolak atau belum tersedia. Server hanya mengizinkan pemulihan jika belum ada pesan dan verifikasi. Pastikan migrasi pemulihan sudah diterapkan. Detail: ' + safeMessage(error));
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 async function confirmPartnerFingerprint() {
