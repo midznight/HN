@@ -22,6 +22,10 @@ let realtimeChannel = null;
 let renderedIds = new Set();
 let isSending = false;
 let pendingLocalRecoveryKey = null;
+let attachmentPickerPending = false;
+let attachmentPickerBackgrounded = false;
+let attachmentPickerResumeTimeout = null;
+const ATTACHMENT_PICKER_RESUME_GRACE_MS = 12000;
 const mediaObjectUrls = new Set();
 
 function messageError(message) {
@@ -87,13 +91,32 @@ export async function initChat() {
     }
   });
   $('chat-send-btn')?.addEventListener('click', sendMessage);
-  $('chat-attach-btn')?.addEventListener('click', () => $('chat-attachment-input')?.click());
+  $('chat-attach-btn')?.addEventListener('click', beginAttachmentPicker);
   $('chat-attachment-input')?.addEventListener('change', async (event) => {
     const picker = event.currentTarget;
-    const file = picker?.files?.[0];
+    const file = picker?.files?.[0] || null;
     if (picker) picker.value = '';
+    finishAttachmentPicker(Boolean(file));
     if (file) await sendMediaFile(file);
   });
+  // Some Android WebViews emit "cancel" without a corresponding empty change event.
+  $('chat-attachment-input')?.addEventListener('cancel', () => finishAttachmentPicker(false));
+
+  // main.js uses this narrow signal to distinguish the system file chooser from a real app switch.
+  // The normal background lock remains active for all other app transitions.
+  window.ourSpaceAttachmentPicker = {
+    isPending: () => attachmentPickerPending,
+    onBackground: () => {
+      if (attachmentPickerPending) attachmentPickerBackgrounded = true;
+    },
+    onForeground: () => {
+      if (!attachmentPickerPending || !attachmentPickerBackgrounded) return;
+      if (attachmentPickerResumeTimeout !== null) window.clearTimeout(attachmentPickerResumeTimeout);
+      attachmentPickerResumeTimeout = window.setTimeout(() => {
+        if (attachmentPickerPending && attachmentPickerBackgrounded) finishAttachmentPicker(false);
+      }, ATTACHMENT_PICKER_RESUME_GRACE_MS);
+    },
+  };
 
   const logoutButton = document.querySelector('#view-profile button.text-red-700');
   logoutButton?.addEventListener('click', async (event) => {
@@ -151,6 +174,38 @@ export async function onChatUnlocked() {
   }
 }
 
+function beginAttachmentPicker() {
+  if (!appUnlocked || !partnerVerified || !sessionUser || isSending) return;
+  const picker = $('chat-attachment-input');
+  if (!picker) return;
+
+  if (attachmentPickerResumeTimeout !== null) window.clearTimeout(attachmentPickerResumeTimeout);
+  attachmentPickerResumeTimeout = null;
+  attachmentPickerPending = true;
+  attachmentPickerBackgrounded = false;
+  picker.value = '';
+  try {
+    // Mark the expected temporary activity switch before launching Android's picker.
+    picker.click();
+  } catch {
+    finishAttachmentPicker(false);
+    messageError('Galeri tidak dapat dibuka. Coba lagi.');
+  }
+}
+
+function clearAttachmentPickerState() {
+  if (attachmentPickerResumeTimeout !== null) window.clearTimeout(attachmentPickerResumeTimeout);
+  attachmentPickerResumeTimeout = null;
+  attachmentPickerPending = false;
+  attachmentPickerBackgrounded = false;
+}
+
+function finishAttachmentPicker(fileSelected) {
+  const shouldRelock = !fileSelected && attachmentPickerPending && attachmentPickerBackgrounded;
+  clearAttachmentPickerState();
+  if (shouldRelock) window.dispatchEvent(new Event('ourspace:attachment-picker-cancelled'));
+}
+
 function clearMediaObjectUrls() {
   document.querySelectorAll('#chat-container video, #chat-container audio').forEach((media) => {
     try { media.pause(); media.removeAttribute('src'); media.load(); } catch { /* best-effort local media release */ }
@@ -160,6 +215,7 @@ function clearMediaObjectUrls() {
 }
 
 export function onChatLocked() {
+  clearAttachmentPickerState();
   clearMediaObjectUrls();
   appUnlocked = false;
   if (realtimeChannel && supabase) {
