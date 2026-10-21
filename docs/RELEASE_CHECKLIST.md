@@ -23,7 +23,7 @@ Status: **kandidat rilis (RC), belum siap rilis produksi** sampai blocker wajib 
 - [ ] Jalankan uji negatif RLS untuk akun di luar pair, recipient yang salah, key fingerprint berbeda, key_version tidak didukung, row/objek ID palsu, dan Storage path lintas pengguna.
 - [x] Audit baca-saja mengonfirmasi bucket `our-space-encrypted-media` `public=false`; policy upload/download mengunci objek ke anggota pasangan dan path `.bin`. Jangan gunakan public URL/signed URL permanen untuk file.
 - [x] Simulasi role `authenticated` dengan subject di luar pair tidak dapat membaca row dari delapan tabel aplikasi. Ini bukan pengganti tes token/jaringan negatif penuh di dua perangkat.
-- [ ] Perbaiki temuan Security Advisor: **Auth Leaked Password Protection masih disabled**; aktifkan di dashboard sebelum rilis publik.
+- [x] Batas Auth ditinjau: **Leaked Password Protection hanya tersedia pada Supabase Pro+** ([dokumen resmi](https://supabase.com/docs/guides/auth/password-security)). Tidak upgrade karena budget Rp0. Catat residual risk untuk penggunaan privat dua akun; sebelum dipakai, verifikasi password kedua akun kuat/unik dan public sign-up off. Warning tetap ada; bukan klaim bahwa fitur telah aktif.
 - [ ] Jangan mengubah atau menghapus key binding, private key, pesan lama, atau membership demi membuat tes lulus.
 
 ## C. Uji dua perangkat Android
@@ -43,7 +43,7 @@ Status: **kandidat rilis (RC), belum siap rilis produksi** sampai blocker wajib 
 ## D. Pengaturan eksternal wajib
 
 - [ ] Google Cloud WIF provider/subject bindings yang membatasi hanya dua identitas telah dikonfigurasi, IAM minimum, dan tiga secrets function valid. Jangan membuat service-account JSON private key sebagai shortcut.
-- [ ] Supabase Auth leaked-password protection diaktifkan/verifikasi.
+- [x] Supabase Free-plan limitation dicatat sebagai residual risk dan tidak menambah biaya. (Password leak-check tidak aktif; lihat keputusan Auth di atas.)
 - [ ] Keystore signing stabil dan nilai secret tersedia pada GitHub Actions. Jangan menyimpan berkas keystore/password di repo.
 
 ## E. Keputusan perilisan

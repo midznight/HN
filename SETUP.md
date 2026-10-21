@@ -43,7 +43,7 @@ Project yang digunakan aplikasi: `sajlpngmpkizwjbarxlj`.
 
 Audit baca-saja mengonfirmasi migrasi untuk chat E2EE, media, push, Brankas, WebRTC, dan anotasi pesan sudah tercatat; tabel aplikasi mengaktifkan RLS; bucket `our-space-encrypted-media` bersifat **private**; uji simulasi subject authenticated di luar pasangan tidak melihat row aplikasi.
 
-**Blocker Auth:** Supabase Security Advisor masih melaporkan **Leaked Password Protection disabled**. Pengaturan ini tidak tersedia melalui konektor yang dipakai saat audit, jadi belum diaktifkan. Aktifkan melalui Supabase Dashboard → Authentication/Security sebelum mengumumkan rilis publik, kemudian jalankan ulang Security Advisor.
+**Residual finding Auth:** Supabase menyatakan Leaked Password Protection hanya tersedia pada paket Pro dan di atas ([dokumen resmi](https://supabase.com/docs/guides/auth/password-security)). Karena batas biaya Rp0, jangan upgrade atau memasukkan metode pembayaran hanya demi menutup warning ini. Untuk deployment privat dua akun, sebelum instalasi pastikan tiap akun memakai password acak yang panjang dan unik, pendaftaran publik dinonaktifkan, dan kredensial tidak dibagikan. Security Advisor akan tetap menampilkan residual warning. Rilis untuk publik umum memerlukan penilaian keamanan/biaya baru; jangan mengklaim warning telah diperbaiki.
 
 Jangan menjalankan ulang migrasi aditif yang sudah diterapkan secara manual atau mengubah data pasangan hanya untuk membuat CI hijau. Sebelum rilis, tetap lakukan uji negatif dengan autentikasi sungguhan dan akun di luar pasangan pada database, Realtime, dan Storage.
 
@@ -69,6 +69,6 @@ Item berikut tidak dapat dinyatakan selesai hanya karena build CI hijau:
 
 ## 7. Definisi siap rilis
 
-Rilis publik baru dapat dinyatakan siap setelah semua hal berikut terbukti: CI/security-contract tests dan audit dependency lulus pada commit final; artefak release bertanda tangan stabil terverifikasi; pengaturan Auth di atas diperbaiki; WIF/FCM dikonfigurasi atau push dinyatakan nonaktif secara eksplisit dalam release notes; QA dua HP termasuk update in-place lulus; dan keterbatasan STUN-only/E2EE didokumentasikan.
+Deployment privat ke dua HP baru dapat diterima setelah CI/security-contract tests dan audit dependency lulus pada commit final; artefak release bertanda tangan stabil terverifikasi; kredensial kedua akun unik/kuat dan sign-up publik dinonaktifkan; push WIF/FCM dikonfigurasi atau dinyatakan nonaktif secara eksplisit; QA dua HP termasuk update in-place lulus; dan keterbatasan STUN-only/E2EE didokumentasikan. Leaked Password Protection adalah fitur Pro+, tidak diaktifkan pada budget Rp0, dan dicatat sebagai residual risk. Status tetap RC hingga QA dua HP dan WIF/push diputuskan.
 
 Saat ini statusnya **release candidate untuk QA akhir**, bukan rilis produksi. Status tersebut sengaja tidak dinaikkan hanya berdasarkan build yang sukses.

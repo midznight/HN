@@ -27,13 +27,13 @@ Pembaruan: 22 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur y
 
 ## Konfigurasi keamanan/Auth
 
-- Supabase Security Advisor melaporkan proteksi password bocor dinonaktifkan. Aktifkan/verifikasi dari Auth settings dashboard sebelum rilis publik. Tool yang tersedia di sesi ini tidak menyediakan kontrol untuk mengubah opsi dashboard tersebut.
+- Supabase Security Advisor melaporkan Leaked Password Protection disabled. Dokumen resmi Supabase menyatakan fitur ini tersedia pada Pro dan di atas ([rujukan resmi](https://supabase.com/docs/guides/auth/password-security)). Karena budget Rp0, jangan upgrade. Untuk app privat dua akun, mitigasinya adalah password random dan unik, nonaktifkan sign-up publik, dan jaga kredensial; warning tetap menjadi residual risk dan bukan diklaim selesai. Rilis publik umum tidak didukung pada konfigurasi/budget saat ini.
 - Advisor info tentang public.push_dispatches RLS tanpa policy sengaja dipertahankan: tabel hanya untuk service role. Jangan menambah policy client untuk menghilangkan peringatan.
 - Tinjau semua migrasi aditif, hasil RLS negative tests, serta secret hygiene sebelum rilis.
 
 ## Temuan Auth dan gerbang APK/rilis
 
-- Supabase Security Advisor masih melaporkan **Leaked Password Protection Disabled**. Koneksi alat yang tersedia hanya dapat mengaudit database dan fungsi; pengaturan Auth tersebut tidak dapat diubah dari jalur ini. Ini blocker yang harus diselesaikan di Supabase Auth dashboard sebelum rilis publik.
+- Supabase Security Advisor masih melaporkan **Leaked Password Protection Disabled**. Menurut [dokumentasi resmi](https://supabase.com/docs/guides/auth/password-security), fitur itu Pro+ dan tidak tersedia di Free. Jangan menaikkan paket untuk proyek dengan budget Rp0. Catat sebagai residual risk; sebelum penggunaan privat pastikan password kedua akun adalah random/unik dengan entropi tinggi dan public sign-up off. Warning tetap belum hilang, dan aplikasi tidak dinyatakan siap untuk rilis publik umum.
 - Workflow Android kini membuat debug dan release APK dengan keystore Actions yang sama, lalu memverifikasi metadata dan kecocokan digest sertifikat. Hasil Actions final pada HEAD terbaru tetap menjadi sumber kebenaran untuk status artefak.
 
 ## Gerbang APK/rilis
