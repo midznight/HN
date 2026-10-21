@@ -4,7 +4,7 @@ on:
     branches: [main, 'phase-1/**', 'phase-2/**']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   build-debug:
     runs-on: ubuntu-latest
@@ -16,14 +16,19 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
       - name: Install pinned dependencies
-        run: npm install --no-audit --no-fund
-      - name: Export resolved dependency lockfile (temporary bootstrap)
-        uses: actions/upload-artifact@v4
-        with:
-          name: our-space-npm-lock-bootstrap
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 1
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+      - name: Commit resolved lockfile to Phase 2 branch (one-time bootstrap)
+        if: github.ref == 'refs/heads/phase-2/e2ee-text-chat'
+        continue-on-error: true
+        run: |
+          if ! git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "build: lock exact npm dependency tree"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
       - name: Run deterministic protocol tests
         run: npm test
       - name: Build bundled web assets
