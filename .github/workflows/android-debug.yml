@@ -227,14 +227,14 @@ jobs:
               f'{indent}    }}\n'
           )
           text = text[:match.start()] + signing + debug + text[match.end():]
-          release_match = re.search(r"(?m)^(\\s*)release\\s*\\{\\s*$", text)
+          release_match = re.search(r"(?m)^(\s*)release\s*\{\s*$", text)
           if not release_match:
               raise SystemExit("Could not find the generated release build type.")
           release_indent = release_match.group(1)
           release_open = release_match.end()
           text = (
               text[:release_open]
-              + "\\n"
+              + "\n"
               + release_indent
               + "    signingConfig signingConfigs.stable"
               + text[release_open:]
