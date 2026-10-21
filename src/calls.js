@@ -8,6 +8,7 @@ import { getPrivateChatContext } from './chat.js';
 const $ = (id) => document.getElementById(id);
 const SIGNAL_TTL_MS = 40_000;
 const CALL_RING_TIMEOUT_MS = 35_000;
+const INCOMING_RING_TIMEOUT_MS = 40_000;
 const ICE_GATHER_TIMEOUT_MS = 9_000;
 const STUN_SERVERS = [{ urls: 'stun:stun.cloudflare.com:3478' }];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -498,6 +499,23 @@ function renderCallHistory(ctx) {
   createIcons({ icons });
 }
 
+async function expireIncomingCall(callId) {
+  const inbound = incomingCall;
+  if (!inbound || inbound.id !== callId) return;
+  incomingCall = null;
+  if (inbound.ringTimer !== null) clearTimeout(inbound.ringTimer);
+  closeCallModal();
+  const ctx = currentContextFrom(inbound);
+  await saveCallRecord(ctx, {
+    id: inbound.id,
+    mode: inbound.mode,
+    direction: 'incoming',
+    connectedAt: null,
+    historySaved: false,
+  }, 'no_answer');
+  if (sameContext(ctx)) await refreshCallHistory();
+}
+
 async function handleSignalRow(row) {
   const ctx = getContext();
   if (!ctx || !row || row.pair_id !== ctx.pairId || row.recipient_id !== ctx.userId ||
@@ -538,7 +556,17 @@ async function handleSignalRow(row) {
         await encryptedSignal(ctx, { type: 'reject', callId: signal.callId, mode: signal.mode });
         return;
       }
-      incomingCall = { id: signal.callId, mode: signal.mode, description: signal.description, context: ctx };
+      incomingCall = {
+        id: signal.callId,
+        mode: signal.mode,
+        description: signal.description,
+        context: ctx,
+        ringTimer: null,
+      };
+      const incomingId = incomingCall.id;
+      incomingCall.ringTimer = setTimeout(() => {
+        void expireIncomingCall(incomingId);
+      }, INCOMING_RING_TIMEOUT_MS);
       showIncoming(incomingCall);
       return;
     }
@@ -560,6 +588,7 @@ async function handleSignalRow(row) {
       if (incomingCall?.id === signal.callId) {
         const ctxForRecord = currentContextFrom(incomingCall);
         const rejected = incomingCall;
+        if (rejected.ringTimer !== null) clearTimeout(rejected.ringTimer);
         incomingCall = null;
         closeCallModal();
         await saveCallRecord(ctxForRecord, {
@@ -576,6 +605,7 @@ async function handleSignalRow(row) {
       if (incomingCall?.id === signal.callId) {
         const ended = incomingCall;
         const ctxForRecord = currentContextFrom(ended);
+        if (ended.ringTimer !== null) clearTimeout(ended.ringTimer);
         incomingCall = null;
         closeCallModal();
         await saveCallRecord(ctxForRecord, {
@@ -764,6 +794,7 @@ async function rejectIncomingCall(outcome = 'rejected') {
   const inbound = incomingCall;
   const ctx = currentContextFrom(inbound);
   if (!inbound) return;
+  if (inbound.ringTimer !== null) clearTimeout(inbound.ringTimer);
   incomingCall = null;
   closeCallModal();
   if (ctx) {
@@ -848,6 +879,7 @@ export function initCalls() {
     onLocked: () => {
       const call = activeCall;
       activeCall = null;
+      if (incomingCall?.ringTimer !== null && incomingCall?.ringTimer !== undefined) clearTimeout(incomingCall.ringTimer);
       incomingCall = null;
       if (call) stopCallResources(call);
       if (signalChannel) supabase.removeChannel(signalChannel).catch(() => {});
