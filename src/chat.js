@@ -361,6 +361,8 @@ function clearMediaObjectUrls() {
 export function onChatLocked() {
   clearAttachmentPickerState();
   closeMediaPreview();
+  window.ourSpaceCalls?.onLocked();
+  window.ourSpaceVault?.onLocked();
   clearMediaObjectUrls();
   appUnlocked = false;
   if (realtimeChannel && supabase) {
@@ -1018,6 +1020,7 @@ async function subscribeToMessages() {
         setConnectionLabel('E2EE tersimpan · live terputus');
       }
     });
+  void window.ourSpaceCalls?.onReady?.().catch((error) => console.warn('Call setup failed', error));
 }
 
 async function sendMediaFile(file) {
