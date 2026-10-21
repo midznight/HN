@@ -2,6 +2,7 @@ import { supabase } from './supabase.js';
 import { OurSpaceKeyStore as KeyStore } from './secure-keys.js';
 import { createMessageId, isSupportedMediaMimeType, MAX_MEDIA_BYTES } from './chat-protocol.js';
 import { getPrivateChatContext } from './chat.js';
+import { createIcons, icons } from 'lucide';
 
 const BUCKET = 'our-space-encrypted-media';
 const $ = (id) => document.getElementById(id);
@@ -458,7 +459,7 @@ function renderItems(items, context) {
     card.append(marker, detail);
     list.appendChild(card);
   }
-  if (window.lucide?.createIcons) window.lucide.createIcons();
+  createIcons({ icons });
 }
 
 async function refreshVault() {
