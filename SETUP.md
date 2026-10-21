@@ -137,7 +137,7 @@ Implementasi berada di branch `phase-2/e2ee-text-chat`. Lihat [docs/PHASE2_E2EE.
 
 - Gunakan APK Android API 23 atau lebih baru. API 31+ menggunakan ECDH di Android Keystore; API 23–30 memakai private key P-256 yang dibungkus AES-GCM di native code. Jangan menyimpan private key plaintext di Preferences atau JavaScript.
 - Pastikan kedua user Auth sudah dibuat di project Supabase yang sama. Nonaktifkan pendaftaran publik dan seed persis satu baris pasangan beserta dua membership admin-only sesuai UUID dari Auth Users.
-- Jalankan migration `supabase/migrations/20261021010159_phase2_e2ee_text_chat.sql` setelah project berstatus ACTIVE. Jangan menjalankan script seed dengan placeholder.
+- Jalankan migration `supabase/migrations/20261021014018_phase2_e2ee_text_chat.sql` setelah project berstatus ACTIVE. Jangan menjalankan script seed dengan placeholder.
 - Login dari HP masing-masing menggunakan akun miliknya sendiri. Jangan menempelkan password/token/private key pada repo, log CI, issue, atau chat.
 - Bandingkan seluruh fingerprint 64 karakter melalui kanal independen. Tombol konfirmasi bukan bukti cryptographic dengan sendirinya; jika tidak sama, berhenti dan jangan kirim pesan.
 - Sebelum menulis E2EE “lulus”, uji pengiriman dua arah, manipulasi ciphertext/metadata, akun ketiga/RLS, lock saat background, dan reopen setelah relock.

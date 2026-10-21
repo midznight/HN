@@ -33,7 +33,7 @@ Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path me
 ## Urutan rollout dan status
 
 1. [x] CI #124: dependency audit, deterministic tests, Vite build, Capacitor sync, Gradle APK assembly dan upload artifact sukses; tree-nya identik dengan merge commit utama.
-2. [x] Migration `supabase/migrations/20261021170000_phase3_encrypted_media.sql` diterapkan ke project `sajlpngmpkizwjbarxlj`.
+2. [x] Migration `supabase/migrations/20261021102710_phase3_encrypted_media.sql` diterapkan ke project `sajlpngmpkizwjbarxlj`.
 3. [x] Read-only check: bucket private, limit 4 MiB, MIME generik, constraint `message_type` dan policy Storage terpasang.
 4. [x] PR #8 menambahkan regression test untuk memastikan hasil decrypt tidak dirender setelah app lock.
 5. [x] APK pasca-merge dibuat; sertifikat penandatanganannya cocok dengan baseline API 30 yang diperiksa.
