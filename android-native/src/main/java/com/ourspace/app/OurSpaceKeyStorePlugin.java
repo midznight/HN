@@ -63,6 +63,7 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
     private static final byte[] IDENTITY_WRAP_AAD = "our-space/device-identity/pkcs8/v1".getBytes(StandardCharsets.UTF_8);
     private static final String SESSION_ALIAS = "our-space.session-storage.aes.v1";
     private static final int KEY_VERSION = 1;
+    private static final int ECDH_SECRET_BYTES = 32;
     private static final int MAX_PLAINTEXT_BYTES = 16 * 1024;
     private static final int GCM_NONCE_BYTES = 12;
     private static final int GCM_TAG_BITS = 128;
@@ -516,7 +517,19 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         KeyAgreement agreement = KeyAgreement.getInstance("ECDH");
         agreement.init(privateKey);
         agreement.doPhase(peerPublicKey, true);
-        return agreement.generateSecret();
+        byte[] rawSecret = agreement.generateSecret();
+        try {
+            // ECDH implementations can differ in whether they retain leading zero bytes.
+            // P-256's shared x-coordinate is always represented as exactly 32 bytes before HKDF.
+            if (rawSecret.length == 0 || rawSecret.length > ECDH_SECRET_BYTES) {
+                throw new GeneralSecurityException("ECDH provider returned an invalid P-256 secret length.");
+            }
+            byte[] normalized = new byte[ECDH_SECRET_BYTES];
+            System.arraycopy(rawSecret, 0, normalized, ECDH_SECRET_BYTES - rawSecret.length, rawSecret.length);
+            return normalized;
+        } finally {
+            clear(rawSecret);
+        }
     }
 
     private static byte[] deriveMessageKey(byte[] sharedSecret, String pairId, String senderId, String recipientId, int keyVersion) throws GeneralSecurityException {
