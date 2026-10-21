@@ -10,7 +10,7 @@ Status diperbarui: 21 Oktober 2026. Status “teruji pengguna” berarti penggun
 | Android 12/API 31+ | Tersedia | Private key ECDH P-256 non-exportable melalui Android Keystore. |
 | Android 11/API 30 | Teruji pengguna untuk chat teks | Fallback membungkus private key P-256 dengan AES-GCM dan kunci AES Android Keystore. Perlindungan terhadap compromise proses lebih lemah daripada API 31+. |
 | Pemulihan binding fingerprint | Terbatas | Hanya jika pair belum punya pesan/verifikasi; tidak dapat memulihkan private key yang hilang. |
-| Lampiran gambar/video/audio E2EE | Kandidat uji; kode merged dan CI lulus | Maksimal 3 MiB per file, Storage privat; masih menunggu uji kirim/terima dan simpan pada kedua HP. |
+| Lampiran gambar/video/audio E2EE | Implementasi merged; penerimaan parsial | Picker kembali tanpa PIN ulang dan file pilihan bertahan telah dikonfirmasi pengguna. Pengiriman/dekripsi dua arah, semua tipe media, batas/error, dan penyimpanan lokal masih menunggu validasi. |
 | Rekam voice note/video note | Belum | Tidak termasuk milestone lampiran saat ini; pemilih hanya mengirim file yang sudah ada. |
 | Notifikasi push FCM | Belum (Fase 4) | Payload rencana harus generik, tanpa plaintext. Menunggu penerimaan Fase 3. |
 | Panggilan WebRTC | Belum (Fase 5) | Memerlukan signaling/TURN dan tes background OEM. |
