@@ -1,35 +1,42 @@
 # Blockers — Our Space
 
-Pembaruan: 21 Oktober 2026.
+Pembaruan: 21 Oktober 2026. Jangan menyamakan kode yang sudah ada dengan fitur yang sudah diuji dan siap rilis.
 
-## Blocker aktivasi Fase 4
+## Blocker Fase 4 — push notification
 
-- Firebase Android config sudah tersedia: CI #171 memvalidasi `FIREBASE_ANDROID_CONFIG_BASE64`, project ID `chatmidnur`, dan package `com.ourspace.app`. Build APK berisi konfigurasi client Firebase.
-- Penghambat autentikasi: PR #22 menghapus kebutuhan `FCM_SERVICE_ACCOUNT_JSON` dan menambahkan WIF. Pool/provider OIDC, dua subject binding, dan tiga Edge Function secrets belum disiapkan; fungsi produksi versi 2 sudah memakai implementasi WIF dan fail-closed.
-- Migration Fase 4 sudah diterapkan pada project Supabase sajlpngmpkizwjbarxlj; Edge Function send-chat-push aktif dengan verifikasi JWT wajib. PR #18, CI #152, dan CI pasca-merge #153 sukses.
-- CI #171 lulus penuh. PR #22 sudah digabung ke `phase-2/e2ee-text-chat`; Edge Function `send-chat-push` versi 2 sudah dideploy dengan `verify_jwt=true`. Probe tetap `ready=false` sampai konfigurasi WIF dan tiga secret server valid. Firebase Android client sudah siap.
-- Pengujian negatif wajib: izin Android ditolak, token expired, salah project ID, function tidak tersedia, jaringan gagal, notifikasi ganda, tap saat PIN gate aktif, dan token dicabut saat logout.
+- Supabase Edge Function send-chat-push aktif dengan verifikasi JWT wajib dan perilaku fail-closed.
+- Google Workload Identity Federation belum lengkap: pool/provider OIDC, binding subject untuk dua akun, dan secrets function wajib divalidasi.
+- Konfirmasi readiness endpoint dan uji token nyata belum selesai.
+- Wajib tes izin Android ditolak, token kedaluwarsa, project ID salah, function/network gagal, duplikasi notifikasi, buka saat PIN gate aktif, dan revoke saat logout.
+- Jangan menurunkan syarat subject condition atau membuat service-account JSON private key untuk melewati blocker.
 
-## Fase 3
+## Blocker Fase 5 — panggilan
 
-Pengguna menyatakan Fase 3 aman pada 21 Oktober 2026 dan proyek boleh berlanjut. Status catatan mengikuti penerimaan pengguna; bukan klaim audit keamanan independen.
+- Implementasi WebRTC/signaling E2EE ada di branch implementasi, tetapi CI terbaru dan uji dua perangkat wajib lulus.
+- Konfigurasi hanya memakai STUN saat ini; panggilan dapat gagal pada symmetric NAT, firewall, jaringan seluler tertentu, atau kondisi yang memerlukan TURN. Jangan klaim konektivitas universal.
+- Panggilan masuk ketika aplikasi tertutup belum didukung; lifecycle mengakhiri sesi saat lock.
+- Uji dua HP perlu mencakup izin mic/kamera ditolak, answer/reject/timeout, audio/video, mute, lost connection, lock/background, dan potensi sinyal/riwayat ganda.
+- Jika implementasi tidak stabil, nonaktifkan tombol panggilan secara fail-closed tanpa mengganggu chat teks.
 
-## Tidak boleh dilakukan untuk mengatasi blocker
+## Blocker Fase 6 — Brankas
 
-- Jangan hapus row `device_keys`, `key_verifications`, atau `messages` untuk membuat UI “lolos”.
-- Jangan publikasikan bucket, unggah file asli, atau menaruh plaintext/kunci di log.
-- Jangan menyarankan uninstall untuk update rutin.
-- Jangan mengaktifkan layanan berbayar atau meminta kartu kredit.
+- Migrasi vault_items dan publikasi Realtime telah diterapkan ke project Supabase sajlpngmpkizwjbarxlj; RLS aktif dan objek tetap berada di bucket privat.
+- CI terbaru dan upload → list → open/decrypt → delete harus diuji di kedua HP. Pastikan picker file Android tidak memicu relock yang menghilangkan seleksi.
+- Pembersihan object ciphertext yang gagal dapat meninggalkan orphan; status UI menyatakan keterbatasan itu. Jangan mengklaim penghapusan fisik pasti jika Storage gagal.
 
-Fase 3 diterima pengguna pada 21 Oktober 2026. Blocker aktif adalah konfigurasi WIF dan Firebase Android client, pengujian autentikasi Google nyata, serta uji push dua arah.
+## Konfigurasi keamanan/Auth
 
-## Jalur keyless yang sedang disiapkan
+- Supabase Security Advisor melaporkan proteksi password bocor dinonaktifkan. Aktifkan/verifikasi dari Auth settings dashboard sebelum rilis publik. Tool yang tersedia di sesi ini tidak menyediakan kontrol untuk mengubah opsi dashboard tersebut.
+- Advisor info tentang public.push_dispatches RLS tanpa policy sengaja dipertahankan: tabel hanya untuk service role. Jangan menambah policy client untuk menghilangkan peringatan.
+- Tinjau semua migrasi aditif, hasil RLS negative tests, serta secret hygiene sebelum rilis.
 
-- Panduan: `docs/FCM-WORKLOAD-IDENTITY.md`.
-- Google service account tetap perlu dibuat dengan hak FCM minimum, tetapi tidak ada JSON key yang dibuat.
-- Jangan melonggarkan provider condition; hanya UUID dua akun privat yang boleh lolos.
-- Kode runtime dideploy tetapi pertukaran token Google belum diuji karena pool/provider, IAM bindings dan secrets belum dikonfigurasi. Jangan menyatakan push aktif sebelum probe token dan uji kedua HP berhasil.
+## Gerbang APK/rilis
 
-- Pemeriksaan Supabase sesudah deploy: `send-chat-push` berstatus ACTIVE, versi 2, `verify_jwt=true`. Kode tidak lagi membaca `FCM_SERVICE_ACCOUNT_JSON`; konfigurasi kosong akan membuat push tetap nonaktif.
+- Keystore signing stabil harus tersedia di GitHub Actions Secrets. Jangan membuat signature sementara untuk update kepada dua HP yang sudah menyimpan key/pesan.
+- Build APK terbaru dan pemasangan update tanpa uninstall belum diverifikasi pada perangkat.
+- Tidak ada uji OEM/Android aktual yang bisa dilakukan dari CI; artifact harus dipasang dan diuji sebelum rilis final.
+- Jangan reset pair, device_keys, key_verifications, private key atau pesan untuk mengatasi error.
 
-- Google Cloud resource setup belum dilakukan karena tool koneksi Google Cloud write tidak tersedia; browser automation berhenti sebelum berjalan karena TinyFish wallet negatif (−US$0,264). Tidak ada biaya/top-up yang dilakukan. Ini blocker akses otomasi, bukan error kode.
+## Batas biaya
+
+Gunakan free tier yang sudah aktif; jangan provision layanan berbayar, membeli credit atau meminta kartu kredit. TURN relay dengan charge per GB tidak diaktifkan karena batas anggaran Rp0.
