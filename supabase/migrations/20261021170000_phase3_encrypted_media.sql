@@ -36,6 +36,8 @@ create policy "our space media members can download encrypted objects"
       where pm.pair_id::text = (storage.foldername(name))[1]
         and pm.user_id = (select auth.uid())
     )
+    and array_length(storage.foldername(name), 1) = 2
+    and right(name, 4) = '.bin'
   );
 
 drop policy if exists "our space verified members can upload encrypted objects" on storage.objects;
@@ -66,6 +68,7 @@ create policy "our space verified members can upload encrypted objects"
         and peer_key.algorithm = 'ECDH-P256'
     )
     and array_length(storage.foldername(name), 1) = 2
+    and right(name, 4) = '.bin'
   );
 
 drop policy if exists "our space media senders can delete their own encrypted objects" on storage.objects;
@@ -82,6 +85,8 @@ create policy "our space media senders can delete their own encrypted objects"
       where pm.pair_id::text = (storage.foldername(name))[1]
         and pm.user_id = (select auth.uid())
     )
+    and array_length(storage.foldername(name), 1) = 2
+    and right(name, 4) = '.bin'
   );
 
 comment on constraint messages_message_type_check on public.messages is
