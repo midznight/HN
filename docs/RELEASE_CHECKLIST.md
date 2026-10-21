@@ -25,6 +25,9 @@ Status: **belum siap rilis produksi** sampai blocker wajib ditutup. Checklist in
 - [ ] Upgrade APK in-place pada kedua HP tanpa uninstall; tanda tangan harus identik dan pesan/fingerprint lama tetap tersedia.
 - [ ] Login PIN dan buka ke Obrolan; uji lock/unlock, aplikasi masuk background, Android Back, keyboard dan safe area.
 - [ ] Chat E2EE dua arah, reconnect, offline/error, pesan gagal didekripsi, dan perbedaan fingerprint.
+- [ ] Voice note: izin mikrofon grant/deny, stop manual/limit durasi/limit 3 MiB, preview/cancel/confirm, lock selama rekaman dan sinkronisasi file audio ke perangkat pasangan.
+- [ ] Reaksi emoji: tambah/toggle, dua pengguna pada emoji yang sama, reaksi lintas perangkat/reconnect, pesan media, lock ketika request in-flight, invalid ciphertext dan tabel annotation tanpa plaintext.
+- [ ] Balasan: pilih target teks/media, batal pemilihan reply, kirim balasan, klik kutipan ke pesan target, gagal tulis annotation, dan target yang tidak lagi dimuat.
 - [ ] Picker gambar/video/audio: pemilihan → pratinjau → Kirim; Batal tidak mengirim; file tetap dipilih sesudah kembali dari galeri; batas 3 MiB dan tipe yang ditolak.
 - [ ] Brankas: pilih file, pratinjau, simpan, lihat dari HP pasangan, buka/dekripsi, tutup viewer, hapus, koneksi gagal, picker dibatalkan, app terkunci selama operasi. Verifikasi tidak ada plaintext/metadata file di database.
 - [ ] Panggilan audio/video: permission grant/deny, answer/reject, timeout, mute/camera, speaker/audio routing, network loss, app lock/background, stop mic/kamera, history card dan sinyal ganda.
