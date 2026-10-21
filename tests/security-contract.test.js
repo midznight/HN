@@ -44,6 +44,9 @@ test('native implementation keeps ECDH private key inside Android Keystore', () 
   assert.match(native, /KeyAgreement\.getInstance\("ECDH"\)/);
   assert.match(native, /AES\/GCM\/NoPadding/);
   assert.match(native, /HmacSHA256/);
+  assert.match(native, /deriveMessageKey\(sharedSecret, pairId, senderId, recipientId, version\)/);
+  assert.match(native, /aes-256-gcm\/v1\/" \+ pairId \+ "\/" \+ senderId \+ "\/" \+ recipientId/);
+  assert.match(native, /clear\(plainBytes\);/);
   assert.match(native, /cipher\.updateAAD\(associatedData/);
   assert.doesNotMatch(native, /privateKey\.getEncoded\(/);
   assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.S/);
