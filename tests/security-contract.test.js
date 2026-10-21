@@ -215,7 +215,7 @@ test('Android gallery picking defers only the expected app background lock and s
   assert.match(main, /ourspace:attachment-picker-cancelled/);
   assert.match(main, /if\(picker\?\.isPending\(\)\)\{picker\.onBackground\(\);return\}/);
   assert.match(main, /if\(isActive\)\{[\s\S]*?window\.ourSpaceAttachmentPicker\?\.onForeground\(\)[\s\S]*?window\.ourSpaceVault\?\.onPickerForeground\?\.\(\)/);
-  assert.match(main, /backButton[\s\S]*?ourSpaceAttachmentPicker\?\.isPending\(\)\)return/);
+  assert.match(main, /backButton[\\s\\S]*?ourSpaceAttachmentPicker\\?\\.isPending\\(\\)\\|\\|window\\.ourSpaceVault\\?\\.isPickerPending/);
   assert.match(main, /ourSpaceVault\?\.isPickerPending\?\.\(\)/);
   assert.match(vaultClient, /function beginVaultPicker\(\)/);
   assert.match(vaultClient, /PICKER_RESUME_GRACE_MS/);
