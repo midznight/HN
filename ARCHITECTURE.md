@@ -127,9 +127,10 @@ Fase 0 tidak mengubah UI/kode fitur, tidak menjalankan migrasi, tidak membuat ak
 
 ## 7. Status implementasi (21 Oktober 2026)
 
-- Fase 1: sumber kerangka Capacitor/PIN ada pada `phase-1/capacitor-offline-shell`; build APK CI pernah sukses dan pengguna melaporkan telah menguji aplikasi pada HP.
-- Fase 2: kode sumber native Keystore/E2EE, UI login/fingerprint, validasi pesan, migration SQL dan dokumentasi tersedia pada `phase-2/e2ee-text-chat`. Migration belum dianggap terpasang hanya karena file SQL committed.
-- Algoritma saat ini: ECDH P-256 melalui Android Keystore (API 31+), HKDF-HMAC-SHA-256, AES-256-GCM dengan nonce random 96-bit dan AAD yang mengikat pair ID, message ID, sender, recipient, key version, serta tipe pesan.
-- Auth session disegel dengan AES-256-GCM menggunakan key lain di Android Keystore. JavaScript menerima plaintext hanya untuk render lokal dan tidak mengirim plaintext ke database.
-- Database design menerapkan RLS untuk membership, public key, verifikasi fingerprint, dan append-only ciphertext message. Akun third-party belum dibuktikan dengan tes nyata.
-- Batasan belum terselesaikan: tidak ada Double Ratchet/forward secrecy, multi-device, key recovery/rotation otomatis, media, push, atau call. Jangan menyatakan setara dengan messenger audited.
+- **Fase 1 — baseline stabil:** APK Capacitor/PIN tersedia dan telah diuji pada perangkat pengguna.
+- **Fase 2 — chat teks E2EE:** merged ke branch `phase-2/e2ee-text-chat`. Pengguna mengonfirmasi pengiriman dua arah bekerja di kedua HP, aplikasi tetap menjaga fingerprint setelah ditutup/dibuka, dan Android 11/API 30 bisa chat. Build CI #73 sukses.
+- **Model kunci:** API 31+ memakai private ECDH P-256 non-exportable di Android Keystore. API 23–30 membungkus private key P-256 dengan AES-GCM memakai AES key Android Keystore; privasi at-rest dipertahankan, tetapi perlindungan terhadap compromise proses lebih lemah daripada API 31+.
+- **Fase 3 — implementasi awal media terenkripsi:** branch `phase-3/encrypted-media`. Memilih file gambar/video/audio hingga 3 MiB; native mengenkripsi file dan metadata menggunakan ECDH P-256/HKDF-SHA-256/AES-256-GCM; Supabase Storage dibuat privat; preview/save tetap lokal sesudah dekripsi. **Belum selesai diterima** sampai CI, migration produksi, dan uji nyata antarperangkat berhasil.
+- **Cakupan Fase 3 belum termasuk:** perekaman voice note/video note, pemilih galeri native khusus, kompresi/progress byte yang presisi, dan pembersihan orphan melalui operasi admin. Saat ini file dipilih melalui picker Android dan ukuran dibatasi 3 MiB.
+- **Backend:** Supabase Free project `sajlpngmpkizwjbarxlj`. Migration Fase 3 masih berupa kode di branch dan belum dianggap aktif di produksi. Dua pesan teks yang sudah ada tidak boleh dihapus/diubah saat rollout.
+- **Batasan keamanan tetap berlaku:** tidak ada Double Ratchet/forward secrecy atau multi-device. Private key ECDH statis yang bocor bisa mengancam ciphertext lama yang tersedia. Jangan menyatakan setara dengan messenger audited tanpa audit independen dan tes akun ketiga/RLS.
