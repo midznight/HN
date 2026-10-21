@@ -1361,7 +1361,7 @@ function updateComposerState() {
   if ($('chat-send-btn')) $('chat-send-btn').disabled = !enabled || isSending;
   if ($('chat-attach-btn')) $('chat-attach-btn').disabled = !enabled || isSending;
   if ($('chat-attachment-input')) $('chat-attachment-input').disabled = !enabled || isSending;
-  if ($('chat-record-btn')) $('chat-record-btn').disabled = !enabled || isSending || voiceRecordingStarting || (!voiceRecordingSession && typeof MediaRecorder !== 'function');
+  if ($('chat-record-btn')) $('chat-record-btn').disabled = !enabled || isSending || voiceRecordingStarting;
   if ($('chat-audio-call')) $('chat-audio-call').disabled = !enabled || isSending;
   if ($('chat-video-call')) $('chat-video-call').disabled = !enabled || isSending;
   if ($('chat-message-input')) $('chat-message-input').placeholder = enabled ? 'Ketik pesan terenkripsi…' : 'Verifikasi fingerprint untuk mulai chat';
