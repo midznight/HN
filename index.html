@@ -99,6 +99,13 @@
         }
     .ambient-backdrop{background:radial-gradient(ellipse at 12% 10%,rgba(210,190,161,.44),transparent 42%),radial-gradient(ellipse at 85% 70%,rgba(28,28,30,.10),transparent 40%),linear-gradient(135deg,#f8f5f0,#ebe5dd)}.mac-glass,.mac-glass-solid{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}body{min-height:100dvh;height:100dvh;padding-top:env(safe-area-inset-top,0px)}#app-layout{height:calc(100dvh - env(safe-area-inset-top,0px))}#login-screen{padding:max(16px,env(safe-area-inset-top,0px)) 16px max(16px,env(safe-area-inset-bottom,0px))}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}.no-blur .mac-glass,.no-blur .mac-glass-solid,.no-blur #login-screen{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 /* Our Space visual refresh — Fase 0.5, presentation layer only */
+/* Preview dialog: local-only media review; no upload until explicit confirmation */
+#media-preview-modal{overscroll-behavior:contain}
+#media-preview-frame img,#media-preview-frame video{display:block;max-width:100%;max-height:52dvh;object-fit:contain;margin:auto}
+#media-preview-frame audio{width:100%;padding:12px}
+#media-preview-cancel:focus-visible,#media-preview-send:focus-visible{outline:3px solid #d98796;outline-offset:3px}
+@media(max-width:767px){#media-preview-modal{padding:0}#media-preview-modal>section{max-height:94dvh}#media-preview-frame{margin:14px 16px;min-height:120px}}
+
 /* Relationship card intentionally avoids a fabricated anniversary date */
 #view-home>div:nth-child(2)>div:first-child{
  background:radial-gradient(circle at 86% 18%,rgba(255,255,255,.20),transparent 30%),linear-gradient(135deg,#a64e63 0%,#c96c7c 52%,#e39b91 100%)!important;
@@ -218,48 +225,25 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
         <!-- DESKTOP SIDEBAR / MOBILE BOTTOM NAV -->
         <nav class="mac-glass rounded-none sm:rounded-[22px] md:w-20 lg:w-64 flex md:flex-col justify-around md:justify-start items-center md:items-start p-2 md:p-4 lg:p-5 z-50 order-2 md:order-1 shrink-0 pb-safe shadow-xl">
-            
-            <!-- Window Controls (Traffic Lights) - Desktop Only -->
-            <div class="hidden md:flex items-center gap-2 mb-6 w-full px-2">
-                <div class="w-3 h-3 rounded-full bg-[#FF5F56] border border-black/10"></div>
-                <div class="w-3 h-3 rounded-full bg-[#FFBD2E] border border-black/10"></div>
-                <div class="w-3 h-3 rounded-full bg-[#27C93F] border border-black/10"></div>
+            <div class="nav-brand hidden md:flex items-center gap-3 mb-6 w-full px-2">
+                <img src="/assets/brand-mark.svg" alt="" class="w-9 h-9 rounded-xl">
+                <span class="hidden lg:block font-serif text-lg text-[#9e3e54]">Our Space</span>
             </div>
-
-            <div class="hidden lg:flex items-center gap-3 mb-4 w-full px-2">
-                <h2 class="font-semibold text-[10px] text-gray-500 tracking-widest uppercase">WORKSPACE</h2>
-            </div>
-
-            <!-- Nav Items -->
-            <button onclick="switchView('home')" class="nav-item active flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group">
-                <i data-lucide="layout-grid" class="w-5 h-5 md:w-4 md:h-4 text-blue-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Dashboard</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-            
-            <button onclick="switchView('chat')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="message-square" class="w-5 h-5 md:w-4 md:h-4 text-green-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Messages</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-            
-            <button onclick="switchView('calls')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="video" class="w-5 h-5 md:w-4 md:h-4 text-emerald-600"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">FaceTime</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-
-            <button onclick="switchView('storage')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group mt-0 md:mt-1">
-                <i data-lucide="folder" class="w-5 h-5 md:w-4 md:h-4 text-amber-500"></i>
-                <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Drive</span>
-                <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
-            </button>
-
-            <div class="md:mt-auto w-full pt-2 md:border-t border-white/20">
-                <button onclick="switchView('profile')" class="nav-item flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2.5 md:p-2.5 w-full rounded-xl text-gray-600 hover:bg-white/50 transition relative group">
-                    <i data-lucide="settings" class="w-5 h-5 md:w-4 md:h-4 text-gray-500"></i>
-                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Settings</span>
-                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-gray-400 rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+            <div class="nav-primary flex md:flex-col justify-around md:justify-start items-stretch md:items-stretch gap-1 w-full">
+                <button type="button" onclick="switchView('chat')" class="nav-item active flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Obrolan">
+                    <i data-lucide="message-circle" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Obrolan</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+                </button>
+                <button type="button" onclick="switchView('home')" class="nav-item flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Kita">
+                    <i data-lucide="heart" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Kita</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
+                </button>
+                <button type="button" onclick="switchView('storage')" class="nav-item flex flex-1 md:flex-none flex-col md:flex-row items-center justify-center gap-1 md:gap-3 p-2.5 md:p-3 min-h-12 w-full rounded-2xl text-gray-600 hover:bg-white/60 transition relative group" aria-label="Brankas">
+                    <i data-lucide="lock-keyhole" class="w-5 h-5 md:w-4 md:h-4 text-[#c65e70]"></i>
+                    <span class="text-[10px] md:text-sm font-medium lg:block md:hidden">Brankas</span>
+                    <div class="nav-indicator absolute bottom-0 md:bottom-auto md:left-0 w-1 h-1 md:w-1 md:h-4 bg-[#c65e70] rounded-full opacity-0 transition-all scale-0 hidden md:block"></div>
                 </button>
             </div>
         </nav>
@@ -268,14 +252,15 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
         <main class="flex-1 flex flex-col h-full min-w-0 mac-glass-solid rounded-none sm:rounded-[22px] shadow-2xl relative order-1 md:order-2 overflow-hidden bg-white/90">
             
             <!-- HOME VIEW -->
-            <div id="view-home" class="app-view active flex-col h-full overflow-y-auto custom-scrollbar">
+            <div id="view-home" class="app-view flex-col h-full overflow-y-auto custom-scrollbar">
                 <div class="mac-glass sticky top-0 z-20 px-6 sm:px-8 py-4 border-b border-white/60 flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight">Ruang Privat Berdua</h2>
+                        <p class="text-[10px] uppercase tracking-[.22em] text-[#9e3e54] font-semibold mb-1">Ruang kecil kita</p>
+                        <h2 class="text-lg sm:text-xl font-semibold text-gray-900 tracking-tight">Kita</h2>
                         <p class="text-[11px] sm:text-xs text-gray-500 mt-0.5">Tempat kecil untuk Hamid & Nur.</p>
                     </div>
-                    <button class="p-2 bg-white/50 text-gray-700 rounded-full hover:bg-white border border-white/60 shadow-sm transition">
-                        <i data-lucide="bell" class="w-4 h-4"></i>
+                    <button id="kita-settings-btn" type="button" onclick="switchView('profile')" aria-label="Buka pengaturan" title="Pengaturan" class="p-3 min-w-12 min-h-12 bg-white/70 text-[#9e3e54] rounded-2xl hover:bg-white border border-[#eedbd8] shadow-sm transition">
+                        <i data-lucide="settings-2" class="w-5 h-5"></i>
                     </button>
                 </div>
 
@@ -374,7 +359,7 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
             </div>
 
             <!-- CHAT VIEW -->
-            <div id="view-chat" class="app-view flex-col h-full bg-surface-bg relative">
+            <div id="view-chat" class="app-view active flex-col h-full bg-surface-bg relative">
                 <header class="mac-glass h-[70px] border-b border-gray-100 flex items-center justify-between px-4 sm:px-6 z-20 shrink-0 bg-white/90">
                     <div class="flex items-center gap-3">
                         <div class="relative">
@@ -388,8 +373,8 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
                     </div>
 
                     <div class="flex items-center gap-2 text-surface-muted">
-                        <button class="p-2 hover:bg-gray-100 hover:text-brand-500 rounded-full transition-colors"><i data-lucide="phone" class="w-4 h-4"></i></button>
-                        <button class="p-2 hover:bg-gray-100 hover:text-brand-500 rounded-full transition-colors"><i data-lucide="video" class="w-4 h-4"></i></button>
+                        <button id="chat-audio-call" type="button" disabled aria-label="Panggilan suara belum aktif" title="Panggilan suara belum aktif" class="p-3 min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] opacity-60 cursor-not-allowed"><i data-lucide="phone" class="w-5 h-5"></i></button>
+                        <button id="chat-video-call" type="button" disabled aria-label="Panggilan video belum aktif" title="Panggilan video belum aktif" class="p-3 min-w-12 min-h-12 rounded-2xl bg-[#fcece8] text-[#9e3e54] opacity-60 cursor-not-allowed"><i data-lucide="video" class="w-5 h-5"></i></button>
                     </div>
                 </header>
 
@@ -565,6 +550,31 @@ button{transition:background-color .18s ease,border-color .18s ease,transform .1
 
     </div>
 
+    <div id="media-preview-modal" class="hidden fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-[#34292b]/55 p-3 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="media-preview-title" aria-describedby="media-preview-description">
+      <section class="w-full max-w-lg max-h-[92dvh] overflow-y-auto rounded-t-[30px] sm:rounded-[30px] border border-[#eedbd8] bg-[#fffdfb] shadow-2xl">
+        <div class="p-5 sm:p-6 border-b border-[#eedbd8]">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-semibold tracking-[.2em] uppercase text-[#9e3e54] mb-1">Privasi sebelum berbagi</p>
+              <h2 id="media-preview-title" class="font-serif text-xl sm:text-2xl text-[#34292b]">Periksa sebelum mengirim</h2>
+              <p id="media-preview-description" class="text-sm text-[#76656a] mt-1">Media belum dikirim. Pastikan pilihanmu benar sebelum melanjutkan.</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-[#fcece8] px-3 py-1 text-[10px] font-semibold text-[#9e3e54]">PRATINJAU</span>
+          </div>
+        </div>
+        <div id="media-preview-frame" class="m-4 sm:m-5 min-h-40 rounded-2xl bg-[#f8efeb] overflow-hidden flex items-center justify-center"></div>
+        <div class="px-5 sm:px-6 pb-4">
+          <p id="media-preview-name" class="font-medium text-sm text-[#34292b] break-words"></p>
+          <p id="media-preview-meta" class="text-xs text-[#76656a] mt-1"></p>
+          <p id="media-preview-error" class="hidden text-sm text-red-700 bg-red-50 rounded-xl p-3 mt-3" role="status" aria-live="polite"></p>
+          <p class="text-xs text-[#76656a] leading-relaxed mt-3">File akan dienkripsi di perangkat sebelum diunggah. Batal akan menutup pratinjau tanpa mengirim.</p>
+        </div>
+        <div class="flex gap-3 p-5 sm:px-6 border-t border-[#eedbd8]">
+          <button id="media-preview-cancel" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl border border-[#e8cdd0] bg-white font-medium text-[#9e3e54]">Batal</button>
+          <button id="media-preview-send" type="button" class="flex-1 min-h-12 px-4 py-3 rounded-2xl bg-[#c65e70] font-semibold text-white disabled:opacity-50">Kirim media</button>
+        </div>
+      </section>
+    </div>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
