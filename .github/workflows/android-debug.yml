@@ -1,7 +1,7 @@
 name: Build Our Space Android Debug APK
 on:
   push:
-    branches: [main, 'phase-1/**']
+    branches: [main, 'phase-1/**', 'phase-2/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,15 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: {node-version: '20'}
+        with: {node-version: '22'}
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
       - name: Install pinned dependencies
         run: npm install --no-audit --no-fund
+      - name: Run deterministic protocol tests
+        run: npm test
       - name: Build bundled web assets
         run: npm run build
       - name: Generate Android project and sync Capacitor
         run: npx cap add android && npx cap sync android
+      - name: Inject maintained native Keystore plugin
+        run: |
+          mkdir -p android/app/src/main/java/com/ourspace/app
+          cp android-native/src/main/java/com/ourspace/app/OurSpaceKeyStorePlugin.java android/app/src/main/java/com/ourspace/app/
+          cp android-native/src/main/java/com/ourspace/app/MainActivity.java android/app/src/main/java/com/ourspace/app/
       - name: Assemble debug APK
         working-directory: android
         run: ./gradlew --no-daemon assembleDebug
