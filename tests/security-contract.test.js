@@ -475,7 +475,7 @@ test('Phase 6 vault stores only encrypted metadata and enforces two-member verif
   assert.match(vaultClient, /currentContext\(context\)/);
   assert.match(vaultClient, /function validateMetadata\(/);
   assert.match(vaultClient, /function openPreview\(/);
-  assert.match(vaultClient, /$('vault-preview-send')\?\.addEventListener\('click'/);
+  assert.match(vaultClient, /vault-preview-send[\s\S]*?addEventListener\('click'/);
   assert.doesNotMatch(vaultClient, /\.createSignedUrl\(/);
 });
 
