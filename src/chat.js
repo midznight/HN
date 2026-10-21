@@ -992,6 +992,8 @@ async function sendMediaFile(file) {
     const bottom = $('chat-container');
     if (bottom) bottom.scrollTop = bottom.scrollHeight;
   } catch (error) {
+    // Do not surface stale upload/encryption errors into a locked chat view.
+    if (!appUnlocked || !partnerVerified || !sessionUser) return;
     const visibleMessage = error?.message && !/jwt|token|authorization|secret/i.test(error.message)
       ? error.message
       : humanError(error, 'Lampiran tidak terkirim. File asli tidak disimpan di server.');
