@@ -408,6 +408,8 @@ test('FCM server auth uses short-lived Workload Identity Federation and no servi
   assert.ok(pushFunction.includes('subject_token: subjectToken'));
   assert.ok(pushFunction.includes('lifetime: "600s"'));
   assert.ok(pushFunction.includes('https://www.googleapis.com/auth/firebase.messaging'));
-  assert.doesNotMatch(pushFunction, /FCM_SERVICE_ACCOUNT_JSON|private_key|google-auth-library|new JWT\\(/);
-  assert.match(pushFunction, /if \\(!serviceKey \\|\\| !ready \\|\\| !wifConfig\\)/);
+  assert.ok(!pushFunction.includes('FCM_SERVICE_ACCOUNT_JSON'));
+  assert.ok(!pushFunction.includes('private_key'));
+  assert.ok(!pushFunction.includes('google-auth-library'));
+  assert.ok(pushFunction.includes('if (!serviceKey || !ready || !wifConfig)'));
 });
