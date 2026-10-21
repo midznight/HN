@@ -10,7 +10,7 @@ import { initPushNotifications } from './push-notifications.js';
 
 const K={identity:'os.identity.v1',salt:'os.pin.salt.v1',hash:'os.pin.hash.v1',failures:'os.pin.failures.v1',lockUntil:'os.pin.lockUntil.v1'};
 const ITERATIONS=210000, $=id=>document.getElementById(id);
-let identity=null, firstRun=true, currentView='home', previousFrame=performance.now(), slowFrames=0, frameSamples=0;
+let identity=null, firstRun=true, currentView='chat', previousFrame=performance.now(), slowFrames=0, frameSamples=0;
 let pendingPushOpenChat = false;
 const read=async key=>(await Preferences.get({key})).value;
 const write=async(key,value)=>Preferences.set({key,value:String(value)});
@@ -50,7 +50,13 @@ App.addListener('appStateChange',({isActive})=>{
 });
 App.addListener('backButton',()=>{
   if(window.ourSpaceAttachmentPicker?.isPending())return;
-  if($('login-screen').classList.contains('hidden')){if(currentView!=='home')window.switchView('home');else lock()}
+  const preview=$('media-preview-modal');
+  if(preview&&!preview.classList.contains('hidden')){$('media-preview-cancel')?.click();return}
+  if($('login-screen').classList.contains('hidden')){
+    if(currentView==='profile'){window.switchView('home');return}
+    if(currentView!=='chat'){window.switchView('chat');return}
+    lock();
+  }
 });
 }
 function frameMonitor(){const now=performance.now();if(now-previousFrame>40)slowFrames++;else slowFrames=Math.max(0,slowFrames-1);previousFrame=now;if(++frameSamples>=90){document.documentElement.classList.toggle('no-blur',slowFrames>25);frameSamples=0;slowFrames=0}requestAnimationFrame(frameMonitor)}
