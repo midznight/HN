@@ -1,0 +1,38 @@
+name: Deploy Our Space UI Preview
+
+on:
+  push:
+    branches:
+      - phase-0.5/ui-ux-redesign
+    paths:
+      - 'preview-ui/**'
+      - '.github/workflows/deploy-ui-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ui-preview-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload standalone preview
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: preview-ui
+      - name: Deploy preview
+        id: deployment
+        uses: actions/deploy-pages@v4
