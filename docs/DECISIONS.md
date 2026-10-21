@@ -1,6 +1,6 @@
 # Decisions — Our Space
 
-Catatan keputusan diperbarui 21 Oktober 2026.
+Catatan keputusan diperbarui 21 Oktober 2026, 18:45 WIB.
 
 1. **Pertahankan chat teks yang sudah berjalan.** Tidak mereset pair, fingerprint, private key, pesan atau membership untuk mengaktifkan media. Migration Fase 3 hanya memperluas constraint tipe pesan dan menambah private Storage/policies.
 2. **Tidak membuat bucket public.** Media asli dienkripsi di perangkat; Storage hanya berisi ciphertext dengan content type generik.
@@ -12,3 +12,5 @@ Catatan keputusan diperbarui 21 Oktober 2026.
 8. **Budget Rp0.** Gunakan project/tier gratis yang sudah ada; jangan provisioning layanan paid atau meminta payment method sebagai langkah tersembunyi.
 9. **Periksa state setelah operasi asinkron.** Load/decrypt pesan harus memeriksa kembali status lock dan verifikasi pasangan setelah network/native await. Jika aplikasi terkunci di tengah operasi, jangan merender plaintext atau placeholder error lama; regression test berada di PR #8.
 10. **Gate media berdasarkan bukti perangkat.** CI hijau dan migration benar tidak cukup untuk menyatakan Fase 3 selesai. Pengiriman, penerimaan, preview dan save harus diuji di kedua HP, termasuk API 30.
+11. **Privasi selama system picker.** Saat picker lampiran terbuka, WebView tetap hidup untuk mempertahankan objek File, tetapi konten `app-layout` disembunyikan. Saat selection selesai, tampilan dipulihkan; saat picker dibatalkan setelah app backgrounded atau timeout, state direset dan aplikasi kembali ke lock gate.
+12. **Guard setiap batas await dalam receive media.** Setelah dekripsi metadata, Storage download dan `Blob.arrayBuffer()`, periksa kembali status lock/verifikasi sebelum memulai tahap berikutnya. Buffer ciphertext yang ditinggalkan saat lock dibersihkan best-effort; ini bukan jaminan secure deletion atas heap JavaScript.
