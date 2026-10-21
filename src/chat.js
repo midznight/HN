@@ -621,7 +621,14 @@ async function decryptAndRenderMedia(row, peerKey) {
   if (result.error || !result.data) throw result.error || new Error('Lampiran tidak tersedia.');
   if (result.data.size > MAX_MEDIA_BYTES + 1024) throw new Error('Ukuran ciphertext lampiran tidak valid.');
 
-  const encryptedBytes = new Uint8Array(await result.data.arrayBuffer());
+  const encryptedBuffer = await result.data.arrayBuffer();
+  // A lock can happen while Blob.arrayBuffer() is pending. Do not start another
+  // native media operation once the session is no longer authorized to continue.
+  if (!appUnlocked || !partnerVerified || !sessionUser) {
+    new Uint8Array(encryptedBuffer).fill(0);
+    return;
+  }
+  const encryptedBytes = new Uint8Array(encryptedBuffer);
   const encryptedBase64 = bytesToBase64(encryptedBytes);
   encryptedBytes.fill(0);
   const openedMedia = await KeyStore.decryptMedia({
