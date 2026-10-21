@@ -9,6 +9,8 @@ const $ = (id) => document.getElementById(id);
 
 let initialized = false;
 let busy = false;
+let refreshing = false;
+let refreshPending = false;
 let pendingFile = null;
 let pendingPreviewUrl = null;
 let viewerUrl = null;
@@ -201,6 +203,7 @@ async function uploadVaultFile(file, expectedContext) {
   let objectPath = '';
   let objectUploaded = false;
   let rowInserted = false;
+  let shouldRefresh = false;
   let mediaBase64 = null;
   let inputBytes = null;
   let encryptedBytes = null;
@@ -285,10 +288,10 @@ async function uploadVaultFile(file, expectedContext) {
     });
     if (insertError) throw insertError;
     rowInserted = true;
+    shouldRefresh = true;
     objectUploaded = false;
     if (!currentContext(context)) return;
     sayStatus('File berhasil disimpan di Brankas terenkripsi.');
-    await refreshVault();
   } catch (error) {
     if (currentContext(context)) {
       const message = typeof error?.message === 'string' && !/token|jwt|authorization|secret/i.test(error.message)
@@ -305,7 +308,8 @@ async function uploadVaultFile(file, expectedContext) {
     }
     busy = false;
     if (send) { send.disabled = false; send.textContent = 'Simpan ke Brankas'; }
-    if (!pendingFile) $('vault-file-input') && ($('vault-file-input').value = '');
+    if (!pendingFile && $('vault-file-input')) $('vault-file-input').value = '';
+    if (shouldRefresh && currentContext(context)) await refreshVault();
   }
 }
 
@@ -472,6 +476,8 @@ async function refreshVault() {
     return;
   }
   if (busy) return;
+  if (refreshing) { refreshPending = true; return; }
+  refreshing = true;
   clearStatus();
   sayStatus('Memuat Brankas terenkripsi…');
   const list = $('vault-items');
@@ -503,6 +509,12 @@ async function refreshVault() {
     else clearStatus();
   } catch (error) {
     if (currentContext(context)) sayStatus('Brankas belum dapat dimuat. Periksa koneksi lalu coba lagi.', true);
+  } finally {
+    refreshing = false;
+    if (refreshPending) {
+      refreshPending = false;
+      queueMicrotask(() => { void refreshVault(); });
+    }
   }
 }
 
@@ -512,12 +524,15 @@ async function removeVaultItem(row, metadata, expectedContext) {
   if (!window.confirm('Hapus file ini dari Brankas? Penghapusan tidak dapat dibatalkan.')) return;
   busy = true;
   try {
-    const { error: removeError } = await supabase.storage.from(BUCKET).remove([metadata.objectPath]);
-    if (removeError) throw removeError;
-    if (!currentContext(context)) return;
     const { error: deleteError } = await supabase.from('vault_items').delete()
       .eq('id', row.id).eq('pair_id', context.pairId).eq('sender_id', context.userId);
     if (deleteError) throw deleteError;
+    if (!currentContext(context)) return;
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([metadata.objectPath]);
+    if (removeError) {
+      sayStatus('Data Brankas dihapus. Pembersihan objek terenkripsi tertunda; file itu tidak lagi tercantum.', true);
+      return;
+    }
     if (!currentContext(context)) return;
     sayStatus('File dihapus dari Brankas.');
   } catch {
