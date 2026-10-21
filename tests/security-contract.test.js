@@ -15,6 +15,7 @@ const pushClient = readFileSync(new URL('../src/push-notifications.js', import.m
 const pushFunction = readFileSync(new URL('../supabase/functions/send-chat-push/index.ts', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/android-debug.yml', import.meta.url), 'utf8');
 const gitignore = readFileSync(new URL('../.gitignore', import.meta.url), 'utf8');
+const supabaseConfig = readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8');
 
 test('all exposed chat tables have RLS and least-privilege grants', () => {
   for (const table of ['pairs', 'pair_members', 'device_keys', 'key_verifications', 'messages']) {
@@ -334,6 +335,7 @@ test('Phase 4 workflow keeps Firebase config optional and never tracks google-se
   assert.match(workflow, /VITE_FCM_CONFIGURED=true/);
   assert.match(workflow, /com\.ourspace\.app/);
   assert.match(gitignore, /^google-services\.json$/m);
+  assert.match(supabaseConfig, /\[functions\.send-chat-push\][\s\S]*?verify_jwt\s*=\s*true/);
 });
 
 test('Encrypted message sends request a generic push only after message insert succeeds', () => {
