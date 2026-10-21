@@ -59,7 +59,7 @@ function closeMediaPreview() {
   if (send) { send.disabled = false; send.textContent = 'Kirim media'; }
 }
 
-function formatMediaSize(bytes) {
+function formatPreviewMediaSize(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return '';
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KiB';
@@ -108,7 +108,7 @@ function openMediaPreview(file) {
   preview.src = pendingMediaPreviewUrl;
   frame.replaceChildren(preview);
   name.textContent = safeMediaFilename(file.name) || 'Lampiran';
-  meta.textContent = (file.type || 'Tipe media tidak diketahui') + ' · ' + formatMediaSize(file.size);
+  meta.textContent = (file.type || 'Tipe media tidak diketahui') + ' · ' + formatPreviewMediaSize(file.size);
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
   send.disabled = false;
