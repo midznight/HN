@@ -75,6 +75,23 @@ test('local fingerprint panel is rendered before server-key mismatch can abort s
   assert.match(client, /Pengiriman dihentikan; jangan hapus kunci atau mengganti fingerprint secara otomatis/);
 });
 
+test('guarded device-key recovery requires an authenticated own member, valid fingerprint, and empty pair history', () => {
+  const recovery = readFileSync(new URL('../supabase/migrations/20261021152500_guarded_device_key_recovery.sql', import.meta.url), 'utf8');
+  assert.match(recovery, /create or replace function private\.recover_own_device_key_if_unused/i);
+  assert.match(recovery, /create or replace function public\.recover_own_device_key_if_unused[\s\S]*?security invoker/i);
+  assert.match(recovery, /security definer/i);
+  assert.match(recovery, /set search_path = ''/i);
+  assert.match(recovery, /auth\.uid\(\)/i);
+  assert.match(recovery, /extensions\.digest\(v_decoded_key, 'sha256'\)/i);
+  assert.match(recovery, /from public\.messages[\s\S]*?raise exception/i);
+  assert.match(recovery, /from public\.key_verifications[\s\S]*?raise exception/i);
+  assert.match(recovery, /update public\.device_keys[\s\S]*?public_key = p_public_key[\s\S]*?fingerprint = p_fingerprint/i);
+  assert.match(recovery, /revoke all on function public\.recover_own_device_key_if_unused\(uuid, text, text\) from public, anon/i);
+  assert.match(recovery, /grant execute on function public\.recover_own_device_key_if_unused\(uuid, text, text\) to authenticated/i);
+  assert.match(client, /supabase\.rpc\('recover_own_device_key_if_unused'/);
+  assert.match(client, /window\.confirm\([\s\S]*?PEMULIHAN KUNCI IDENTITAS/);
+});
+
 test('client recomputes remote key fingerprint and only trusts a matching verification', () => {
   assert.match(client, /fingerprintPublicKey/);
   assert.match(client, /calculated\.fingerprint !== partnerDeviceKey\.fingerprint/);
