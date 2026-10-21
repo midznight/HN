@@ -51,4 +51,4 @@ Object path saat ini berbentuk `pair_uuid/sender_uuid/message_uuid.bin`. Path me
 
 Private key tidak dikirim ke JavaScript/server. Namun browser WebView perlu memegang bytes file sementara saat file dipilih dan melewatkan Base64 ke plugin native; bytes dan string immutable di memori tidak bisa dijamin terhapus sempurna dari heap. Jangan menyebutnya secure deletion. Pada API 23–30, ECDH private key dilindungi at-rest oleh AES-GCM key dari Android Keystore, tetapi sementara dibuka di native memory; jaminan lebih rendah daripada API 31+.
 
-Fase belum dinyatakan selesai hanya karena CI hijau. Verifikasi nyata antara kedua HP diperlukan sebelum pengguna menyimpan media pribadi.
+Pengguna menerima Fase 3 pada 21 Oktober 2026. Checklist granular di atas tetap menjadi jejak teknis historis karena keputusan pengguna tidak berarti setiap edge case diaudit ulang secara independen oleh CI.
