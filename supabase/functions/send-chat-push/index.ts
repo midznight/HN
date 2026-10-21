@@ -27,6 +27,20 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: CORS_HEADERS });
 }
 
+function readNamedKey(environmentName: string, legacyName: string): string | null {
+  const legacy = Deno.env.get(legacyName);
+  if (legacy) return legacy;
+  const raw = Deno.env.get(environmentName);
+  if (!raw) return null;
+  try {
+    const values = JSON.parse(raw);
+    const key = values?.default;
+    return typeof key === "string" && key.length > 0 ? key : null;
+  } catch {
+    return null;
+  }
+}
+
 function readServiceAccount(): ServiceAccount | null {
   const raw = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
   if (!raw) return null;
@@ -130,8 +144,9 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const apiKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const apiKey = readNamedKey("SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_PUBLISHABLE_KEY") ||
+    Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceKey = readNamedKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
   const authHeader = request.headers.get("Authorization") || "";
   const jwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   if (!supabaseUrl || !apiKey || !jwt) return jsonResponse({ error: "unauthorized" }, 401);
