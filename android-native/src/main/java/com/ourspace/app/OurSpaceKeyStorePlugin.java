@@ -1,8 +1,12 @@
 package com.ourspace.app;
 
 import android.os.Build;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
@@ -17,7 +21,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -422,6 +429,130 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
             clear(mimeBytes);
             clear(mediaBytes);
         }
+    }
+
+    @PluginMethod
+    public void saveMediaToGallery(PluginCall call) {
+        byte[] mediaBytes = null;
+        Uri insertedUri = null;
+        File savedFile = null;
+        try {
+            requireEcdhSupport();
+            String filename = sanitizeOutputFilename(requiredString(call, "filename"));
+            String mimeType = normalizeMediaMimeType(requiredString(call, "mimeType"));
+            String mediaBase64 = requiredString(call, "mediaBase64");
+            if (!isAllowedMediaMimeType(mimeType)) {
+                throw new IllegalArgumentException("Jenis media tidak didukung untuk disimpan.");
+            }
+            if (mediaBase64.length() > ((MAX_MEDIA_BYTES + 2) / 3 * 4) + 8) {
+                throw new IllegalArgumentException("Ukuran media melebihi batas 3 MiB.");
+            }
+            mediaBytes = Base64.decode(mediaBase64, Base64.DEFAULT);
+            if (mediaBytes.length == 0 || mediaBytes.length > MAX_MEDIA_BYTES) {
+                throw new IllegalArgumentException("Ukuran media tidak valid.");
+            }
+
+            JSObject result = new JSObject();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Uri collection;
+                String relativePath;
+                if (mimeType.startsWith("image/")) {
+                    collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                    relativePath = Environment.DIRECTORY_PICTURES + "/Our Space";
+                } else if (mimeType.startsWith("video/")) {
+                    collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                    relativePath = Environment.DIRECTORY_MOVIES + "/Our Space";
+                } else {
+                    collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                    relativePath = Environment.DIRECTORY_MUSIC + "/Our Space";
+                }
+
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
+                values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+                values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath);
+                values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                insertedUri = getContext().getContentResolver().insert(collection, values);
+                if (insertedUri == null) {
+                    throw new IOException("Android tidak dapat membuat item media di penyimpanan bersama.");
+                }
+
+                try (OutputStream output = getContext().getContentResolver().openOutputStream(insertedUri, "w")) {
+                    if (output == null) throw new IOException("Android tidak dapat membuka file tujuan.");
+                    output.write(mediaBytes);
+                    output.flush();
+                }
+
+                ContentValues ready = new ContentValues();
+                ready.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                int updated = getContext().getContentResolver().update(insertedUri, ready, null, null);
+                if (updated != 1) throw new IOException("Android tidak dapat menyelesaikan penyimpanan media.");
+
+                result.put("destination", "gallery");
+                result.put("uri", insertedUri.toString());
+                result.put("filename", filename);
+            } else {
+                File baseDirectory = getContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+                if (baseDirectory == null) baseDirectory = getContext().getFilesDir();
+                File directory = new File(baseDirectory, "Our Space");
+                if (!directory.exists() && !directory.mkdirs()) {
+                    throw new IOException("Folder penyimpanan aplikasi tidak dapat dibuat.");
+                }
+                if (!directory.isDirectory()) {
+                    throw new IOException("Lokasi penyimpanan aplikasi tidak valid.");
+                }
+
+                String candidate = filename;
+                int suffix = 1;
+                savedFile = new File(directory, candidate);
+                while (savedFile.exists() && suffix < 1000) {
+                    candidate = addFilenameSuffix(filename, suffix++);
+                    savedFile = new File(directory, candidate);
+                }
+                if (savedFile.exists()) throw new IOException("Nama file tujuan tidak tersedia.");
+
+                try (FileOutputStream output = new FileOutputStream(savedFile, false)) {
+                    output.write(mediaBytes);
+                    output.flush();
+                    output.getFD().sync();
+                }
+                result.put("destination", "app-files");
+                result.put("path", savedFile.getAbsolutePath());
+                result.put("filename", candidate);
+            }
+            call.resolve(result);
+        } catch (Exception e) {
+            if (insertedUri != null) {
+                try { getContext().getContentResolver().delete(insertedUri, null, null); } catch (Exception ignored) { }
+            }
+            if (savedFile != null && savedFile.exists()) {
+                try { savedFile.delete(); } catch (Exception ignored) { }
+            }
+            call.reject("Media sudah didekripsi tetapi tidak dapat disimpan ke perangkat.", e);
+        } finally {
+            clear(mediaBytes);
+        }
+    }
+
+    private static String sanitizeOutputFilename(String value) {
+        StringBuilder safe = new StringBuilder();
+        for (int i = 0; i < value.length() && safe.length() < 120; i++) {
+            char ch = value.charAt(i);
+            if (ch < 32 || ch == 127 || ch == '/' || ch == '\\') safe.append('_');
+            else safe.append(ch);
+        }
+        String result = safe.toString().trim();
+        while (result.startsWith(".")) result = result.substring(1);
+        if (result.isEmpty()) return "lampiran";
+        return result;
+    }
+
+    private static String addFilenameSuffix(String filename, int suffix) {
+        int dot = filename.lastIndexOf('.');
+        if (dot > 0 && dot < filename.length() - 1) {
+            return filename.substring(0, dot) + " (" + suffix + ")" + filename.substring(dot);
+        }
+        return filename + " (" + suffix + ")";
     }
 
     @PluginMethod
