@@ -57,6 +57,13 @@ test('native implementation preserves ECDH protocol while using strongest availa
   assert.match(native, /refusing automatic replacement/);
 });
 
+test('ECDH output is normalized to a 32-byte P-256 secret before key derivation', () => {
+  assert.match(native, /ECDH_SECRET_BYTES = 32/);
+  assert.match(native, /rawSecret\.length > ECDH_SECRET_BYTES/);
+  assert.match(native, /System\.arraycopy\(rawSecret, 0, normalized, ECDH_SECRET_BYTES - rawSecret\.length, rawSecret\.length\)/);
+  assert.match(native, /clear\(rawSecret\)/);
+});
+
 test('Android 11 fallback uses Keystore AES-GCM wrapping and fails closed on incomplete identity material', () => {
   assert.match(native, /Build\.VERSION\.SDK_INT < Build\.VERSION_CODES\.M/);
   assert.match(native, /software-backed and briefly present in/);
