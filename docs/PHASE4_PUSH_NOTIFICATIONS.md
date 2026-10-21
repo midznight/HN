@@ -1,6 +1,6 @@
 # Fase 4 — Notifikasi push privat
 
-Status: PR #16 sudah merged ke integration branch; CI pasca-merge #146 lulus. Migration sudah diterapkan pada Supabase project sajlpngmpkizwjbarxlj dan Edge Function send-chat-push sudah ACTIVE dengan verify_jwt=true. Push tetap nonaktif karena CI #146 memastikan Firebase Android config tidak tersedia dan service-account secret server belum diset. Tidak ada teks chat, ciphertext, nama pengirim, nama file, identitas pasangan, pair ID, atau message ID di payload FCM.
+Status: PR #16 dan hardening opt-out PR #18 sudah merged. CI #152 (source) dan #153 (pasca-merge) lulus. Migration sudah diterapkan pada Supabase project sajlpngmpkizwjbarxlj dan Edge Function send-chat-push ACTIVE dengan verify_jwt=true. Build #153 memastikan Firebase Android config belum tersedia, jadi push sengaja nonaktif; service-account secret server belum dikonfigurasi/terverifikasi. Tidak ada teks chat, ciphertext, nama pengirim, nama file, identitas pasangan, pair ID, atau message ID di payload FCM.
 
 ## Desain keamanan
 
@@ -16,14 +16,14 @@ Status: PR #16 sudah merged ke integration branch; CI pasca-merge #146 lulus. Mi
 
 ## Pengaturan Firebase client (gratis)
 
-1. Buat atau gunakan project Firebase tanpa mengaktifkan layanan berbayar. Daftarkan Android app dengan package name persis com.ourspace.app.
+1. Buat atau gunakan project Firebase pada Spark/no-cost plan. Firebase Cloud Messaging tercantum sebagai produk no-cost pada [halaman pricing Firebase](https://firebase.google.com/pricing?hl=id), dan penggunaan produk gratis di Spark tidak memerlukan payment information menurut [dokumentasi pricing plan](https://firebase.google.com/docs/projects/billing/firebase-pricing-plans). Daftarkan Android app dengan package name persis com.ourspace.app.
 2. Aktifkan Firebase Cloud Messaging dan unduh google-services.json untuk aplikasi Android tersebut.
 3. Jangan commit file ini ke repository. Encode file lokal menggunakan base64 -w0 google-services.json (pada shell yang mendukung -w0) lalu simpan hasilnya ke GitHub Actions Secret bernama FIREBASE_ANDROID_CONFIG_BASE64.
 4. Setelah secret tersimpan, workflow akan memvalidasi project ID dan package name, menambahkan file ke direktori build Android saja, lalu menghasilkan APK baru. Jika secret kosong, build sengaja tetap menonaktifkan push.
 
 ## Pengaturan kredensial server
 
-1. Dari Firebase Console, buat service-account private key khusus FCM HTTP v1. Perlakukan file JSON ini sebagai rahasia berdaya tinggi; jangan taruh di GitHub repo, issue, log, source code, atau percakapan.
+1. Pastikan Firebase Cloud Messaging API aktif, lalu buat service account khusus untuk pengiriman FCM. Beri peran minimum yang diperlukan, `Firebase Cloud Messaging API Admin` (`roles/firebasecloudmessaging.admin`) pada project target, sesuai [panduan otorisasi HTTP v1 FCM](https://firebase.google.com/docs/cloud-messaging/send/v1-api) dan [daftar role/permission FCM](https://cloud.google.com/iam/docs/roles-permissions/firebasecloudmessaging). Unduh private-key JSON untuk akun tersebut. Perlakukan file sebagai rahasia berdaya tinggi; jangan taruh di GitHub repo, issue, log, source code, atau percakapan.
 2. Di Supabase Dashboard untuk project yang digunakan aplikasi, buka Edge Functions → Secrets dan tambahkan secret bernama FCM_SERVICE_ACCOUNT_JSON. Isi nilainya dengan seluruh isi service-account JSON. Jangan gunakan key ini pada APK/client.
 3. Edge Function membandingkan project ID service-account dengan project ID dari google-services.json. Toggle hanya diaktifkan bila keduanya cocok dan server bisa memakai kredensial service account.
 4. Jika kredensial belum tersedia/salah, aplikasi menampilkan status nonaktif dan tidak meminta izin Android. Ini disengaja fail-closed.
