@@ -82,6 +82,24 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
     }
 
     @PluginMethod
+    public void fingerprintPublicKey(PluginCall call) {
+        byte[] encoded = null;
+        try {
+            requireEcdhSupport();
+            PublicKey peerKey = decodeAndValidatePeerKey(requiredString(call, "publicKey"));
+            encoded = peerKey.getEncoded();
+            JSObject result = new JSObject();
+            result.put("fingerprint", hex(MessageDigest.getInstance("SHA-256").digest(encoded)));
+            result.put("algorithm", "ECDH-P256");
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Public key pasangan tidak valid; fingerprint tidak dapat diverifikasi.", e);
+        } finally {
+            clear(encoded);
+        }
+    }
+
+    @PluginMethod
     public void getIdentityKey(PluginCall call) {
         try {
             requireEcdhSupport();
@@ -308,11 +326,16 @@ public final class OurSpaceKeyStorePlugin extends Plugin {
         if (!(key instanceof ECPublicKey)) {
             throw new GeneralSecurityException("Peer key is not an EC key.");
         }
-        ECParameterSpec params = ((ECPublicKey) key).getParams();
-        if (!(params.getCurve().getField() instanceof ECFieldFp)
-            || ((ECFieldFp) params.getCurve().getField()).getP().bitLength() != 256
-            || params.getOrder().bitLength() != 256) {
-            throw new GeneralSecurityException("Peer key is not a supported 256-bit EC key.");
+        ECParameterSpec actual = ((ECPublicKey) key).getParams();
+        java.security.AlgorithmParameters namedCurve = java.security.AlgorithmParameters.getInstance("EC");
+        namedCurve.init(new ECGenParameterSpec("secp256r1"));
+        ECParameterSpec expected = namedCurve.getParameterSpec(ECParameterSpec.class);
+        if (!(actual.getCurve().getField() instanceof ECFieldFp)
+            || !actual.getCurve().equals(expected.getCurve())
+            || !actual.getGenerator().equals(expected.getGenerator())
+            || !actual.getOrder().equals(expected.getOrder())
+            || actual.getCofactor() != expected.getCofactor()) {
+            throw new GeneralSecurityException("Peer key is not a P-256 key.");
         }
         return key;
     }
